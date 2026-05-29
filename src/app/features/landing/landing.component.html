@@ -1,0 +1,421 @@
+<!-- ─── NAVBAR ──────────────────────────────────────────────────────── -->
+<nav class="fixed top-0 inset-x-0 z-50 border-b border-white/5 backdrop-blur-xl bg-surface-950/60">
+  <div class="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
+    <button (click)="scrollToTop()" class="text-xl font-bold tracking-tight cursor-pointer" style="font-family: var(--font-display)">
+      <span class="text-brand-400">Chef</span><span class="text-white"> Control</span>
+    </button>
+    <div class="hidden md:flex items-center gap-8 text-sm text-surface-400">
+      <a href="#producto" class="hover:text-white transition-colors">Producto</a>
+      <a href="#como-funciona" class="hover:text-white transition-colors">Cómo funciona</a>
+      <a href="#contacto" class="hover:text-white transition-colors">Contacto</a>
+    </div>
+    <button class="bg-brand-600 hover:bg-brand-500 text-white text-sm font-semibold px-4 py-2 rounded-lg transition-colors">
+      Empezar gratis
+    </button>
+  </div>
+</nav>
+
+<!-- ─── HERO ──────────────────────────────────────────────────────────── -->
+<section class="bg-surface-950 pt-40 pb-32 px-6 relative overflow-hidden min-h-screen flex items-center">
+
+  <!-- Aurora orbs -->
+  <div class="absolute -top-20 left-1/2 -translate-x-1/2 w-[900px] h-[600px] rounded-full opacity-25 blur-[140px] pointer-events-none"
+       style="background: radial-gradient(ellipse, #4f46e5 0%, #2563eb 40%, transparent 70%);">
+  </div>
+  <div class="absolute bottom-0 -left-40 w-[500px] h-[500px] rounded-full opacity-15 blur-[120px] pointer-events-none"
+       style="background: radial-gradient(circle, #2563eb 0%, transparent 65%);">
+  </div>
+  <div class="absolute top-1/3 -right-20 w-[400px] h-[400px] rounded-full opacity-10 blur-[100px] pointer-events-none"
+       style="background: radial-gradient(circle, #7c3aed 0%, transparent 65%);">
+  </div>
+
+  <div class="relative max-w-4xl mx-auto text-center w-full">
+
+    <!-- Badge -->
+    <div class="animate-fade-up inline-flex items-center gap-2 bg-white/5 border border-white/10 text-surface-300 text-xs font-medium tracking-wide px-4 py-2 rounded-full mb-8">
+      <span class="w-1.5 h-1.5 rounded-full bg-brand-400 animate-pulse"></span>
+      WhatsApp · IA · Dashboard · Tiempo real
+    </div>
+
+    <!-- H1 -->
+    <h1 class="text-4xl md:text-6xl font-extrabold text-white leading-[1.05] mb-8 tracking-tight"
+        style="font-family: var(--font-display)">
+      <span class="animate-fade-up block" style="animation-delay: 120ms">Dejá de perder</span>
+      <span class="animate-fade-up block gradient-text" style="animation-delay: 240ms">plata</span>
+      <span class="animate-fade-up block" style="animation-delay: 360ms">sin saberlo</span>
+    </h1>
+
+    <p class="animate-fade-up text-lg md:text-xl text-surface-400 max-w-xl mx-auto mb-12 leading-relaxed"
+       style="animation-delay: 500ms">
+      Tu equipo registra lo que pasa por WhatsApp.
+      Chef Control lo convierte en stock, costos y alertas en tiempo real.
+    </p>
+
+    <!-- CTAs -->
+    <div class="animate-fade-up flex flex-col sm:flex-row items-center justify-center gap-4 mb-20"
+         style="animation-delay: 640ms">
+      <button class="w-full sm:w-auto bg-brand-600 hover:bg-brand-500 text-white font-semibold px-8 py-3.5 rounded-xl text-base transition-all duration-200 hover:shadow-xl hover:shadow-brand-600/30">
+        Empezar gratis →
+      </button>
+      <button class="w-full sm:w-auto text-surface-300 hover:text-white font-medium px-8 py-3.5 rounded-xl text-base transition-all border border-white/10 hover:border-white/20 hover:bg-white/5">
+        Ver demo
+      </button>
+    </div>
+
+    <!-- Stats -->
+    <div class="animate-fade-up flex flex-col sm:flex-row items-center justify-center gap-10 border-t border-white/5 pt-10"
+         style="animation-delay: 780ms">
+      <div class="text-center">
+        <div class="text-3xl font-black text-white mb-1" style="font-family: var(--font-display)">3</div>
+        <div class="text-surface-500 text-xs uppercase tracking-widest">capas operativas</div>
+      </div>
+      <div class="hidden sm:block w-px h-10 bg-white/5"></div>
+      <div class="text-center">
+        <div class="flex items-center justify-center gap-2 mb-1">
+          <span class="w-2 h-2 rounded-full bg-success-400 inline-block"></span>
+          <span class="text-3xl font-black text-white" style="font-family: var(--font-display)">Vivo</span>
+        </div>
+        <div class="text-surface-500 text-xs uppercase tracking-widest">tiempo real</div>
+      </div>
+      <div class="hidden sm:block w-px h-10 bg-white/5"></div>
+      <div class="text-center">
+        <div class="text-3xl font-black text-white mb-1" style="font-family: var(--font-display)">0</div>
+        <div class="text-surface-500 text-xs uppercase tracking-widest">planillas necesarias</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ─── PROBLEM SECTION ───────────────────────────────────────────────── -->
+<section id="producto" class="bg-surface-950 py-32 px-6 border-t border-white/5">
+  <div class="max-w-6xl mx-auto">
+
+    <div class="text-center max-w-3xl mx-auto mb-20">
+      <p class="text-brand-400 text-xs font-semibold uppercase tracking-[0.2em] mb-5">El problema</p>
+      <h2 class="text-4xl md:text-5xl font-bold text-white leading-tight mb-6"
+          style="font-family: var(--font-display)">
+        Los restaurantes saben cuánto venden.<br>
+        <span class="text-surface-500">Casi nunca cuánto pierden.</span>
+      </h2>
+      <p class="text-surface-400 text-lg">
+        Cada día hay pérdidas invisibles que no se registran, no se alertan y no se corrigen.
+      </p>
+    </div>
+
+    <!-- Cards grid with gap-px pattern -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-px bg-white/5 rounded-2xl overflow-hidden">
+
+      <div class="bg-surface-900/90 p-8 hover:bg-surface-800/60 transition-colors duration-200">
+        <div class="text-3xl mb-5">🗑️</div>
+        <h3 class="text-white font-semibold text-lg mb-3">Merma no registrada</h3>
+        <p class="text-surface-500 text-sm leading-relaxed">El producto se tira sin dejar rastro. La pérdida nunca se cuantifica y se repite cada semana.</p>
+      </div>
+
+      <div class="bg-surface-900/90 p-8 hover:bg-surface-800/60 transition-colors duration-200">
+        <div class="text-3xl mb-5">⏰</div>
+        <h3 class="text-white font-semibold text-lg mb-3">Productos vencidos</h3>
+        <p class="text-surface-500 text-sm leading-relaxed">Nadie avisó a tiempo. El producto se pierde o, peor, se usa igualmente.</p>
+      </div>
+
+      <div class="bg-surface-900/90 p-8 hover:bg-surface-800/60 transition-colors duration-200">
+        <div class="text-3xl mb-5">📦</div>
+        <h3 class="text-white font-semibold text-lg mb-3">Sobrestock y faltantes</h3>
+        <p class="text-surface-500 text-sm leading-relaxed">Se compra de más o de menos. Capital inmovilizado o producción parada.</p>
+      </div>
+
+      <div class="bg-surface-900/90 p-8 hover:bg-surface-800/60 transition-colors duration-200">
+        <div class="text-3xl mb-5">🧮</div>
+        <h3 class="text-white font-semibold text-lg mb-3">Recetas mal costeadas</h3>
+        <p class="text-surface-500 text-sm leading-relaxed">El plato se vende a un precio que no cubre su costo real de producción.</p>
+      </div>
+
+      <div class="bg-surface-900/90 p-8 hover:bg-surface-800/60 transition-colors duration-200">
+        <div class="text-3xl mb-5">🔍</div>
+        <h3 class="text-white font-semibold text-lg mb-3">Diferencia de stock</h3>
+        <p class="text-surface-500 text-sm leading-relaxed">Hay menos producto del que debería haber. Nadie lo detecta hasta fin de mes.</p>
+      </div>
+
+      <div class="bg-surface-900/90 p-8 hover:bg-surface-800/60 transition-colors duration-200">
+        <div class="text-3xl mb-5">🔔</div>
+        <h3 class="text-white font-semibold text-lg mb-3">Sin alertas preventivas</h3>
+        <p class="text-surface-500 text-sm leading-relaxed">El problema se detecta cuando ya es pérdida, nunca antes de que ocurra.</p>
+      </div>
+
+    </div>
+
+    <!-- Result callout -->
+    <div class="mt-6 relative overflow-hidden rounded-2xl border border-danger-500/40 bg-danger-500/10 px-8 py-7">
+      <div class="absolute inset-0 blur-[50px] opacity-40 pointer-events-none"
+           style="background: radial-gradient(ellipse at center, #ef4444 0%, transparent 65%);">
+      </div>
+      <p class="relative text-center text-base leading-relaxed text-surface-300">
+        <span class="block text-xs font-semibold uppercase tracking-[0.2em] text-danger-400 mb-3">El resultado</span>
+        El restaurante opera sin información. Las pérdidas se detectan al final del mes<span class="text-white font-semibold"> — si es que se detectan.</span>
+      </p>
+    </div>
+
+  </div>
+</section>
+
+<!-- ─── HOW IT WORKS ──────────────────────────────────────────────────── -->
+<section id="como-funciona" class="bg-surface-950 py-32 px-6 border-t border-white/5">
+  <div class="max-w-6xl mx-auto">
+
+    <div class="text-center max-w-2xl mx-auto mb-20">
+      <p class="text-brand-400 text-xs font-semibold uppercase tracking-[0.2em] mb-5">Cómo funciona</p>
+      <h2 class="text-4xl md:text-5xl font-bold text-white leading-tight"
+          style="font-family: var(--font-display)">
+        Tres capas.<br>Un sistema. Control total.
+      </h2>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-5">
+
+      <!-- Capa 1 -->
+      <div class="relative bg-surface-900 border border-white/10 rounded-2xl p-8 overflow-hidden hover:border-brand-600/30 transition-all duration-300 group">
+        <div class="absolute -top-4 -left-2 text-[130px] font-black leading-none select-none pointer-events-none opacity-[0.035]"
+             style="font-family: var(--font-display); color: white">01</div>
+        <div class="relative z-10">
+          <div class="w-12 h-12 bg-brand-600/15 border border-brand-600/20 rounded-xl flex items-center justify-center mb-6">
+            <span class="text-2xl">💬</span>
+          </div>
+          <h3 class="text-xl font-bold text-white mb-3" style="font-family: var(--font-display)">Carga rápida</h3>
+          <p class="text-surface-500 leading-relaxed text-sm mb-6">
+            El equipo registra por WhatsApp, audio o formulario. Sin abrir planillas. Lo escriben o mandan un audio, y ya está registrado.
+          </p>
+          <div class="bg-surface-950 rounded-xl p-4 space-y-2 border border-white/5">
+            <div class="flex items-start gap-2">
+              <div class="bg-surface-800 text-surface-300 text-xs rounded-lg rounded-tl-none px-3 py-2 max-w-[90%]">
+                Ingresaron 40kg de ojo de bife a $15.000
+              </div>
+            </div>
+            <div class="flex items-start gap-2 justify-end">
+              <div class="bg-brand-600/15 border border-brand-600/20 text-brand-300 text-xs rounded-lg rounded-tr-none px-3 py-2 max-w-[90%]">
+                ✅ Compra registrada. Stock +40 kg. Total: $600.000
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Capa 2 -->
+      <div class="relative bg-surface-900 border border-white/10 rounded-2xl p-8 overflow-hidden hover:border-brand-600/30 transition-all duration-300 group">
+        <div class="absolute -top-4 -left-2 text-[130px] font-black leading-none select-none pointer-events-none opacity-[0.035]"
+             style="font-family: var(--font-display); color: white">02</div>
+        <div class="relative z-10">
+          <div class="w-12 h-12 bg-brand-600/15 border border-brand-600/20 rounded-xl flex items-center justify-center mb-6">
+            <span class="text-2xl">🧠</span>
+          </div>
+          <h3 class="text-xl font-bold text-white mb-3" style="font-family: var(--font-display)">Motor inteligente</h3>
+          <p class="text-surface-500 leading-relaxed text-sm mb-6">
+            Calcula stock, costos, consumos y mermas en tiempo real. Cada mensaje se convierte en un movimiento operativo registrado.
+          </p>
+          <div class="space-y-2">
+            <div class="flex items-center gap-3 bg-surface-950 border border-white/5 rounded-lg px-3 py-2.5">
+              <span class="w-1.5 h-1.5 rounded-full bg-success-400 flex-shrink-0"></span>
+              <span class="text-xs text-surface-400">Identifica tipo de evento</span>
+            </div>
+            <div class="flex items-center gap-3 bg-surface-950 border border-white/5 rounded-lg px-3 py-2.5">
+              <span class="w-1.5 h-1.5 rounded-full bg-success-400 flex-shrink-0"></span>
+              <span class="text-xs text-surface-400">Actualiza stock en tiempo real</span>
+            </div>
+            <div class="flex items-center gap-3 bg-surface-950 border border-white/5 rounded-lg px-3 py-2.5">
+              <span class="w-1.5 h-1.5 rounded-full bg-success-400 flex-shrink-0"></span>
+              <span class="text-xs text-surface-400">Calcula costo automáticamente</span>
+            </div>
+            <div class="flex items-center gap-3 bg-surface-950 border border-white/5 rounded-lg px-3 py-2.5">
+              <span class="w-1.5 h-1.5 rounded-full bg-success-400 flex-shrink-0"></span>
+              <span class="text-xs text-surface-400">Dispara alertas si hay riesgo</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Capa 3 -->
+      <div class="relative bg-surface-900 border border-white/10 rounded-2xl p-8 overflow-hidden hover:border-brand-600/30 transition-all duration-300 group">
+        <div class="absolute -top-4 -left-2 text-[130px] font-black leading-none select-none pointer-events-none opacity-[0.035]"
+             style="font-family: var(--font-display); color: white">03</div>
+        <div class="relative z-10">
+          <div class="w-12 h-12 bg-brand-600/15 border border-brand-600/20 rounded-xl flex items-center justify-center mb-6">
+            <span class="text-2xl">📊</span>
+          </div>
+          <h3 class="text-xl font-bold text-white mb-3" style="font-family: var(--font-display)">Dashboard + alertas</h3>
+          <p class="text-surface-500 leading-relaxed text-sm mb-6">
+            El dueño controla, audita y recibe avisos antes de perder plata. No al final del día: en el momento justo.
+          </p>
+          <div class="space-y-2">
+            <div class="flex items-start gap-2 bg-warning-500/10 border border-warning-500/15 rounded-lg px-3 py-2.5">
+              <span class="text-warning-400 text-xs mt-0.5">⚠</span>
+              <span class="text-xs text-warning-200">Queda poco ojo de bife — 1 día más de stock</span>
+            </div>
+            <div class="flex items-start gap-2 bg-danger-500/10 border border-danger-500/15 rounded-lg px-3 py-2.5">
+              <span class="text-danger-400 text-xs mt-0.5">🔴</span>
+              <span class="text-xs text-danger-200">6L de crema vencen en 48h — $24.000 en riesgo</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- ─── DASHBOARD PREVIEW ─────────────────────────────────────────────── -->
+<section class="bg-surface-950 py-32 px-6 border-t border-white/5">
+  <div class="max-w-6xl mx-auto">
+
+    <div class="text-center max-w-2xl mx-auto mb-16">
+      <p class="text-brand-400 text-xs font-semibold uppercase tracking-[0.2em] mb-5">Panel operativo</p>
+      <h2 class="text-4xl md:text-5xl font-bold text-white leading-tight"
+          style="font-family: var(--font-display)">
+        Todo el negocio en un panel.<br>En tiempo real.
+      </h2>
+    </div>
+
+    <!-- Dashboard with glow -->
+    <div class="relative">
+      <!-- Ambient glow behind -->
+      <div class="absolute inset-x-0 top-0 -mt-16 h-48 blur-[80px] opacity-20 pointer-events-none"
+           style="background: radial-gradient(ellipse, #2563eb 0%, transparent 60%);">
+      </div>
+
+      <div class="relative bg-surface-900 border border-white/10 rounded-2xl overflow-hidden shadow-2xl">
+
+        <!-- Browser chrome -->
+        <div class="bg-surface-800/80 border-b border-white/5 px-5 py-3 flex items-center gap-3">
+          <div class="flex items-center gap-1.5">
+            <div class="w-2.5 h-2.5 rounded-full bg-white/10"></div>
+            <div class="w-2.5 h-2.5 rounded-full bg-white/10"></div>
+            <div class="w-2.5 h-2.5 rounded-full bg-white/10"></div>
+          </div>
+          <div class="flex-1 flex items-center justify-center">
+            <div class="bg-surface-700/50 rounded px-12 py-1 text-xs text-surface-500">app.chefcontrol.io/dashboard</div>
+          </div>
+          <span class="text-xs text-success-400 font-medium">● En vivo</span>
+        </div>
+
+        <!-- App header -->
+        <div class="bg-surface-800/40 border-b border-white/5 px-6 py-4 flex items-center justify-between">
+          <div>
+            <span class="text-white font-semibold text-sm">Panel operativo</span>
+            <span class="ml-3 text-xs text-success-400 font-medium">En vivo · miércoles 28 de mayo</span>
+          </div>
+          <span class="text-xs text-surface-500">Último informe hace 2 min</span>
+        </div>
+
+        <!-- KPI Cards -->
+        <div class="grid grid-cols-2 lg:grid-cols-4 gap-px bg-white/5">
+          <div class="bg-surface-900 p-6">
+            <p class="text-xs font-semibold uppercase tracking-wider text-success-500 mb-2">Stock en regla</p>
+            <p class="text-4xl font-black text-white mb-1" style="font-family: var(--font-display)">14</p>
+            <p class="text-xs text-surface-500">productos con stock OK</p>
+          </div>
+          <div class="bg-surface-900 p-6">
+            <p class="text-xs font-semibold uppercase tracking-wider text-warning-500 mb-2">Bajo stock</p>
+            <p class="text-4xl font-black text-white mb-1" style="font-family: var(--font-display)">3</p>
+            <p class="text-xs text-surface-500">ojo de bife, pollo, papa</p>
+          </div>
+          <div class="bg-surface-900 p-6">
+            <p class="text-xs font-semibold uppercase tracking-wider text-danger-500 mb-2">Por vencer</p>
+            <p class="text-4xl font-black text-white mb-1" style="font-family: var(--font-display)">2</p>
+            <p class="text-xs text-surface-500">crema, carne molida</p>
+          </div>
+          <div class="bg-surface-900 p-6">
+            <p class="text-xs font-semibold uppercase tracking-wider text-danger-400 mb-2">Costo perdido hoy</p>
+            <p class="text-4xl font-black text-danger-400 mb-1" style="font-family: var(--font-display)">$8.450</p>
+            <p class="text-xs text-surface-500">mermas registradas</p>
+          </div>
+        </div>
+
+        <!-- Stock table -->
+        <div class="p-6">
+          <table class="w-full text-sm">
+            <thead>
+              <tr class="text-xs text-surface-500 uppercase tracking-wider border-b border-white/5">
+                <th class="text-left pb-3 font-medium">Producto</th>
+                <th class="text-right pb-3 font-medium">Stock actual</th>
+                <th class="text-right pb-3 font-medium hidden md:table-cell">Consumo teórico</th>
+                <th class="text-right pb-3 font-medium">Diferencia</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-white/5">
+              <tr class="text-surface-400">
+                <td class="py-3 text-white">Ojo de bife</td>
+                <td class="py-3 text-right text-warning-400 font-medium">12 kg ↓</td>
+                <td class="py-3 text-right hidden md:table-cell">14,5 kg</td>
+                <td class="py-3 text-right text-danger-400 font-medium">-2,5 kg</td>
+              </tr>
+              <tr class="text-surface-400">
+                <td class="py-3 text-white">Pollo entero</td>
+                <td class="py-3 text-right text-success-400 font-medium">28 kg ✓</td>
+                <td class="py-3 text-right hidden md:table-cell">22 kg</td>
+                <td class="py-3 text-right text-success-400 font-medium">+6 kg</td>
+              </tr>
+              <tr class="text-surface-400">
+                <td class="py-3 text-white">Crema de leche</td>
+                <td class="py-3 text-right text-danger-400 font-medium">3 L ⚠</td>
+                <td class="py-3 text-right hidden md:table-cell">5 L</td>
+                <td class="py-3 text-right text-danger-400 font-medium">-2 L</td>
+              </tr>
+              <tr class="text-surface-400">
+                <td class="py-3 text-white">Papa</td>
+                <td class="py-3 text-right text-warning-400 font-medium">8 kg ↓</td>
+                <td class="py-3 text-right hidden md:table-cell">10 kg</td>
+                <td class="py-3 text-right text-danger-400 font-medium">-2 kg</td>
+              </tr>
+            </tbody>
+          </table>
+
+          <div class="flex flex-wrap gap-6 mt-6 pt-6 border-t border-white/5 text-xs text-surface-400">
+            <span>Compras hoy: <strong class="text-surface-300">$847.000</strong></span>
+            <span>Ventas registradas: <strong class="text-surface-300">112 platos</strong></span>
+            <span>Merma acumulada: <strong class="text-danger-400">$24.300</strong></span>
+            <span>Costo en riesgo: <strong class="text-danger-400">$33.600</strong></span>
+          </div>
+        </div>
+
+        <!-- Fade out bottom -->
+        <div class="absolute bottom-0 inset-x-0 h-28 pointer-events-none"
+             style="background: linear-gradient(to bottom, transparent, #0d1526);">
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ─── CTA ───────────────────────────────────────────────────────────── -->
+<section id="contacto" class="bg-surface-950 py-40 px-6 border-t border-white/5 relative overflow-hidden">
+
+  <div class="absolute inset-0 flex items-center justify-center pointer-events-none">
+    <div class="w-[700px] h-[500px] rounded-full blur-[160px] opacity-15"
+         style="background: radial-gradient(circle, #4f46e5 0%, #2563eb 40%, transparent 70%);">
+    </div>
+  </div>
+
+  <div class="relative max-w-3xl mx-auto text-center">
+    <p class="text-brand-400 text-xs font-semibold uppercase tracking-[0.2em] mb-6">Piloto abierto</p>
+    <h2 class="text-5xl md:text-6xl font-extrabold text-white mb-6 leading-tight"
+        style="font-family: var(--font-display)">
+      ¿Listo para controlar<br>tu operación?
+    </h2>
+    <p class="text-surface-400 text-lg mb-12 max-w-xl mx-auto">
+      Empezá con el piloto. Sin contratos, sin configuración compleja.
+    </p>
+    <button class="bg-white hover:bg-surface-100 text-surface-900 font-bold text-lg px-12 py-4 rounded-xl transition-all hover:shadow-2xl hover:shadow-white/10">
+      Empezar gratis →
+    </button>
+  </div>
+</section>
+
+<!-- ─── FOOTER ────────────────────────────────────────────────────────── -->
+<footer class="bg-surface-950 border-t border-white/5 py-10 px-6">
+  <div class="max-w-6xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
+    <div>
+      <span class="text-lg font-bold" style="font-family: var(--font-display)">
+        <span class="text-brand-400">Chef</span><span class="text-white"> Control</span>
+      </span>
+      <p class="text-xs text-surface-700 mt-1">Agente operativo para restaurantes. En tiempo real.</p>
+    </div>
+    <p class="text-xs text-surface-700">© 2026 Chef Control.</p>
+  </div>
+</footer>

@@ -1,0 +1,2106 @@
+openapi: 3.0.1
+info:
+  title: Chef Control API
+  description: Backend para el SaaS de control de inventario gastronómico
+  contact:
+    name: Chef Control
+    email: matiasportela94@gmail.com
+  version: 0.1.0
+servers:
+- url: http://localhost:8080
+  description: Generated server url
+security:
+- bearerAuth: []
+paths:
+  /users/{id}:
+    get:
+      tags:
+      - user-controller
+      operationId: getUser
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/UserResponse"
+    put:
+      tags:
+      - user-controller
+      operationId: updateUser
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateUserRequest"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/UserResponse"
+    delete:
+      tags:
+      - user-controller
+      operationId: deactivateUser
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        "200":
+          description: OK
+  /suppliers/{id}:
+    put:
+      tags:
+      - supplier-controller
+      operationId: updateSupplier
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateSupplierRequest"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/SupplierResponse"
+    delete:
+      tags:
+      - supplier-controller
+      operationId: deactivateSupplier
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        "200":
+          description: OK
+  /products/{id}:
+    get:
+      tags:
+      - product-controller
+      operationId: getProduct
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ProductResponse"
+    put:
+      tags:
+      - product-controller
+      operationId: updateProduct
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateProductRequest"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ProductResponse"
+    delete:
+      tags:
+      - product-controller
+      operationId: deactivateProduct
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        "200":
+          description: OK
+  /menu-items/{id}:
+    get:
+      tags:
+      - menu-item-controller
+      operationId: get
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/MenuItemResponse"
+    put:
+      tags:
+      - menu-item-controller
+      operationId: update
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateMenuItemRequest"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/MenuItemResponse"
+    delete:
+      tags:
+      - menu-item-controller
+      operationId: deactivate
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        "200":
+          description: OK
+  /menu-items/{id}/recipe:
+    get:
+      tags:
+      - menu-item-controller
+      operationId: getRecipe
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/RecipeResponse"
+    put:
+      tags:
+      - menu-item-controller
+      operationId: setRecipe
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SetRecipeRequest"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/RecipeResponse"
+    delete:
+      tags:
+      - menu-item-controller
+      operationId: deleteRecipe
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        "200":
+          description: OK
+  /categories/{id}:
+    put:
+      tags:
+      - product-category-controller
+      operationId: updateCategory
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateCategoryRequest"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/CategoryResponse"
+    delete:
+      tags:
+      - product-category-controller
+      operationId: deleteCategory
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        "200":
+          description: OK
+  /alerts/{id}/resolve:
+    put:
+      tags:
+      - alert-controller
+      operationId: resolve
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/AlertResponse"
+  /alerts/{id}/read:
+    put:
+      tags:
+      - alert-controller
+      operationId: markRead
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/AlertResponse"
+  /waste-events:
+    get:
+      tags:
+      - waste-event-controller
+      operationId: listWasteEvents
+      parameters:
+      - name: page
+        in: query
+        required: false
+        schema:
+          type: integer
+          format: int32
+          default: 0
+      - name: size
+        in: query
+        required: false
+        schema:
+          type: integer
+          format: int32
+          default: 20
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/PagedResponseWasteEventResponse"
+    post:
+      tags:
+      - waste-event-controller
+      operationId: createWasteEvent
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateWasteEventRequest"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/WasteEventResponse"
+  /users:
+    get:
+      tags:
+      - user-controller
+      operationId: listUsers
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/UserResponse"
+    post:
+      tags:
+      - user-controller
+      operationId: createUser
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateUserRequest"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/CreateUserResponse"
+  /suppliers:
+    get:
+      tags:
+      - supplier-controller
+      operationId: listSuppliers
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/SupplierResponse"
+    post:
+      tags:
+      - supplier-controller
+      operationId: createSupplier
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateSupplierRequest"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/SupplierResponse"
+  /stock-movements/{id}/reverse:
+    post:
+      tags:
+      - stock-movement-controller
+      operationId: reverse
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/StockMovementResponse"
+  /stock-counts:
+    get:
+      tags:
+      - stock-count-controller
+      operationId: list
+      parameters:
+      - name: page
+        in: query
+        required: false
+        schema:
+          type: integer
+          format: int32
+          default: 0
+      - name: size
+        in: query
+        required: false
+        schema:
+          type: integer
+          format: int32
+          default: 20
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/PagedResponseStockCountResponse"
+    post:
+      tags:
+      - stock-count-controller
+      operationId: create
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateStockCountRequest"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/StockCountResponse"
+  /sales:
+    get:
+      tags:
+      - sale-controller
+      operationId: list_1
+      parameters:
+      - name: page
+        in: query
+        required: false
+        schema:
+          type: integer
+          format: int32
+          default: 0
+      - name: size
+        in: query
+        required: false
+        schema:
+          type: integer
+          format: int32
+          default: 50
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/PagedResponseSaleResponse"
+    post:
+      tags:
+      - sale-controller
+      operationId: create_1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateSaleRequest"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/SaleResponse"
+  /purchases:
+    get:
+      tags:
+      - purchase-controller
+      operationId: listPurchases
+      parameters:
+      - name: page
+        in: query
+        required: false
+        schema:
+          type: integer
+          format: int32
+          default: 0
+      - name: size
+        in: query
+        required: false
+        schema:
+          type: integer
+          format: int32
+          default: 20
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/PagedResponsePurchaseResponse"
+    post:
+      tags:
+      - purchase-controller
+      operationId: createPurchase
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreatePurchaseRequest"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/PurchaseDetailResponse"
+  /products:
+    get:
+      tags:
+      - product-controller
+      operationId: listProducts
+      parameters:
+      - name: page
+        in: query
+        required: false
+        schema:
+          type: integer
+          format: int32
+          default: 0
+      - name: size
+        in: query
+        required: false
+        schema:
+          type: integer
+          format: int32
+          default: 20
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/PagedResponseProductResponse"
+    post:
+      tags:
+      - product-controller
+      operationId: createProduct
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateProductRequest"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ProductResponse"
+  /menu-items:
+    get:
+      tags:
+      - menu-item-controller
+      operationId: list_2
+      parameters:
+      - name: page
+        in: query
+        required: false
+        schema:
+          type: integer
+          format: int32
+          default: 0
+      - name: size
+        in: query
+        required: false
+        schema:
+          type: integer
+          format: int32
+          default: 50
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/PagedResponseMenuItemResponse"
+    post:
+      tags:
+      - menu-item-controller
+      operationId: create_2
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateMenuItemRequest"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/MenuItemResponse"
+  /categories:
+    get:
+      tags:
+      - product-category-controller
+      operationId: listCategories
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/CategoryResponse"
+    post:
+      tags:
+      - product-category-controller
+      operationId: createCategory
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateCategoryRequest"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/CategoryResponse"
+  /auth/switch-restaurant:
+    post:
+      tags:
+      - auth-controller
+      operationId: switchRestaurant
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SwitchRestaurantRequest"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/LoginResponse"
+  /auth/reset-password:
+    post:
+      tags:
+      - auth-controller
+      operationId: resetPassword
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ResetPasswordRequest"
+        required: true
+      responses:
+        "200":
+          description: OK
+  /auth/register:
+    post:
+      tags:
+      - auth-controller
+      operationId: register
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RegisterRequest"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/LoginResponse"
+  /auth/login:
+    post:
+      tags:
+      - auth-controller
+      operationId: login
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LoginRequest"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/LoginResponse"
+  /auth/forgot-password:
+    post:
+      tags:
+      - auth-controller
+      operationId: forgotPassword
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ForgotPasswordRequest"
+        required: true
+      responses:
+        "200":
+          description: OK
+  /waste-events/{id}:
+    get:
+      tags:
+      - waste-event-controller
+      operationId: getWasteEvent
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/WasteEventResponse"
+  /units:
+    get:
+      tags:
+      - unit-controller
+      operationId: listUnits
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/UnitResponse"
+  /stock-movements:
+    get:
+      tags:
+      - stock-movement-controller
+      operationId: list_3
+      parameters:
+      - name: page
+        in: query
+        required: false
+        schema:
+          type: integer
+          format: int32
+          default: 0
+      - name: size
+        in: query
+        required: false
+        schema:
+          type: integer
+          format: int32
+          default: 50
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/PagedResponseStockMovementResponse"
+  /stock-counts/{id}:
+    get:
+      tags:
+      - stock-count-controller
+      operationId: get_1
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/StockCountResponse"
+  /sales/{id}:
+    get:
+      tags:
+      - sale-controller
+      operationId: get_2
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/SaleResponse"
+  /purchases/{id}:
+    get:
+      tags:
+      - purchase-controller
+      operationId: getPurchase
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/PurchaseDetailResponse"
+  /products/{id}/stock:
+    get:
+      tags:
+      - product-controller
+      operationId: getStock
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                type: object
+                additionalProperties:
+                  type: object
+  /food-cost:
+    get:
+      tags:
+      - food-cost-controller
+      operationId: calculate
+      parameters:
+      - name: from
+        in: query
+        required: true
+        schema:
+          type: string
+          format: date-time
+      - name: to
+        in: query
+        required: true
+        schema:
+          type: string
+          format: date-time
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/FoodCostResponse"
+  /dashboard/summary:
+    get:
+      tags:
+      - dashboard-controller
+      operationId: getSummary
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/DashboardResponse"
+  /alerts:
+    get:
+      tags:
+      - alert-controller
+      operationId: list_4
+      parameters:
+      - name: page
+        in: query
+        required: false
+        schema:
+          type: integer
+          format: int32
+          default: 0
+      - name: size
+        in: query
+        required: false
+        schema:
+          type: integer
+          format: int32
+          default: 20
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/PagedResponseAlertResponse"
+components:
+  schemas:
+    UpdateUserRequest:
+      required:
+      - name
+      - role
+      type: object
+      properties:
+        name:
+          type: string
+        phone:
+          type: string
+        role:
+          type: string
+          enum:
+          - OWNER
+          - MANAGER
+          - KITCHEN
+          - READONLY
+    UserResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        email:
+          type: string
+        phone:
+          type: string
+        role:
+          type: string
+        isActive:
+          type: boolean
+        memberSince:
+          type: string
+          format: date-time
+    UpdateSupplierRequest:
+      required:
+      - name
+      type: object
+      properties:
+        name:
+          maxLength: 255
+          minLength: 0
+          type: string
+        phone:
+          maxLength: 20
+          minLength: 0
+          type: string
+        email:
+          maxLength: 255
+          minLength: 0
+          type: string
+        address:
+          maxLength: 500
+          minLength: 0
+          type: string
+        notes:
+          maxLength: 1000
+          minLength: 0
+          type: string
+    SupplierResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        phone:
+          type: string
+        email:
+          type: string
+        address:
+          type: string
+        notes:
+          type: string
+        isActive:
+          type: boolean
+    UpdateProductRequest:
+      required:
+      - defaultUnitId
+      - name
+      type: object
+      properties:
+        name:
+          maxLength: 255
+          minLength: 0
+          type: string
+        sku:
+          maxLength: 100
+          minLength: 0
+          type: string
+        defaultUnitId:
+          type: string
+          format: uuid
+        categoryId:
+          type: string
+          format: uuid
+        minStock:
+          minimum: 0
+          exclusiveMinimum: false
+          type: number
+        maxStock:
+          minimum: 0
+          exclusiveMinimum: false
+          type: number
+    CategorySummary:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        color:
+          type: string
+    ProductResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        sku:
+          type: string
+        defaultUnit:
+          $ref: "#/components/schemas/UnitSummary"
+        category:
+          $ref: "#/components/schemas/CategorySummary"
+        minStock:
+          type: number
+        maxStock:
+          type: number
+        isActive:
+          type: boolean
+    UnitSummary:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        abbreviation:
+          type: string
+    UpdateMenuItemRequest:
+      type: object
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+        price:
+          type: number
+        category:
+          type: string
+    MenuItemResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        description:
+          type: string
+        price:
+          type: number
+        category:
+          type: string
+        active:
+          type: boolean
+        createdAt:
+          type: string
+          format: date-time
+    RecipeItemRequest:
+      required:
+      - productId
+      - quantity
+      - unitId
+      type: object
+      properties:
+        productId:
+          type: string
+          format: uuid
+        unitId:
+          type: string
+          format: uuid
+        quantity:
+          type: number
+    SetRecipeRequest:
+      required:
+      - items
+      type: object
+      properties:
+        servings:
+          minimum: 1
+          type: integer
+          format: int32
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/RecipeItemRequest"
+    RecipeItemResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        productId:
+          type: string
+          format: uuid
+        productName:
+          type: string
+        quantity:
+          type: number
+        unitId:
+          type: string
+          format: uuid
+        unitName:
+          type: string
+    RecipeResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        menuItemId:
+          type: string
+          format: uuid
+        servings:
+          type: integer
+          format: int32
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/RecipeItemResponse"
+    UpdateCategoryRequest:
+      required:
+      - name
+      type: object
+      properties:
+        name:
+          maxLength: 100
+          minLength: 0
+          type: string
+        color:
+          pattern: "^#[0-9A-Fa-f]{6}$"
+          type: string
+    CategoryResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        color:
+          type: string
+    AlertResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        productId:
+          type: string
+          format: uuid
+        type:
+          type: string
+        severity:
+          type: string
+        message:
+          type: string
+        isRead:
+          type: boolean
+        resolvedAt:
+          type: string
+          format: date-time
+        createdAt:
+          type: string
+          format: date-time
+    CreateWasteEventRequest:
+      required:
+      - productId
+      - quantity
+      - unitId
+      type: object
+      properties:
+        productId:
+          type: string
+          format: uuid
+        unitId:
+          type: string
+          format: uuid
+        quantity:
+          minimum: 0.001
+          exclusiveMinimum: false
+          type: number
+        reason:
+          type: string
+          enum:
+          - EXPIRED
+          - DAMAGED
+          - OVERPRODUCTION
+          - THEFT
+          - OTHER
+        cost:
+          minimum: 0
+          exclusiveMinimum: false
+          type: number
+    WasteEventResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        productId:
+          type: string
+          format: uuid
+        productName:
+          type: string
+        productSku:
+          type: string
+        quantity:
+          type: number
+        unitId:
+          type: string
+          format: uuid
+        unitName:
+          type: string
+        unitAbbreviation:
+          type: string
+        reason:
+          type: string
+          enum:
+          - EXPIRED
+          - DAMAGED
+          - OVERPRODUCTION
+          - THEFT
+          - OTHER
+        cost:
+          type: number
+        userId:
+          type: string
+          format: uuid
+        createdAt:
+          type: string
+          format: date-time
+    CreateUserRequest:
+      required:
+      - email
+      - name
+      - role
+      type: object
+      properties:
+        name:
+          type: string
+        email:
+          type: string
+        phone:
+          type: string
+        role:
+          type: string
+          enum:
+          - OWNER
+          - MANAGER
+          - KITCHEN
+          - READONLY
+    CreateUserResponse:
+      type: object
+      properties:
+        user:
+          $ref: "#/components/schemas/UserResponse"
+    CreateSupplierRequest:
+      required:
+      - name
+      type: object
+      properties:
+        name:
+          maxLength: 255
+          minLength: 0
+          type: string
+        phone:
+          maxLength: 20
+          minLength: 0
+          type: string
+        email:
+          maxLength: 255
+          minLength: 0
+          type: string
+        address:
+          maxLength: 500
+          minLength: 0
+          type: string
+        notes:
+          maxLength: 1000
+          minLength: 0
+          type: string
+    StockMovementResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        productId:
+          type: string
+          format: uuid
+        type:
+          type: string
+        direction:
+          type: string
+        quantity:
+          type: number
+        unitId:
+          type: string
+          format: uuid
+        costPerUnit:
+          type: number
+        stockBefore:
+          type: number
+        stockAfter:
+          type: number
+        referenceId:
+          type: string
+          format: uuid
+        referenceType:
+          type: string
+        reversedBy:
+          type: string
+          format: uuid
+        userId:
+          type: string
+          format: uuid
+        source:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+    CreateStockCountRequest:
+      required:
+      - items
+      type: object
+      properties:
+        notes:
+          type: string
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/StockCountItemRequest"
+    StockCountItemRequest:
+      required:
+      - countedQuantity
+      - productId
+      - unitId
+      type: object
+      properties:
+        productId:
+          type: string
+          format: uuid
+        unitId:
+          type: string
+          format: uuid
+        countedQuantity:
+          minimum: 0.0
+          exclusiveMinimum: false
+          type: number
+    StockCountResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        notes:
+          type: string
+        countedAt:
+          type: string
+          format: date-time
+        itemsChecked:
+          type: integer
+          format: int32
+        adjustmentsMade:
+          type: integer
+          format: int32
+        adjustments:
+          type: array
+          items:
+            $ref: "#/components/schemas/StockMovementResponse"
+    CreateSaleRequest:
+      required:
+      - items
+      type: object
+      properties:
+        notes:
+          type: string
+        soldAt:
+          type: string
+          format: date-time
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/SaleItemRequest"
+    SaleItemRequest:
+      required:
+      - menuItemId
+      type: object
+      properties:
+        menuItemId:
+          type: string
+          format: uuid
+        quantity:
+          minimum: 1
+          type: integer
+          format: int32
+    SaleItemResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        menuItemId:
+          type: string
+          format: uuid
+        menuItemName:
+          type: string
+        quantity:
+          type: integer
+          format: int32
+        unitPrice:
+          type: number
+        subtotal:
+          type: number
+    SaleResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        totalAmount:
+          type: number
+        source:
+          type: string
+        notes:
+          type: string
+        soldAt:
+          type: string
+          format: date-time
+        createdAt:
+          type: string
+          format: date-time
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/SaleItemResponse"
+    CreatePurchaseRequest:
+      required:
+      - items
+      type: object
+      properties:
+        supplierId:
+          type: string
+          format: uuid
+        notes:
+          maxLength: 1000
+          minLength: 0
+          type: string
+        purchasedAt:
+          type: string
+          format: date-time
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/PurchaseItemRequest"
+    PurchaseItemRequest:
+      required:
+      - pricePerUnit
+      - productId
+      - quantity
+      - unitId
+      type: object
+      properties:
+        productId:
+          type: string
+          format: uuid
+        unitId:
+          type: string
+          format: uuid
+        quantity:
+          minimum: 0.001
+          exclusiveMinimum: false
+          type: number
+        pricePerUnit:
+          minimum: 0
+          exclusiveMinimum: false
+          type: number
+    ItemDetail:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        productId:
+          type: string
+          format: uuid
+        productName:
+          type: string
+        productSku:
+          type: string
+        quantity:
+          type: number
+        unitId:
+          type: string
+          format: uuid
+        unitName:
+          type: string
+        unitAbbreviation:
+          type: string
+        pricePerUnit:
+          type: number
+        subtotal:
+          type: number
+    PurchaseDetailResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        supplierId:
+          type: string
+          format: uuid
+        supplierName:
+          type: string
+        total:
+          type: number
+        notes:
+          type: string
+        purchasedAt:
+          type: string
+          format: date-time
+        createdAt:
+          type: string
+          format: date-time
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/ItemDetail"
+    CreateProductRequest:
+      required:
+      - defaultUnitId
+      - name
+      type: object
+      properties:
+        name:
+          maxLength: 255
+          minLength: 0
+          type: string
+        sku:
+          maxLength: 100
+          minLength: 0
+          type: string
+        defaultUnitId:
+          type: string
+          format: uuid
+        categoryId:
+          type: string
+          format: uuid
+        minStock:
+          minimum: 0
+          exclusiveMinimum: false
+          type: number
+        maxStock:
+          minimum: 0
+          exclusiveMinimum: false
+          type: number
+    CreateMenuItemRequest:
+      required:
+      - name
+      type: object
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+        price:
+          type: number
+        category:
+          type: string
+    CreateCategoryRequest:
+      required:
+      - name
+      type: object
+      properties:
+        name:
+          maxLength: 100
+          minLength: 0
+          type: string
+        color:
+          pattern: "^#[0-9A-Fa-f]{6}$"
+          type: string
+    SwitchRestaurantRequest:
+      required:
+      - restaurantId
+      type: object
+      properties:
+        restaurantId:
+          type: string
+          format: uuid
+    LoginResponse:
+      type: object
+      properties:
+        token:
+          type: string
+        userId:
+          type: string
+          format: uuid
+        name:
+          type: string
+        email:
+          type: string
+        activeRestaurantId:
+          type: string
+          format: uuid
+        activeRestaurantName:
+          type: string
+        role:
+          type: string
+        restaurants:
+          type: array
+          items:
+            $ref: "#/components/schemas/RestaurantSummary"
+    RestaurantSummary:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        role:
+          type: string
+    ResetPasswordRequest:
+      required:
+      - newPassword
+      - token
+      type: object
+      properties:
+        token:
+          type: string
+          format: uuid
+        newPassword:
+          maxLength: 100
+          minLength: 8
+          type: string
+    RegisterRequest:
+      required:
+      - ownerEmail
+      - ownerName
+      - ownerPassword
+      - restaurantName
+      type: object
+      properties:
+        restaurantName:
+          type: string
+        ownerName:
+          type: string
+        ownerEmail:
+          type: string
+        ownerPassword:
+          maxLength: 100
+          minLength: 8
+          type: string
+        ownerPhone:
+          type: string
+        timezone:
+          type: string
+    LoginRequest:
+      required:
+      - email
+      - password
+      type: object
+      properties:
+        email:
+          type: string
+        password:
+          type: string
+    ForgotPasswordRequest:
+      required:
+      - email
+      type: object
+      properties:
+        email:
+          type: string
+    PagedResponseWasteEventResponse:
+      type: object
+      properties:
+        content:
+          type: array
+          items:
+            $ref: "#/components/schemas/WasteEventResponse"
+        page:
+          type: integer
+          format: int32
+        size:
+          type: integer
+          format: int32
+        totalElements:
+          type: integer
+          format: int64
+        totalPages:
+          type: integer
+          format: int32
+        first:
+          type: boolean
+        last:
+          type: boolean
+    UnitResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        abbreviation:
+          type: string
+        type:
+          type: string
+    PagedResponseStockMovementResponse:
+      type: object
+      properties:
+        content:
+          type: array
+          items:
+            $ref: "#/components/schemas/StockMovementResponse"
+        page:
+          type: integer
+          format: int32
+        size:
+          type: integer
+          format: int32
+        totalElements:
+          type: integer
+          format: int64
+        totalPages:
+          type: integer
+          format: int32
+        first:
+          type: boolean
+        last:
+          type: boolean
+    PagedResponseStockCountResponse:
+      type: object
+      properties:
+        content:
+          type: array
+          items:
+            $ref: "#/components/schemas/StockCountResponse"
+        page:
+          type: integer
+          format: int32
+        size:
+          type: integer
+          format: int32
+        totalElements:
+          type: integer
+          format: int64
+        totalPages:
+          type: integer
+          format: int32
+        first:
+          type: boolean
+        last:
+          type: boolean
+    PagedResponseSaleResponse:
+      type: object
+      properties:
+        content:
+          type: array
+          items:
+            $ref: "#/components/schemas/SaleResponse"
+        page:
+          type: integer
+          format: int32
+        size:
+          type: integer
+          format: int32
+        totalElements:
+          type: integer
+          format: int64
+        totalPages:
+          type: integer
+          format: int32
+        first:
+          type: boolean
+        last:
+          type: boolean
+    PagedResponsePurchaseResponse:
+      type: object
+      properties:
+        content:
+          type: array
+          items:
+            $ref: "#/components/schemas/PurchaseResponse"
+        page:
+          type: integer
+          format: int32
+        size:
+          type: integer
+          format: int32
+        totalElements:
+          type: integer
+          format: int64
+        totalPages:
+          type: integer
+          format: int32
+        first:
+          type: boolean
+        last:
+          type: boolean
+    PurchaseResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        supplierId:
+          type: string
+          format: uuid
+        supplierName:
+          type: string
+        total:
+          type: number
+        notes:
+          type: string
+        purchasedAt:
+          type: string
+          format: date-time
+        createdAt:
+          type: string
+          format: date-time
+    PagedResponseProductResponse:
+      type: object
+      properties:
+        content:
+          type: array
+          items:
+            $ref: "#/components/schemas/ProductResponse"
+        page:
+          type: integer
+          format: int32
+        size:
+          type: integer
+          format: int32
+        totalElements:
+          type: integer
+          format: int64
+        totalPages:
+          type: integer
+          format: int32
+        first:
+          type: boolean
+        last:
+          type: boolean
+    PagedResponseMenuItemResponse:
+      type: object
+      properties:
+        content:
+          type: array
+          items:
+            $ref: "#/components/schemas/MenuItemResponse"
+        page:
+          type: integer
+          format: int32
+        size:
+          type: integer
+          format: int32
+        totalElements:
+          type: integer
+          format: int64
+        totalPages:
+          type: integer
+          format: int32
+        first:
+          type: boolean
+        last:
+          type: boolean
+    FoodCostResponse:
+      type: object
+      properties:
+        from:
+          type: string
+          format: date-time
+        to:
+          type: string
+          format: date-time
+        revenue:
+          type: number
+        theoreticalCost:
+          type: number
+        foodCostPercentage:
+          type: number
+    DashboardResponse:
+      type: object
+      properties:
+        products:
+          type: array
+          items:
+            $ref: "#/components/schemas/ProductStock"
+        kpis:
+          $ref: "#/components/schemas/Kpis"
+    Kpis:
+      type: object
+      properties:
+        totalActiveProducts:
+          type: integer
+          format: int64
+        lowStockProducts:
+          type: integer
+          format: int64
+        overstockProducts:
+          type: integer
+          format: int64
+        purchasesThisMonth:
+          type: integer
+          format: int64
+        purchasesTotalThisMonth:
+          type: number
+        wasteEventsThisMonth:
+          type: integer
+          format: int64
+    ProductStock:
+      type: object
+      properties:
+        productId:
+          type: string
+          format: uuid
+        name:
+          type: string
+        sku:
+          type: string
+        unitAbbreviation:
+          type: string
+        currentStock:
+          type: number
+        minStock:
+          type: number
+        maxStock:
+          type: number
+        status:
+          type: string
+          enum:
+          - OK
+          - LOW_STOCK
+          - OVERSTOCK
+          - NO_THRESHOLD
+    PagedResponseAlertResponse:
+      type: object
+      properties:
+        content:
+          type: array
+          items:
+            $ref: "#/components/schemas/AlertResponse"
+        page:
+          type: integer
+          format: int32
+        size:
+          type: integer
+          format: int32
+        totalElements:
+          type: integer
+          format: int64
+        totalPages:
+          type: integer
+          format: int32
+        first:
+          type: boolean
+        last:
+          type: boolean
+  securitySchemes:
+    bearerAuth:
+      type: http
+      name: bearerAuth
+      scheme: bearer
+      bearerFormat: JWT
