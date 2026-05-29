@@ -1,0 +1,222 @@
+<div class="min-h-screen bg-surface-950 flex flex-col relative overflow-hidden">
+
+  <!-- Aurora -->
+  <div class="absolute -top-40 left-1/2 -translate-x-1/2 w-[700px] h-[500px] rounded-full opacity-20 blur-[120px] pointer-events-none"
+       style="background: radial-gradient(ellipse, #4f46e5 0%, #2563eb 40%, transparent 70%);">
+  </div>
+
+  <!-- Navbar — misma estructura que la landing -->
+  <nav class="fixed top-0 inset-x-0 z-50 border-b border-white/5 backdrop-blur-xl bg-surface-950/60">
+    <div class="max-w-6xl mx-auto px-6 h-16 flex items-center gap-8">
+      <a routerLink="/" class="text-xl font-bold tracking-tight leading-none shrink-0" style="font-family: var(--font-display)">
+        <span class="text-brand-400">Chef</span><span class="text-white"> Control</span>
+      </a>
+      <a routerLink="/" class="ml-auto shrink-0 text-sm text-surface-400 hover:text-white transition-colors">
+        ← Volver al inicio
+      </a>
+    </div>
+  </nav>
+
+  <!-- Card -->
+  <div class="relative z-10 flex justify-center px-4 pt-28 pb-16">
+    <div class="w-full max-w-md">
+
+      <!-- ── LOGIN ─────────────────────────────────────────────────── -->
+      @if (view() === 'login') {
+        <div class="view-enter">
+          <div class="mb-8">
+            <h1 class="text-2xl font-bold text-white mb-2" style="font-family: var(--font-display)">
+              Iniciar sesión
+            </h1>
+            <p class="text-surface-400 text-sm">Accedé al panel de tu restaurante.</p>
+          </div>
+
+          <form [formGroup]="loginForm" (ngSubmit)="submitLogin()" class="space-y-4">
+
+            <div class="space-y-1.5">
+              <label class="text-surface-400 text-sm">Email</label>
+              <input formControlName="email" type="email" placeholder="hola@mirestaurante.com"
+                     class="input-field" [class.input-error]="isInvalid('login', 'email')">
+              @if (isInvalid('login', 'email')) {
+                <p class="text-danger-400 text-xs">Ingresá un email válido</p>
+              }
+            </div>
+
+            <div class="space-y-1.5">
+              <div class="flex items-center justify-between">
+                <label class="text-surface-400 text-sm">Contraseña</label>
+                <button type="button" (click)="setView('forgot')"
+                        class="text-xs text-brand-400 hover:text-brand-300 transition-colors">
+                  ¿Olvidaste tu contraseña?
+                </button>
+              </div>
+              <input formControlName="password" type="password" placeholder="••••••••"
+                     class="input-field"
+                     [class.input-error]="isInvalid('login', 'password') || loginForm.get('password')?.errors?.['serverError']">
+              @if (loginForm.get('password')?.errors?.['serverError']) {
+                <p class="text-danger-400 text-xs">{{ loginForm.get('password')?.errors?.['serverError'] }}</p>
+              } @else if (isInvalid('login', 'password')) {
+                <p class="text-danger-400 text-xs">Mínimo 6 caracteres</p>
+              }
+            </div>
+
+            <button type="submit" [disabled]="loading()"
+                    class="btn-primary w-full mt-2">
+              @if (loading()) { <span class="loader"></span> }
+              @else { Iniciar sesión }
+            </button>
+
+          </form>
+
+          <p class="text-center text-sm text-surface-500 mt-6">
+            ¿No tenés cuenta?
+            <button (click)="setView('register')" class="text-brand-400 hover:text-brand-300 transition-colors ml-1">
+              Registrate gratis
+            </button>
+          </p>
+        </div>
+      }
+
+      <!-- ── REGISTER ───────────────────────────────────────────────── -->
+      @if (view() === 'register') {
+        <div class="view-enter">
+          <div class="mb-8">
+            <h1 class="text-2xl font-bold text-white mb-2" style="font-family: var(--font-display)">
+              Crear cuenta
+            </h1>
+            <p class="text-surface-400 text-sm">Empezá a controlar tu operación hoy.</p>
+          </div>
+
+          <form [formGroup]="registerForm" (ngSubmit)="submitRegister()" class="space-y-4">
+
+            <div class="space-y-1.5">
+              <label class="text-surface-400 text-sm">Nombre del restaurante</label>
+              <input formControlName="restaurantName" type="text" placeholder="La Parrilla de Juan"
+                     class="input-field" [class.input-error]="isInvalid('register', 'restaurantName')">
+              @if (isInvalid('register', 'restaurantName')) {
+                <p class="text-danger-400 text-xs">Campo requerido</p>
+              }
+            </div>
+
+            <div class="space-y-1.5">
+              <label class="text-surface-400 text-sm">Tu nombre</label>
+              <input formControlName="ownerName" type="text" placeholder="Juan García"
+                     class="input-field" [class.input-error]="isInvalid('register', 'ownerName')">
+              @if (isInvalid('register', 'ownerName')) {
+                <p class="text-danger-400 text-xs">Campo requerido</p>
+              }
+            </div>
+
+            <div class="space-y-1.5">
+              <label class="text-surface-400 text-sm">Email</label>
+              <input formControlName="ownerEmail" type="email" placeholder="hola@mirestaurante.com"
+                     class="input-field" [class.input-error]="isInvalid('register', 'ownerEmail')">
+              @if (isInvalid('register', 'ownerEmail')) {
+                <p class="text-danger-400 text-xs">Ingresá un email válido</p>
+              }
+            </div>
+
+            <div class="space-y-1.5">
+              <label class="text-surface-400 text-sm">Contraseña</label>
+              <input formControlName="ownerPassword" type="password" placeholder="••••••••"
+                     class="input-field" [class.input-error]="isInvalid('register', 'ownerPassword')">
+              @if (isInvalid('register', 'ownerPassword')) {
+                <p class="text-danger-400 text-xs">Mínimo 6 caracteres</p>
+              }
+            </div>
+
+            <div class="space-y-1.5">
+              <label class="text-surface-400 text-sm">
+                Teléfono
+                <span class="text-surface-600 ml-1">(opcional)</span>
+              </label>
+              <input formControlName="ownerPhone" type="tel" placeholder="+54 11 1234-5678"
+                     class="input-field">
+            </div>
+
+            @if (errorMsg()) {
+              <div class="bg-danger-500/10 border border-danger-500/20 text-danger-400 text-sm rounded-xl px-4 py-3">
+                {{ errorMsg() }}
+              </div>
+            }
+
+            <button type="submit" [disabled]="loading()"
+                    class="btn-primary w-full mt-2">
+              @if (loading()) { <span class="loader"></span> }
+              @else { Crear cuenta }
+            </button>
+
+          </form>
+
+          <p class="text-center text-sm text-surface-500 mt-6">
+            ¿Ya tenés cuenta?
+            <button (click)="setView('login')" class="text-brand-400 hover:text-brand-300 transition-colors ml-1">
+              Iniciá sesión
+            </button>
+          </p>
+        </div>
+      }
+
+      <!-- ── FORGOT PASSWORD ────────────────────────────────────────── -->
+      @if (view() === 'forgot') {
+        <div class="view-enter">
+
+          @if (!forgotSent()) {
+            <div class="mb-8">
+              <h1 class="text-2xl font-bold text-white mb-2" style="font-family: var(--font-display)">
+                Recuperar contraseña
+              </h1>
+              <p class="text-surface-400 text-sm">
+                Te enviamos un correo con las instrucciones para restablecer tu contraseña.
+              </p>
+            </div>
+
+            <form [formGroup]="forgotForm" (ngSubmit)="submitForgot()" class="space-y-4">
+
+              <div class="space-y-1.5">
+                <label class="text-surface-400 text-sm">Email</label>
+                <input formControlName="email" type="email" placeholder="hola@mirestaurante.com"
+                       class="input-field" [class.input-error]="isInvalid('forgot', 'email')">
+                @if (isInvalid('forgot', 'email')) {
+                  <p class="text-danger-400 text-xs">Ingresá un email válido</p>
+                }
+              </div>
+
+              @if (errorMsg()) {
+                <div class="bg-danger-500/10 border border-danger-500/20 text-danger-400 text-sm rounded-xl px-4 py-3">
+                  {{ errorMsg() }}
+                </div>
+              }
+
+              <button type="submit" [disabled]="loading()"
+                      class="btn-primary w-full mt-2">
+                @if (loading()) { <span class="loader"></span> }
+                @else { Enviar instrucciones }
+              </button>
+
+            </form>
+          } @else {
+            <div class="text-center py-4">
+              <div class="w-14 h-14 bg-success-500/10 border border-success-500/20 rounded-2xl flex items-center justify-center mx-auto mb-5">
+                <span class="text-2xl">✉️</span>
+              </div>
+              <h2 class="text-xl font-bold text-white mb-3" style="font-family: var(--font-display)">
+                Correo enviado
+              </h2>
+              <p class="text-surface-400 text-sm leading-relaxed">
+                Revisá tu bandeja de entrada y seguí las instrucciones para restablecer tu contraseña.
+              </p>
+            </div>
+          }
+
+          <p class="text-center text-sm text-surface-500 mt-6">
+            <button (click)="setView('login')" class="text-brand-400 hover:text-brand-300 transition-colors">
+              ← Volver al inicio de sesión
+            </button>
+          </p>
+        </div>
+      }
+
+    </div>
+  </div>
+</div>
