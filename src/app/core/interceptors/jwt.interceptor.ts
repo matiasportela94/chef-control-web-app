@@ -1,13 +1,5 @@
+// Este interceptor fue reemplazado por credentialsInterceptor (httpOnly cookie).
+// Se mantiene el archivo vacío para no romper imports residuales.
 import { HttpInterceptorFn } from '@angular/common/http';
-import { inject } from '@angular/core';
-import { AuthService } from '../services/auth.service';
 
-export const jwtInterceptor: HttpInterceptorFn = (req, next) => {
-  const token = inject(AuthService).token();
-
-  if (token) {
-    return next(req.clone({ setHeaders: { Authorization: `Bearer ${token}` } }));
-  }
-
-  return next(req);
-};
+export const jwtInterceptor: HttpInterceptorFn = (req, next) => next(req);
