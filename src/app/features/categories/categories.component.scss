@@ -1,0 +1,20 @@
+.input-field {
+  @apply w-full bg-surface-800 border border-white/10 rounded-xl px-4 py-3 text-white text-sm
+         placeholder-surface-600 transition-colors outline-none;
+
+  &:focus {
+    @apply border-brand-500/50;
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+  }
+}
+
+.input-error {
+  @apply border-danger-500/50;
+  &:focus {
+    box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.12);
+  }
+}
+
+.loader {
+  @apply w-4 h-4 rounded-full border-2 border-white/30 border-t-white animate-spin inline-block;
+}

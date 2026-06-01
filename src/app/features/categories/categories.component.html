@@ -1,0 +1,182 @@
+﻿<div class="px-8 py-8">
+
+  <!-- Header -->
+  <div class="flex items-start justify-between mb-8">
+    <div>
+      <h1 class="text-2xl font-bold text-white mb-1 font-display">Categorías de Insumos</h1>
+      <p class="text-surface-500 text-sm">
+        @if (!loading()) { {{ categories().length }} categorías registradas }
+      </p>
+    </div>
+    <button (click)="openCreate()"
+            class="shrink-0 flex items-center gap-2 bg-brand-600 hover:bg-brand-500 text-white font-semibold px-4 py-2 rounded-xl text-sm transition-all hover:shadow-lg hover:shadow-brand-600/25">
+      <span class="text-base leading-none">+</span> Nueva categoría
+    </button>
+  </div>
+
+  <!-- Loading skeleton -->
+  @if (loading()) {
+    <div class="bg-surface-900 border border-white/5 rounded-2xl overflow-hidden">
+      <div class="px-6 py-4 border-b border-white/5">
+        <div class="h-4 w-32 bg-surface-700 rounded animate-pulse"></div>
+      </div>
+      @for (_ of [1,2,3,4]; track $index) {
+        <div class="px-6 py-4 border-b border-white/5 last:border-0 flex items-center gap-4 animate-pulse">
+          <div class="w-4 h-4 rounded-full bg-surface-700 shrink-0"></div>
+          <div class="h-4 w-36 bg-surface-700 rounded"></div>
+          <div class="h-4 w-16 bg-surface-800 rounded ml-auto"></div>
+        </div>
+      }
+    </div>
+  }
+
+  <!-- Error -->
+  @if (!loading() && error()) {
+    <div class="bg-danger-500/10 border border-danger-500/20 rounded-2xl p-8 text-center">
+      <p class="text-danger-400 mb-4">{{ error() }}</p>
+      <button (click)="load()"
+              class="text-sm bg-surface-800 hover:bg-surface-700 text-white px-4 py-2 rounded-lg transition-colors">
+        Reintentar
+      </button>
+    </div>
+  }
+
+  <!-- Table -->
+  @if (!loading() && !error()) {
+    @if (categories().length === 0) {
+      <div class="bg-surface-900 border border-white/5 rounded-2xl p-16 text-center">
+        <p class="text-4xl mb-4">🏷️</p>
+        <p class="text-white font-semibold mb-2">Sin categorías</p>
+        <p class="text-surface-500 text-sm mb-6">Creá categorías para organizar tus insumos.</p>
+        <button (click)="openCreate()"
+                class="bg-brand-600 hover:bg-brand-500 text-white font-semibold px-5 py-2.5 rounded-xl text-sm transition-all">
+          + Nueva categoría
+        </button>
+      </div>
+    } @else {
+      <div class="bg-surface-900 border border-white/5 rounded-2xl overflow-hidden">
+        <div class="overflow-x-auto">
+          <table class="w-full text-sm">
+            <thead>
+              <tr class="text-xs text-surface-500 uppercase tracking-wider border-b border-white/5">
+                <th class="text-left px-6 py-3 font-medium">Nombre</th>
+                <th class="text-left px-6 py-3 font-medium hidden sm:table-cell">Color</th>
+                <th class="text-right px-6 py-3 font-medium">Acciones</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-white/5">
+              @for (cat of categories(); track cat.id) {
+                <tr class="hover:bg-surface-800/40 transition-colors">
+                  <td class="px-6 py-4">
+                    <div class="flex items-center gap-3">
+                      @if (cat.color) {
+                        <span class="w-3 h-3 rounded-full shrink-0 border border-white/10"
+                              [style.background-color]="cat.color"></span>
+                      }
+                      <span class="text-white font-medium">{{ cat.name }}</span>
+                      @if (cat.isSystem) {
+                        <span class="text-xs px-2 py-0.5 rounded-md bg-surface-700/60 text-surface-500 border border-white/10">
+                          Sistema
+                        </span>
+                      }
+                    </div>
+                  </td>
+                  <td class="px-6 py-4 hidden sm:table-cell text-surface-500 font-mono text-xs">
+                    {{ cat.color ?? '—' }}
+                  </td>
+                  <td class="px-6 py-4 text-right">
+                    @if (!cat.isSystem) {
+                      <button (click)="deleting.set(cat)"
+                              class="text-xs text-danger-400 hover:text-danger-300 px-2.5 py-1.5 rounded-lg border border-danger-500/20 hover:border-danger-500/40 transition-all">
+                        Eliminar
+                      </button>
+                    }
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      </div>
+    }
+  }
+
+</div>
+
+<!-- ── DRAWER BACKDROP ─────────────────────────────────────── -->
+<div class="fixed inset-0 bg-black/50 backdrop-blur-sm z-[90] transition-opacity duration-300"
+     [class.opacity-100]="drawerOpen()"
+     [class.opacity-0]="!drawerOpen()"
+     [class.pointer-events-none]="!drawerOpen()"
+     (click)="closeDrawer()">
+</div>
+
+<!-- ── DRAWER ──────────────────────────────────────────────── -->
+<aside class="fixed inset-y-0 right-0 w-full max-w-md bg-surface-900 border-l border-white/10 z-[100]
+              flex flex-col transform transition-transform duration-300 ease-in-out"
+       [class.translate-x-0]="drawerOpen()"
+       [class.translate-x-full]="!drawerOpen()">
+
+  <div class="flex items-center justify-between px-6 py-5 border-b border-white/5 shrink-0">
+    <h2 class="text-white font-semibold font-display">Nueva categoría</h2>
+    <button (click)="closeDrawer()" class="text-surface-400 hover:text-white transition-colors text-xl leading-none">✕</button>
+  </div>
+
+  <div class="flex-1 overflow-y-auto px-6 py-6">
+    <form id="cat-form" [formGroup]="form" (ngSubmit)="save()" class="space-y-5">
+
+      <div class="space-y-1.5">
+        <label class="text-surface-400 text-sm">Nombre <span class="text-danger-400">*</span></label>
+        <input formControlName="name" type="text" placeholder="Lácteos"
+               class="input-field" [class.input-error]="isInvalid('name')">
+        @if (isInvalid('name')) { <p class="text-danger-400 text-xs">Campo requerido</p> }
+      </div>
+
+      <div class="space-y-1.5">
+        <label class="text-surface-400 text-sm">Color <span class="text-surface-600">(opcional)</span></label>
+        <div class="flex items-center gap-3">
+          <input formControlName="color" type="color"
+                 class="w-10 h-10 rounded-lg border border-white/10 bg-surface-800 cursor-pointer p-1 shrink-0">
+          <input formControlName="color" type="text" placeholder="#6366f1"
+                 class="input-field flex-1 font-mono">
+        </div>
+      </div>
+
+      @if (saveError()) {
+        <div class="bg-danger-500/10 border border-danger-500/20 text-danger-400 text-sm rounded-xl px-4 py-3">
+          {{ saveError() }}
+        </div>
+      }
+
+    </form>
+  </div>
+
+  <div class="shrink-0 flex items-center justify-end gap-3 px-6 py-4 border-t border-white/5">
+    <button type="button" (click)="closeDrawer()"
+            class="text-sm text-surface-400 hover:text-white border border-white/10 hover:border-white/20 px-4 py-2.5 rounded-xl transition-all">
+      Cancelar
+    </button>
+    <button type="submit" form="cat-form" [disabled]="saving()"
+            class="flex items-center gap-2 bg-brand-600 hover:bg-brand-500 disabled:opacity-50 disabled:cursor-not-allowed
+                   text-white font-semibold px-5 py-2.5 rounded-xl text-sm transition-all">
+      @if (saving()) { <span class="loader"></span> }
+      Crear categoría
+    </button>
+  </div>
+
+</aside>
+
+<!-- ── DELETE DIALOG ───────────────────────────────────────── -->
+<app-action-dialog
+  [visible]="!!deleting()"
+  title="Eliminar categoría"
+  icon="🗑️"
+  tone="danger"
+  message="Esta acción eliminará permanentemente la categoría. Los insumos asociados quedarán sin categoría."
+  [itemTitle]="deleting()?.name ?? ''"
+  confirmLabel="Eliminar"
+  cancelLabel="Cancelar"
+  [confirmDisabled]="deleteLoading()"
+  (confirm)="confirmDelete()"
+  (cancel)="deleting.set(null)">
+</app-action-dialog>
