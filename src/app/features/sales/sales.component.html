@@ -1,0 +1,328 @@
+<div class="px-8 py-8">
+
+  <!-- Header -->
+  <div class="flex items-start justify-between mb-8">
+    <div>
+      <h1 class="text-2xl font-bold text-white mb-1 font-display">Ventas</h1>
+      <p class="text-surface-500 text-sm">
+        @if (!loading()) { {{ total() }} ventas registradas }
+      </p>
+    </div>
+    <button (click)="openCreate()"
+            class="shrink-0 flex items-center gap-2 bg-brand-600 hover:bg-brand-500 text-white font-semibold px-4 py-2 rounded-xl text-sm transition-all hover:shadow-lg hover:shadow-brand-600/25">
+      <span class="text-base leading-none">+</span> Registrar venta
+    </button>
+  </div>
+
+  <!-- Loading skeleton -->
+  @if (loading()) {
+    <div class="bg-surface-900 border border-white/5 rounded-2xl overflow-hidden">
+      <div class="px-6 py-4 border-b border-white/5">
+        <div class="h-4 w-32 bg-surface-700 rounded animate-pulse"></div>
+      </div>
+      @for (_ of [1,2,3,4,5]; track $index) {
+        <div class="px-6 py-4 border-b border-white/5 last:border-0 flex items-center gap-4 animate-pulse">
+          <div class="h-4 w-24 bg-surface-700 rounded"></div>
+          <div class="h-4 w-32 bg-surface-800 rounded"></div>
+          <div class="h-4 w-20 bg-surface-800 rounded ml-auto"></div>
+        </div>
+      }
+    </div>
+  }
+
+  <!-- Error -->
+  @if (!loading() && error()) {
+    <div class="bg-danger-500/10 border border-danger-500/20 rounded-2xl p-8 text-center">
+      <p class="text-danger-400 mb-4">{{ error() }}</p>
+      <button (click)="loadSales()"
+              class="text-sm bg-surface-800 hover:bg-surface-700 text-white px-4 py-2 rounded-lg transition-colors">
+        Reintentar
+      </button>
+    </div>
+  }
+
+  <!-- Table -->
+  @if (!loading() && !error()) {
+    @if (sales().length === 0) {
+      <div class="bg-surface-900 border border-white/5 rounded-2xl p-16 text-center">
+        <p class="text-4xl mb-4">💰</p>
+        <p class="text-white font-semibold mb-2">Sin ventas registradas</p>
+        <p class="text-surface-500 text-sm mb-6">Registrá ventas para trackear ingresos y consumo de insumos.</p>
+        <button (click)="openCreate()"
+                class="bg-brand-600 hover:bg-brand-500 text-white font-semibold px-5 py-2.5 rounded-xl text-sm transition-all">
+          + Registrar venta
+        </button>
+      </div>
+    } @else {
+      <div class="bg-surface-900 border border-white/5 rounded-2xl overflow-hidden">
+        <div class="overflow-x-auto">
+          <table class="w-full text-sm">
+            <thead>
+              <tr class="text-xs text-surface-500 uppercase tracking-wider border-b border-white/5">
+                <th class="text-left px-6 py-3 font-medium">Fecha</th>
+                <th class="text-left px-6 py-3 font-medium hidden md:table-cell">Notas</th>
+                <th class="text-right px-6 py-3 font-medium hidden sm:table-cell">Platos</th>
+                <th class="text-right px-6 py-3 font-medium">Total</th>
+                <th class="px-6 py-3"></th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-white/5">
+              @for (sale of sales(); track sale.id) {
+                <tr class="hover:bg-surface-800/40 transition-colors">
+                  <td class="px-6 py-4 text-white font-medium">{{ formatDate(sale.soldAt) }}</td>
+                  <td class="px-6 py-4 hidden md:table-cell text-surface-400 max-w-xs truncate">
+                    {{ sale.notes || '—' }}
+                  </td>
+                  <td class="px-6 py-4 text-right hidden sm:table-cell text-surface-400 tabular-nums">
+                    {{ sale.itemCount ?? '—' }}
+                  </td>
+                  <td class="px-6 py-4 text-right text-white font-medium tabular-nums">
+                    {{ formatARS(sale.totalAmount) }}
+                  </td>
+                  <td class="px-6 py-4 text-right">
+                    <button (click)="openDetail(sale)"
+                            class="text-xs text-surface-400 hover:text-white px-2.5 py-1.5 rounded-lg border border-white/10 hover:border-white/20 transition-all">
+                      Ver detalle
+                    </button>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+
+        @if (total() > pageSize) {
+          <div class="border-t border-white/5 px-6 py-4">
+            <app-paginator
+              [currentPage]="page()"
+              [totalItems]="total()"
+              [itemsPerPage]="pageSize"
+              (pageChange)="goToPage($event)">
+            </app-paginator>
+          </div>
+        }
+      </div>
+    }
+  }
+
+</div>
+
+<!-- ══ CREATE DRAWER ════════════════════════════════════════════ -->
+
+<div class="fixed inset-0 bg-black/50 backdrop-blur-sm z-[90] transition-opacity duration-300"
+     [class.opacity-100]="createOpen()"
+     [class.opacity-0]="!createOpen()"
+     [class.pointer-events-none]="!createOpen()"
+     (click)="closeCreate()">
+</div>
+
+<aside class="fixed inset-y-0 right-0 w-full max-w-2xl bg-surface-900 border-l border-white/10 z-[100]
+              flex flex-col transform transition-transform duration-300 ease-in-out"
+       [class.translate-x-0]="createOpen()"
+       [class.translate-x-full]="!createOpen()">
+
+  <div class="flex items-center justify-between px-6 py-5 border-b border-white/5 shrink-0">
+    <h2 class="text-white font-semibold font-display">Registrar venta</h2>
+    <button (click)="closeCreate()" class="text-surface-400 hover:text-white transition-colors text-xl leading-none">✕</button>
+  </div>
+
+  <div class="flex-1 overflow-y-auto px-6 py-6">
+    <form id="sale-form" [formGroup]="form" (ngSubmit)="save()" class="space-y-6">
+
+      <!-- Meta -->
+      <div class="grid grid-cols-2 gap-4">
+        <div class="space-y-1.5">
+          <label class="text-surface-400 text-sm">Fecha</label>
+          <input formControlName="soldAt" type="date" class="input-field">
+        </div>
+        <div class="space-y-1.5">
+          <label class="text-surface-400 text-sm">Notas <span class="text-surface-600">(opcional)</span></label>
+          <input formControlName="notes" type="text" placeholder="Mesa 5, delivery, etc."
+                 class="input-field">
+        </div>
+      </div>
+
+      <!-- Items -->
+      <div>
+        <div class="flex items-center justify-between mb-3">
+          <h3 class="text-sm font-semibold text-surface-300">Platos vendidos</h3>
+          <button type="button" (click)="addItem()"
+                  class="text-xs text-brand-400 hover:text-brand-300 border border-brand-500/20 hover:border-brand-500/40 px-3 py-1.5 rounded-lg transition-all">
+            + Agregar plato
+          </button>
+        </div>
+
+        @if (items.length > 0) {
+          <div class="sale-header hidden md:grid mb-1">
+            <span class="text-xs text-surface-600 uppercase tracking-wider">Plato</span>
+            <span class="text-xs text-surface-600 uppercase tracking-wider text-center">Cant.</span>
+            <span class="text-xs text-surface-600 uppercase tracking-wider text-right">Subtotal</span>
+            <span></span>
+          </div>
+        }
+
+        <div formArrayName="items" class="space-y-2">
+          @for (item of items.controls; track $index; let i = $index) {
+            <div [formGroupName]="i" class="sale-row bg-surface-800/50 rounded-xl p-3">
+
+              <select formControlName="menuItemId"
+                      class="input-field-sm" [class.input-error]="isItemInvalid(i, 'menuItemId')">
+                <option value="">Seleccioná un plato</option>
+                @for (m of menuItems(); track m.id) {
+                  <option [value]="m.id">{{ m.name }}@if (m.price) { · {{ formatARS(m.price) }} }</option>
+                }
+              </select>
+
+              <input formControlName="quantity" type="number" min="1" step="1" placeholder="1"
+                     class="input-field-sm text-center" [class.input-error]="isItemInvalid(i, 'quantity')">
+
+              <div class="text-right text-sm text-surface-300 tabular-nums font-medium pr-1">
+                {{ lineTotal(i) != null ? formatARS(lineTotal(i)) : '—' }}
+              </div>
+
+              <div class="flex items-center justify-center">
+                <button type="button" (click)="removeItem(i)"
+                        class="text-surface-500 hover:text-danger-400 transition-colors text-lg leading-none w-7 h-7 flex items-center justify-center rounded-lg hover:bg-danger-500/10">
+                  ✕
+                </button>
+              </div>
+
+            </div>
+          }
+        </div>
+
+        @if (items.length === 0) {
+          <div class="border border-dashed border-white/10 rounded-xl p-8 text-center">
+            <p class="text-surface-500 text-sm">Sin platos — usá "+ Agregar plato" para comenzar.</p>
+          </div>
+        }
+      </div>
+
+      @if (saveError()) {
+        <div class="bg-danger-500/10 border border-danger-500/20 text-danger-400 text-sm rounded-xl px-4 py-3">
+          {{ saveError() }}
+        </div>
+      }
+
+    </form>
+  </div>
+
+  <div class="shrink-0 flex items-center justify-between px-6 py-4 border-t border-white/5">
+    <div class="text-sm">
+      <span class="text-surface-500">Total estimado:</span>
+      <span class="text-white font-bold text-base ml-2 tabular-nums">{{ formatARS(grandTotal) }}</span>
+    </div>
+    <div class="flex items-center gap-3">
+      <button type="button" (click)="closeCreate()"
+              class="text-sm text-surface-400 hover:text-white border border-white/10 hover:border-white/20 px-4 py-2.5 rounded-xl transition-all">
+        Cancelar
+      </button>
+      <button type="submit" form="sale-form" [disabled]="saving()"
+              class="flex items-center gap-2 bg-brand-600 hover:bg-brand-500 disabled:opacity-50 disabled:cursor-not-allowed
+                     text-white font-semibold px-5 py-2.5 rounded-xl text-sm transition-all">
+        @if (saving()) { <span class="loader"></span> }
+        Registrar venta
+      </button>
+    </div>
+  </div>
+
+</aside>
+
+<!-- ══ DETAIL DRAWER ════════════════════════════════════════════ -->
+
+<div class="fixed inset-0 bg-black/50 backdrop-blur-sm z-[90] transition-opacity duration-300"
+     [class.opacity-100]="detailOpen()"
+     [class.opacity-0]="!detailOpen()"
+     [class.pointer-events-none]="!detailOpen()"
+     (click)="closeDetail()">
+</div>
+
+<aside class="fixed inset-y-0 right-0 w-full max-w-lg bg-surface-900 border-l border-white/10 z-[100]
+              flex flex-col transform transition-transform duration-300 ease-in-out"
+       [class.translate-x-0]="detailOpen()"
+       [class.translate-x-full]="!detailOpen()">
+
+  <div class="flex items-center justify-between px-6 py-5 border-b border-white/5 shrink-0">
+    <h2 class="text-white font-semibold font-display">Detalle de venta</h2>
+    <button (click)="closeDetail()" class="text-surface-400 hover:text-white transition-colors text-xl leading-none">✕</button>
+  </div>
+
+  <div class="flex-1 overflow-y-auto px-6 py-6">
+
+    @if (detailLoading()) {
+      <div class="space-y-4 animate-pulse">
+        <div class="grid grid-cols-2 gap-3">
+          <div class="bg-surface-800 rounded-xl h-16"></div>
+          <div class="bg-surface-800 rounded-xl h-16"></div>
+        </div>
+        <div class="bg-surface-800 rounded-2xl overflow-hidden">
+          @for (_ of [1,2,3]; track $index) {
+            <div class="px-4 py-4 border-b border-white/5 last:border-0 flex gap-4">
+              <div class="h-4 w-40 bg-surface-700 rounded"></div>
+              <div class="h-4 w-16 bg-surface-700 rounded ml-auto"></div>
+            </div>
+          }
+        </div>
+      </div>
+    }
+
+    @if (!detailLoading() && detail(); as d) {
+
+      <!-- Meta -->
+      <div class="grid grid-cols-2 gap-3 mb-6">
+        <div class="bg-surface-800/60 rounded-xl p-4">
+          <p class="text-xs text-surface-500 uppercase tracking-wider mb-1">Fecha</p>
+          <p class="text-white text-sm font-medium">{{ formatDate(d.soldAt) }}</p>
+        </div>
+        <div class="bg-surface-800/60 rounded-xl p-4">
+          <p class="text-xs text-surface-500 uppercase tracking-wider mb-1">Total</p>
+          <p class="text-white text-sm font-bold tabular-nums">{{ formatARS(d.totalAmount) }}</p>
+        </div>
+      </div>
+
+      @if (d.notes) {
+        <div class="bg-surface-800/40 border border-white/5 rounded-xl px-4 py-3 mb-6">
+          <p class="text-xs text-surface-500 uppercase tracking-wider mb-1">Notas</p>
+          <p class="text-surface-300 text-sm">{{ d.notes }}</p>
+        </div>
+      }
+
+      <!-- Items -->
+      <div class="bg-surface-800/40 border border-white/5 rounded-2xl overflow-hidden">
+        <div class="px-4 py-3 border-b border-white/5">
+          <p class="text-xs font-semibold text-surface-400 uppercase tracking-wider">Platos</p>
+        </div>
+        <table class="w-full text-sm">
+          <thead>
+            <tr class="text-xs text-surface-600 uppercase tracking-wider border-b border-white/5">
+              <th class="text-left px-4 py-2.5 font-medium">Plato</th>
+              <th class="text-right px-4 py-2.5 font-medium">Cant.</th>
+              <th class="text-right px-4 py-2.5 font-medium hidden sm:table-cell">P. Unit.</th>
+              <th class="text-right px-4 py-2.5 font-medium">Subtotal</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-white/5">
+            @for (item of d.items; track item.id) {
+              <tr>
+                <td class="px-4 py-3 text-white font-medium">{{ item.menuItemName }}</td>
+                <td class="px-4 py-3 text-right text-surface-400 tabular-nums">{{ item.quantity }}</td>
+                <td class="px-4 py-3 text-right hidden sm:table-cell text-surface-400 tabular-nums">
+                  {{ formatARS(item.unitPrice) }}
+                </td>
+                <td class="px-4 py-3 text-right text-white font-medium tabular-nums">
+                  {{ formatARS(item.subtotal) }}
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+        <div class="flex justify-end px-4 py-3 border-t border-white/5">
+          <span class="text-sm text-surface-400 mr-3">Total:</span>
+          <span class="text-white font-bold tabular-nums">{{ formatARS(d.totalAmount) }}</span>
+        </div>
+      </div>
+
+    }
+  </div>
+
+</aside>
