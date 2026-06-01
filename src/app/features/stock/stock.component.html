@@ -1,0 +1,164 @@
+<div class="px-8 py-8">
+
+  <!-- Header -->
+  <div class="mb-8">
+    <h1 class="text-2xl font-bold text-white mb-1 font-display">Stock por Producto</h1>
+    <p class="text-surface-500 text-sm">Seleccioná un producto para ver su stock actual y el historial de movimientos.</p>
+  </div>
+
+  <!-- Product selector -->
+  <div class="mb-6">
+    <select [(ngModel)]="selectedProductId" (ngModelChange)="onProductChange()"
+            class="input-field max-w-sm">
+      <option value="">— Seleccioná un producto —</option>
+      @for (p of products(); track p.id) {
+        <option [value]="p.id">{{ p.name }}@if (p.sku) { · {{ p.sku }} }</option>
+      }
+    </select>
+  </div>
+
+  @if (selectedProductId()) {
+
+    <!-- Stock card -->
+    <div class="mb-6">
+      @if (stockLoading()) {
+        <div class="bg-surface-900 border border-white/5 rounded-2xl p-6 animate-pulse w-72">
+          <div class="h-3 w-24 bg-surface-700 rounded mb-4"></div>
+          <div class="h-10 w-32 bg-surface-700 rounded mb-3"></div>
+          <div class="h-3 w-40 bg-surface-800 rounded"></div>
+        </div>
+      }
+
+      @if (!stockLoading() && stockInfo(); as info) {
+        <div class="stock-card rounded-2xl p-6 w-72 border"
+             [class.stock-ok]="stockStatus() === 'ok'"
+             [class.stock-low]="stockStatus() === 'low'"
+             [class.stock-over]="stockStatus() === 'over'"
+             [class.stock-none]="stockStatus() === 'none'">
+
+          <p class="text-xs font-semibold uppercase tracking-wider mb-3 opacity-70">Stock actual</p>
+
+          <p class="text-4xl font-black mb-2 font-display">
+            {{ formatNum(info.currentStock) }}
+            <span class="text-lg font-normal opacity-60">{{ unitAbbr(selectedProduct?.defaultUnit?.id) }}</span>
+          </p>
+
+          <div class="text-xs opacity-60 space-y-0.5">
+            @if (selectedProduct?.minStock != null) {
+              <p>Mínimo: {{ formatNum(selectedProduct!.minStock!) }} {{ unitAbbr(selectedProduct?.defaultUnit?.id) }}</p>
+            }
+            @if (selectedProduct?.maxStock != null) {
+              <p>Máximo: {{ formatNum(selectedProduct!.maxStock!) }} {{ unitAbbr(selectedProduct?.defaultUnit?.id) }}</p>
+            }
+            @if (selectedProduct?.minStock == null && selectedProduct?.maxStock == null) {
+              <p>Sin umbrales configurados</p>
+            }
+          </div>
+
+          <div class="mt-3">
+            @if (stockStatus() === 'low') {
+              <span class="text-xs font-semibold px-2 py-0.5 rounded-md bg-black/20">⚠ Bajo stock</span>
+            } @else if (stockStatus() === 'over') {
+              <span class="text-xs font-semibold px-2 py-0.5 rounded-md bg-black/20">↑ Sobrestock</span>
+            } @else if (stockStatus() === 'ok') {
+              <span class="text-xs font-semibold px-2 py-0.5 rounded-md bg-black/20">✓ Normal</span>
+            }
+          </div>
+
+        </div>
+      }
+    </div>
+
+    <!-- Movements -->
+    <div>
+      <h2 class="text-sm font-semibold text-surface-300 mb-3 uppercase tracking-wider">Historial de movimientos</h2>
+
+      @if (movementsLoading()) {
+        <div class="bg-surface-900 border border-white/5 rounded-2xl overflow-hidden">
+          @for (_ of [1,2,3,4,5]; track $index) {
+            <div class="px-6 py-4 border-b border-white/5 last:border-0 flex items-center gap-4 animate-pulse">
+              <div class="h-4 w-28 bg-surface-700 rounded"></div>
+              <div class="h-4 w-16 bg-surface-800 rounded"></div>
+              <div class="h-4 w-20 bg-surface-800 rounded ml-auto"></div>
+            </div>
+          }
+        </div>
+      }
+
+      @if (!movementsLoading() && movementsError()) {
+        <div class="bg-danger-500/10 border border-danger-500/20 rounded-2xl p-6 text-center">
+          <p class="text-danger-400">{{ movementsError() }}</p>
+        </div>
+      }
+
+      @if (!movementsLoading() && !movementsError()) {
+        @if (movements().length === 0) {
+          <div class="bg-surface-900 border border-white/5 rounded-2xl p-12 text-center">
+            <p class="text-surface-500 text-sm">Sin movimientos registrados para este producto.</p>
+          </div>
+        } @else {
+          <div class="bg-surface-900 border border-white/5 rounded-2xl overflow-hidden">
+            <div class="overflow-x-auto">
+              <table class="w-full text-sm">
+                <thead>
+                  <tr class="text-xs text-surface-500 uppercase tracking-wider border-b border-white/5">
+                    <th class="text-left px-6 py-3 font-medium">Fecha</th>
+                    <th class="text-left px-6 py-3 font-medium hidden md:table-cell">Tipo</th>
+                    <th class="text-center px-6 py-3 font-medium">Dirección</th>
+                    <th class="text-right px-6 py-3 font-medium">Cantidad</th>
+                    <th class="text-right px-6 py-3 font-medium hidden lg:table-cell">Antes</th>
+                    <th class="text-right px-6 py-3 font-medium hidden lg:table-cell">Después</th>
+                  </tr>
+                </thead>
+                <tbody class="divide-y divide-white/5">
+                  @for (m of movements(); track m.id) {
+                    <tr class="hover:bg-surface-800/40 transition-colors"
+                        [class.opacity-40]="m.reversedBy">
+                      <td class="px-6 py-4 text-surface-300 text-xs">{{ formatDate(m.createdAt) }}</td>
+                      <td class="px-6 py-4 hidden md:table-cell text-surface-400">
+                        {{ typeLabel(m.type) }}
+                        @if (m.reversedBy) {
+                          <span class="ml-1 text-xs text-surface-600">(revertido)</span>
+                        }
+                      </td>
+                      <td class="px-6 py-4 text-center">
+                        @if (m.direction === 'IN') {
+                          <span class="badge-in text-xs px-2.5 py-1 rounded-lg font-semibold">↑ Entrada</span>
+                        } @else {
+                          <span class="badge-out text-xs px-2.5 py-1 rounded-lg font-semibold">↓ Salida</span>
+                        }
+                      </td>
+                      <td class="px-6 py-4 text-right text-white font-medium tabular-nums">
+                        {{ formatNum(m.quantity) }}
+                        <span class="text-surface-500 text-xs ml-1">{{ unitAbbr(m.unitId) }}</span>
+                      </td>
+                      <td class="px-6 py-4 text-right hidden lg:table-cell text-surface-500 tabular-nums text-xs">
+                        {{ formatNum(m.stockBefore) }}
+                      </td>
+                      <td class="px-6 py-4 text-right hidden lg:table-cell text-surface-300 tabular-nums text-xs font-medium">
+                        {{ formatNum(m.stockAfter) }}
+                      </td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+
+            @if (total() > pageSize) {
+              <div class="border-t border-white/5 px-6 py-4">
+                <app-paginator
+                  [currentPage]="page()"
+                  [totalItems]="total()"
+                  [itemsPerPage]="pageSize"
+                  (pageChange)="goToPage($event)">
+                </app-paginator>
+              </div>
+            }
+          </div>
+        }
+      }
+    </div>
+
+  }
+
+</div>
