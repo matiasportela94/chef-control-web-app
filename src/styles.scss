@@ -6,3 +6,9 @@
   --font-sans:    'DM Sans', system-ui, -apple-system, sans-serif;
   --font-display: 'Syne', system-ui, sans-serif;
 }
+
+@layer utilities {
+  .font-display {
+    font-family: var(--font-display);
+  }
+}
