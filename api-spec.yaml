@@ -279,45 +279,6 @@ paths:
       responses:
         "200":
           description: OK
-  /categories/{id}:
-    put:
-      tags:
-      - product-category-controller
-      operationId: updateCategory
-      parameters:
-      - name: id
-        in: path
-        required: true
-        schema:
-          type: string
-          format: uuid
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/UpdateCategoryRequest"
-        required: true
-      responses:
-        "200":
-          description: OK
-          content:
-            '*/*':
-              schema:
-                $ref: "#/components/schemas/CategoryResponse"
-    delete:
-      tags:
-      - product-category-controller
-      operationId: deleteCategory
-      parameters:
-      - name: id
-        in: path
-        required: true
-        schema:
-          type: string
-          format: uuid
-      responses:
-        "200":
-          description: OK
   /alerts/{id}/resolve:
     put:
       tags:
@@ -782,6 +743,14 @@ paths:
             '*/*':
               schema:
                 $ref: "#/components/schemas/LoginResponse"
+  /auth/logout:
+    post:
+      tags:
+      - auth-controller
+      operationId: logout
+      responses:
+        "200":
+          description: OK
   /auth/login:
     post:
       tags:
@@ -867,6 +836,12 @@ paths:
           type: integer
           format: int32
           default: 50
+      - name: productId
+        in: query
+        required: false
+        schema:
+          type: string
+          format: uuid
       responses:
         "200":
           description: OK
@@ -1016,6 +991,21 @@ paths:
             '*/*':
               schema:
                 $ref: "#/components/schemas/PagedResponseAlertResponse"
+  /categories/{id}:
+    delete:
+      tags:
+      - product-category-controller
+      operationId: deleteCategory
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        "200":
+          description: OK
 components:
   schemas:
     UpdateUserRequest:
@@ -1257,28 +1247,6 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/RecipeItemResponse"
-    UpdateCategoryRequest:
-      required:
-      - name
-      type: object
-      properties:
-        name:
-          maxLength: 100
-          minLength: 0
-          type: string
-        color:
-          pattern: "^#[0-9A-Fa-f]{6}$"
-          type: string
-    CategoryResponse:
-      type: object
-      properties:
-        id:
-          type: string
-          format: uuid
-        name:
-          type: string
-        color:
-          type: string
     AlertResponse:
       type: object
       properties:
@@ -1570,6 +1538,9 @@ components:
         createdAt:
           type: string
           format: date-time
+        itemCount:
+          type: integer
+          format: int32
         items:
           type: array
           items:
@@ -1719,6 +1690,24 @@ components:
         color:
           pattern: "^#[0-9A-Fa-f]{6}$"
           type: string
+        parentId:
+          type: string
+          format: uuid
+    CategoryResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        color:
+          type: string
+        isSystem:
+          type: boolean
+        parentId:
+          type: string
+          format: uuid
     SwitchRestaurantRequest:
       required:
       - restaurantId
@@ -1730,8 +1719,6 @@ components:
     LoginResponse:
       type: object
       properties:
-        token:
-          type: string
         userId:
           type: string
           format: uuid
