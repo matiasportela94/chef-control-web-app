@@ -1,11 +1,10 @@
 import { Component, OnInit, signal } from '@angular/core';
-import { Router } from '@angular/router';
 import { DecimalPipe, DatePipe } from '@angular/common';
 import { Api } from '../../api/api';
 import { getSummary } from '../../api/fn/dashboard-controller/get-summary';
 import { DashboardResponse } from '../../api/models/dashboard-response';
 import { ProductStock } from '../../api/models/product-stock';
-import { AuthService } from '../../core/services/auth.service';
+import { parseBlob } from '../../core/utils/parse-blob';
 
 @Component({
   selector: 'app-dashboard',
@@ -21,11 +20,7 @@ export class DashboardComponent implements OnInit {
 
   readonly today = new Date();
 
-  constructor(
-    private api: Api,
-    public  authService: AuthService,
-    private router: Router
-  ) {}
+  constructor(private api: Api) {}
 
   async ngOnInit(): Promise<void> {
     await this.load();
@@ -36,20 +31,12 @@ export class DashboardComponent implements OnInit {
     this.error.set(null);
     try {
       const raw = await this.api.invoke(getSummary) as unknown;
-      const data = raw instanceof Blob
-        ? JSON.parse(await raw.text()) as DashboardResponse
-        : raw as DashboardResponse;
-      this.data.set(data);
+      this.data.set(await parseBlob<DashboardResponse>(raw));
     } catch {
       this.error.set('No se pudieron cargar los datos del panel.');
     } finally {
       this.loading.set(false);
     }
-  }
-
-  logout(): void {
-    this.authService.logout();
-    this.router.navigate(['/login']);
   }
 
   get kpis()     { return this.data()?.kpis; }

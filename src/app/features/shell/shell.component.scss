@@ -1,0 +1,12 @@
+.side-link {
+  @apply flex items-center gap-3 text-sm text-surface-400 hover:text-white hover:bg-white/5
+         px-3 py-2.5 rounded-xl transition-colors w-full;
+}
+
+.side-link-active {
+  @apply text-white bg-white/5;
+}
+
+.side-section-label {
+  @apply text-xs font-semibold uppercase tracking-wider text-surface-600 px-3 py-2;
+}
