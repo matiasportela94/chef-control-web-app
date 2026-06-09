@@ -14,6 +14,7 @@ import { formatDatetime } from '../../core/utils/format';
 import { extractApiError } from '../../core/utils/api-error';
 import { PaginatorComponent } from '../../shared/components/paginator/paginator.component';
 import { DrawerComponent } from '../../shared/components/drawer/drawer.component';
+import { SpinnerComponent } from '../../shared/components/spinner/spinner.component';
 
 interface ProductMeta {
   name: string;
@@ -24,7 +25,7 @@ interface ProductMeta {
 @Component({
   selector: 'app-stock-counts',
   standalone: true,
-  imports: [ReactiveFormsModule, PaginatorComponent, DecimalPipe, DrawerComponent],
+  imports: [ReactiveFormsModule, PaginatorComponent, DecimalPipe, DrawerComponent, SpinnerComponent],
   templateUrl: './stock-counts.component.html',
   styleUrl: './stock-counts.component.scss'
 })

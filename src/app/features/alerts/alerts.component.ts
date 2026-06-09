@@ -8,6 +8,7 @@ import { PagedResponseAlertResponse } from '../../api/models/paged-response-aler
 import { parseBlob } from '../../core/utils/parse-blob';
 import { formatDate } from '../../core/utils/format';
 import { PaginatorComponent } from '../../shared/components/paginator/paginator.component';
+import { SpinnerComponent } from '../../shared/components/spinner/spinner.component';
 import { AlertNotificationService } from '../../core/services/alert-notification.service';
 
 type FilterMode = 'active' | 'all';
@@ -15,7 +16,7 @@ type FilterMode = 'active' | 'all';
 @Component({
   selector: 'app-alerts',
   standalone: true,
-  imports: [PaginatorComponent],
+  imports: [PaginatorComponent, SpinnerComponent],
   templateUrl: './alerts.component.html',
   styleUrl: './alerts.component.scss'
 })

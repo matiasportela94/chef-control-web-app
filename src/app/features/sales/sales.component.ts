@@ -15,11 +15,12 @@ import { todayISO } from '../../core/utils/date';
 import { extractApiError } from '../../core/utils/api-error';
 import { PaginatorComponent } from '../../shared/components/paginator/paginator.component';
 import { DrawerComponent } from '../../shared/components/drawer/drawer.component';
+import { SpinnerComponent } from '../../shared/components/spinner/spinner.component';
 
 @Component({
   selector: 'app-sales',
   standalone: true,
-  imports: [ReactiveFormsModule, PaginatorComponent, DrawerComponent],
+  imports: [ReactiveFormsModule, PaginatorComponent, DrawerComponent, SpinnerComponent],
   templateUrl: './sales.component.html',
   styleUrl: './sales.component.scss'
 })

@@ -15,6 +15,7 @@ import { PagedResponseProductResponse } from '../../api/models/paged-response-pr
 import { PaginatorComponent } from '../../shared/components/paginator/paginator.component';
 import { ActionDialogComponent } from '../../shared/components/action-dialog/action-dialog.component';
 import { DrawerComponent } from '../../shared/components/drawer/drawer.component';
+import { SpinnerComponent } from '../../shared/components/spinner/spinner.component';
 import { parseBlob } from '../../core/utils/parse-blob';
 import { extractApiError } from '../../core/utils/api-error';
 import { isFormFieldInvalid } from '../../core/utils/form';
@@ -22,7 +23,7 @@ import { isFormFieldInvalid } from '../../core/utils/form';
 @Component({
   selector: 'app-products',
   standalone: true,
-  imports: [ReactiveFormsModule, DecimalPipe, PaginatorComponent, ActionDialogComponent, DrawerComponent],
+  imports: [ReactiveFormsModule, DecimalPipe, PaginatorComponent, ActionDialogComponent, DrawerComponent, SpinnerComponent],
   templateUrl: './products.component.html',
   styleUrl: './products.component.scss'
 })

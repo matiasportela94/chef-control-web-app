@@ -21,11 +21,12 @@ import { todayISO } from '../../core/utils/date';
 import { extractApiError } from '../../core/utils/api-error';
 import { PaginatorComponent } from '../../shared/components/paginator/paginator.component';
 import { DrawerComponent } from '../../shared/components/drawer/drawer.component';
+import { SpinnerComponent } from '../../shared/components/spinner/spinner.component';
 
 @Component({
   selector: 'app-purchases',
   standalone: true,
-  imports: [ReactiveFormsModule, DecimalPipe, PaginatorComponent, DrawerComponent],
+  imports: [ReactiveFormsModule, DecimalPipe, PaginatorComponent, DrawerComponent, SpinnerComponent],
   templateUrl: './purchases.component.html',
   styleUrl: './purchases.component.scss'
 })

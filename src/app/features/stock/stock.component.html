@@ -21,13 +21,7 @@
 
     <!-- Stock card -->
     <div class="mb-6">
-      @if (stockLoading()) {
-        <div class="bg-surface-900 border border-white/5 rounded-2xl p-6 animate-pulse w-72">
-          <div class="h-3 w-24 bg-surface-700 rounded mb-4"></div>
-          <div class="h-10 w-32 bg-surface-700 rounded mb-3"></div>
-          <div class="h-3 w-40 bg-surface-800 rounded"></div>
-        </div>
-      }
+      @if (stockLoading()) { <app-spinner /> }
 
       @if (!stockLoading() && stockInfo(); as info) {
         <div class="stock-card rounded-2xl p-6 w-72 border"

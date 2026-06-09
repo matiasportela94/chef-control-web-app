@@ -10,12 +10,13 @@ import { parseBlob } from '../../core/utils/parse-blob';
 import { extractApiError } from '../../core/utils/api-error';
 import { ActionDialogComponent } from '../../shared/components/action-dialog/action-dialog.component';
 import { DrawerComponent } from '../../shared/components/drawer/drawer.component';
+import { SpinnerComponent } from '../../shared/components/spinner/spinner.component';
 import { isFormFieldInvalid } from '../../core/utils/form';
 
 @Component({
   selector: 'app-suppliers',
   standalone: true,
-  imports: [ReactiveFormsModule, ActionDialogComponent, DrawerComponent],
+  imports: [ReactiveFormsModule, ActionDialogComponent, DrawerComponent, SpinnerComponent],
   templateUrl: './suppliers.component.html',
   styleUrl: './suppliers.component.scss'
 })

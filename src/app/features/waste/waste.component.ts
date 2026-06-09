@@ -15,12 +15,13 @@ import { formatARS, formatDate } from '../../core/utils/format';
 import { extractApiError } from '../../core/utils/api-error';
 import { PaginatorComponent } from '../../shared/components/paginator/paginator.component';
 import { DrawerComponent } from '../../shared/components/drawer/drawer.component';
+import { SpinnerComponent } from '../../shared/components/spinner/spinner.component';
 import { isFormFieldInvalid } from '../../core/utils/form';
 
 @Component({
   selector: 'app-waste',
   standalone: true,
-  imports: [ReactiveFormsModule, PaginatorComponent, DrawerComponent],
+  imports: [ReactiveFormsModule, PaginatorComponent, DrawerComponent, SpinnerComponent],
   templateUrl: './waste.component.html',
   styleUrl: './waste.component.scss'
 })

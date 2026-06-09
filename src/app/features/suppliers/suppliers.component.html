@@ -14,21 +14,7 @@
     </button>
   </div>
 
-  <!-- Loading skeleton -->
-  @if (loading()) {
-    <div class="bg-surface-900 border border-white/5 rounded-2xl overflow-hidden">
-      <div class="px-6 py-4 border-b border-white/5">
-        <div class="h-4 w-32 bg-surface-700 rounded animate-pulse"></div>
-      </div>
-      @for (_ of [1,2,3,4]; track $index) {
-        <div class="px-6 py-4 border-b border-white/5 last:border-0 flex items-center gap-4 animate-pulse">
-          <div class="h-4 w-40 bg-surface-700 rounded"></div>
-          <div class="h-4 w-32 bg-surface-800 rounded"></div>
-          <div class="h-4 w-24 bg-surface-800 rounded ml-auto"></div>
-        </div>
-      }
-    </div>
-  }
+  @if (loading()) { <app-spinner /> }
 
   <!-- Error -->
   @if (!loading() && error()) {

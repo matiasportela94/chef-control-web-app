@@ -11,6 +11,7 @@ import { formatDate } from '../../core/utils/format';
 import { extractApiError } from '../../core/utils/api-error';
 import { ActionDialogComponent } from '../../shared/components/action-dialog/action-dialog.component';
 import { DrawerComponent } from '../../shared/components/drawer/drawer.component';
+import { SpinnerComponent } from '../../shared/components/spinner/spinner.component';
 import { isFormFieldInvalid } from '../../core/utils/form';
 
 type Role = 'OWNER' | 'MANAGER' | 'KITCHEN' | 'READONLY';
@@ -18,7 +19,7 @@ type Role = 'OWNER' | 'MANAGER' | 'KITCHEN' | 'READONLY';
 @Component({
   selector: 'app-users',
   standalone: true,
-  imports: [ReactiveFormsModule, ActionDialogComponent, DrawerComponent],
+  imports: [ReactiveFormsModule, ActionDialogComponent, DrawerComponent, SpinnerComponent],
   templateUrl: './users.component.html',
   styleUrl: './users.component.scss'
 })

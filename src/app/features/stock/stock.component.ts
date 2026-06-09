@@ -16,6 +16,7 @@ import { UnitResponse } from '../../api/models/unit-response';
 import { parseBlob } from '../../core/utils/parse-blob';
 import { formatDatetime, formatNum } from '../../core/utils/format';
 import { PaginatorComponent } from '../../shared/components/paginator/paginator.component';
+import { SpinnerComponent } from '../../shared/components/spinner/spinner.component';
 
 interface StockInfo { productId: string; currentStock: number; }
 
@@ -38,7 +39,7 @@ function listMovementsByProduct(
 @Component({
   selector: 'app-stock',
   standalone: true,
-  imports: [FormsModule, PaginatorComponent],
+  imports: [FormsModule, PaginatorComponent, SpinnerComponent],
   templateUrl: './stock.component.html',
   styleUrl: './stock.component.scss'
 })

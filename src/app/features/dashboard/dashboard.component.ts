@@ -10,11 +10,12 @@ import { AlertResponse } from '../../api/models/alert-response';
 import { PagedResponseAlertResponse } from '../../api/models/paged-response-alert-response';
 import { parseBlob } from '../../core/utils/parse-blob';
 import { formatARS } from '../../core/utils/format';
+import { SpinnerComponent } from '../../shared/components/spinner/spinner.component';
 
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [DecimalPipe, DatePipe, RouterLink],
+  imports: [DecimalPipe, DatePipe, RouterLink, SpinnerComponent],
   templateUrl: './dashboard.component.html',
   styleUrl: './dashboard.component.scss'
 })
