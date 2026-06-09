@@ -111,10 +111,11 @@ export class PurchasesComponent implements OnInit {
 
   private newItemGroup(): FormGroup {
     return this.fb.group({
-      productId:    ['', Validators.required],
-      unitId:       ['', Validators.required],
-      quantity:     [null as number | null, [Validators.required, Validators.min(0.001)]],
-      pricePerUnit: [null as number | null, [Validators.required, Validators.min(0)]],
+      productId:      ['', Validators.required],
+      unitId:         ['', Validators.required],
+      quantity:       [null as number | null, [Validators.required, Validators.min(0.001)]],
+      pricePerUnit:   [null as number | null, [Validators.required, Validators.min(0)]],
+      expirationDate: [null as string | null],
     });
   }
 
@@ -158,6 +159,7 @@ export class PurchasesComponent implements OnInit {
         unitId:       item.unitId,
         quantity:     +item.quantity,
         pricePerUnit: +item.pricePerUnit,
+        ...(item.expirationDate ? { expirationDate: item.expirationDate } : {}),
       })),
       ...(v.purchasedAt ? { purchasedAt: v.purchasedAt } : {}),
       ...(v.supplierId  ? { supplierId:  v.supplierId  } : {}),

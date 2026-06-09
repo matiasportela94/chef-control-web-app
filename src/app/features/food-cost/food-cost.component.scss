@@ -1,15 +1,47 @@
 .input-field {
   @apply w-full bg-surface-800 border border-white/10 rounded-xl px-4 py-3 text-white text-sm
          placeholder-surface-600 transition-colors outline-none;
-
   &:focus {
     @apply border-brand-500/50;
     box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
   }
 }
 
+.input-sm {
+  @apply bg-surface-800 border border-white/10 rounded-lg px-3 py-2 text-white text-sm
+         placeholder-surface-600 transition-colors outline-none;
+  &:focus {
+    @apply border-brand-500/50;
+    box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.10);
+  }
+}
+
 .loader {
   @apply w-4 h-4 rounded-full border-2 border-white/30 border-t-white animate-spin inline-block;
+}
+
+// Segmented mode toggle
+.mode-toggle {
+  display: flex;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  padding: 4px;
+  gap: 2px;
+  flex-shrink: 0;
+}
+
+.mode-btn {
+  @apply px-5 py-2 text-sm font-medium rounded-[9px] transition-all duration-200 cursor-pointer border-0 bg-transparent;
+}
+
+.mode-active {
+  @apply bg-brand-600 text-white;
+  box-shadow: 0 1px 6px rgba(37, 99, 235, 0.40);
+}
+
+.mode-inactive {
+  @apply text-surface-400 hover:text-white hover:bg-white/5;
 }
 
 // Preset buttons

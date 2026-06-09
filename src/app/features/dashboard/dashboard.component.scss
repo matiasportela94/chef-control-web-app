@@ -2,3 +2,7 @@
 .badge-warning { @apply bg-warning-500/10 text-warning-400 border border-warning-500/20; }
 .badge-brand   { @apply bg-brand-600/10   text-brand-400   border border-brand-600/20;   }
 .badge-neutral { @apply bg-surface-700/50 text-surface-400 border border-white/10;       }
+
+.alert-high   { @apply bg-danger-500/10  text-danger-400  border border-danger-500/20;  }
+.alert-medium { @apply bg-warning-500/10 text-warning-400 border border-warning-500/20; }
+.alert-low    { @apply bg-brand-600/10   text-brand-400   border border-brand-500/20;   }

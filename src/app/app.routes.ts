@@ -49,6 +49,22 @@ export const routes: Routes = [
         path: 'sales',
         loadComponent: () => import('./features/sales/sales.component').then(m => m.SalesComponent)
       },
+      {
+        path: 'waste',
+        loadComponent: () => import('./features/waste/waste.component').then(m => m.WasteComponent)
+      },
+      {
+        path: 'alerts',
+        loadComponent: () => import('./features/alerts/alerts.component').then(m => m.AlertsComponent)
+      },
+      {
+        path: 'users',
+        loadComponent: () => import('./features/users/users.component').then(m => m.UsersComponent)
+      },
+      {
+        path: 'stock-counts',
+        loadComponent: () => import('./features/stock-counts/stock-counts.component').then(m => m.StockCountsComponent)
+      },
     ]
   },
   { path: '**', redirectTo: '' }

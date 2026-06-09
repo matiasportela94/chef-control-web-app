@@ -927,6 +927,56 @@ paths:
                 type: object
                 additionalProperties:
                   type: object
+  /menu-items/{id}/recipe/cost:
+    get:
+      tags:
+      - menu-item-controller
+      operationId: getRecipeCost
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/RecipeCostResponse"
+  /menu-items/{id}/food-cost:
+    get:
+      tags:
+      - menu-item-controller
+      operationId: getFoodCost
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: from
+        in: query
+        required: true
+        schema:
+          type: string
+          format: date-time
+      - name: to
+        in: query
+        required: true
+        schema:
+          type: string
+          format: date-time
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/MenuItemFoodCostResponse"
   /food-cost:
     get:
       tags:
@@ -1586,6 +1636,9 @@ components:
           minimum: 0
           exclusiveMinimum: false
           type: number
+        expirationDate:
+          type: string
+          format: date
     ItemDetail:
       type: object
       properties:
@@ -1993,6 +2046,71 @@ components:
           type: boolean
         last:
           type: boolean
+    IngredientCost:
+      type: object
+      properties:
+        productId:
+          type: string
+          format: uuid
+        productName:
+          type: string
+        quantity:
+          type: number
+        unitId:
+          type: string
+          format: uuid
+        unitName:
+          type: string
+        unitCost:
+          type: number
+        totalCost:
+          type: number
+    RecipeCostResponse:
+      type: object
+      properties:
+        menuItemId:
+          type: string
+          format: uuid
+        menuItemName:
+          type: string
+        servings:
+          type: integer
+          format: int32
+        menuPrice:
+          type: number
+        ingredients:
+          type: array
+          items:
+            $ref: "#/components/schemas/IngredientCost"
+        totalCost:
+          type: number
+        costPerServing:
+          type: number
+        foodCostPercentage:
+          type: number
+    MenuItemFoodCostResponse:
+      type: object
+      properties:
+        menuItemId:
+          type: string
+          format: uuid
+        menuItemName:
+          type: string
+        from:
+          type: string
+          format: date-time
+        to:
+          type: string
+          format: date-time
+        quantitySold:
+          type: integer
+          format: int32
+        revenue:
+          type: number
+        realizedCost:
+          type: number
+        foodCostPercentage:
+          type: number
     FoodCostResponse:
       type: object
       properties:
