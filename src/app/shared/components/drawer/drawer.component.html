@@ -1,5 +1,7 @@
 <!-- Backdrop -->
-<div class="fixed inset-0 bg-black/50 backdrop-blur-sm z-[90] transition-opacity duration-300"
+<div class="fixed inset-0 bg-black/50 backdrop-blur-sm z-[90]"
+     [class.transition-opacity]="ready"
+     [class.duration-300]="ready"
      [class.opacity-100]="isOpen"
      [class.opacity-0]="!isOpen"
      [class.pointer-events-none]="!isOpen"
@@ -7,8 +9,10 @@
 </div>
 
 <!-- Panel -->
-<aside class="fixed inset-y-0 right-0 w-full bg-surface-900 border-l border-white/10 z-[100]
-              flex flex-col transform transition-transform duration-300 ease-in-out"
+<aside class="fixed inset-y-0 right-0 w-full bg-surface-900 border-l border-white/10 z-[100] flex flex-col"
+       [class.transition-transform]="ready"
+       [class.duration-300]="ready"
+       [class.ease-in-out]="ready"
        [class.max-w-md]="size === 'sm'"
        [class.max-w-lg]="size === 'md'"
        [class.max-w-2xl]="size === 'lg'"
