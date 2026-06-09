@@ -148,9 +148,14 @@
 
       <div class="grid grid-cols-2 gap-4">
         <div class="space-y-1.5">
-          <label class="text-surface-400 text-sm">Precio <span class="text-surface-600">(opcional)</span></label>
+          <label class="text-surface-400 text-sm">
+            Precio
+            @if (editing()) { <span class="text-surface-600">(opcional)</span> }
+            @else { <span class="text-danger-400">*</span> }
+          </label>
           <input formControlName="price" type="number" min="0" step="any" placeholder="$ 0"
-                 class="input-field">
+                 class="input-field" [class.input-error]="isInvalid(itemForm, 'price')">
+          @if (isInvalid(itemForm, 'price')) { <p class="text-danger-400 text-xs">Precio requerido para calcular el food cost</p> }
         </div>
         <div class="space-y-1.5">
           <label class="text-surface-400 text-sm">Categoría <span class="text-surface-600">(opcional)</span></label>

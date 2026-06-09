@@ -113,6 +113,7 @@ export class MenuComponent implements OnInit {
 
   openCreate(): void {
     this.editing.set(null);
+    this.itemForm.get('price')!.setValidators([Validators.required, Validators.min(0)]);
     this.itemForm.reset({ name: '', description: '', price: null, category: '' });
     this.saveError.set(null);
     this.itemDrawerOpen.set(true);
@@ -120,6 +121,7 @@ export class MenuComponent implements OnInit {
 
   openEdit(item: MenuItemResponse): void {
     this.editing.set(item);
+    this.itemForm.get('price')!.clearValidators();
     this.itemForm.reset({
       name:        item.name        ?? '',
       description: item.description ?? '',
