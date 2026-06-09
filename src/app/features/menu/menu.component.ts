@@ -1,6 +1,5 @@
 import { Component, HostListener, OnInit, signal } from '@angular/core';
 import { FormArray, FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
-import { DecimalPipe } from '@angular/common';
 import { Api } from '../../api/api';
 import { list2 as listMenuItems }      from '../../api/fn/menu-item-controller/list-2';
 import { create2 as createMenuItem }   from '../../api/fn/menu-item-controller/create-2';
@@ -17,7 +16,10 @@ import { ProductResponse }             from '../../api/models/product-response';
 import { UnitResponse }                from '../../api/models/unit-response';
 import { PagedResponseMenuItemResponse } from '../../api/models/paged-response-menu-item-response';
 import { PagedResponseProductResponse }  from '../../api/models/paged-response-product-response';
+import { DecimalPipe } from '@angular/common';
 import { parseBlob } from '../../core/utils/parse-blob';
+import { formatARS } from '../../core/utils/format';
+import { extractApiError } from '../../core/utils/api-error';
 import { PaginatorComponent } from '../../shared/components/paginator/paginator.component';
 import { ActionDialogComponent } from '../../shared/components/action-dialog/action-dialog.component';
 
@@ -151,7 +153,7 @@ export class MenuComponent implements OnInit {
       this.itemDrawerOpen.set(false);
       await this.loadMenuItems();
     } catch (e: any) {
-      this.saveError.set(e?.error?.message ?? 'Error al guardar el plato');
+      this.saveError.set(extractApiError(e, 'Error al guardar el plato'));
     } finally {
       this.saving.set(false);
     }
@@ -234,7 +236,7 @@ export class MenuComponent implements OnInit {
       await this.api.invoke(setRecipe, { id: this.recipeItem()!.id!, body });
       this.recipeDrawerOpen.set(false);
     } catch (e: any) {
-      this.recipeError.set(e?.error?.message ?? 'Error al guardar la receta');
+      this.recipeError.set(extractApiError(e, 'Error al guardar la receta'));
     } finally {
       this.recipeSaving.set(false);
     }
@@ -291,8 +293,5 @@ export class MenuComponent implements OnInit {
     return !!(ctrl?.invalid && ctrl?.touched);
   }
 
-  formatARS(n?: number): string {
-    if (n == null) return '—';
-    return '$ ' + n.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-  }
+  readonly formatARS = formatARS;
 }

@@ -1,6 +1,5 @@
 import { Component, HostListener, OnInit, signal } from '@angular/core';
 import { FormArray, FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
-import { DecimalPipe } from '@angular/common';
 import { Api } from '../../api/api';
 import { listPurchases } from '../../api/fn/purchase-controller/list-purchases';
 import { createPurchase } from '../../api/fn/purchase-controller/create-purchase';
@@ -15,7 +14,11 @@ import { SupplierResponse } from '../../api/models/supplier-response';
 import { UnitResponse } from '../../api/models/unit-response';
 import { PagedResponsePurchaseResponse } from '../../api/models/paged-response-purchase-response';
 import { PagedResponseProductResponse } from '../../api/models/paged-response-product-response';
+import { DecimalPipe } from '@angular/common';
 import { parseBlob } from '../../core/utils/parse-blob';
+import { formatARS, formatDate } from '../../core/utils/format';
+import { todayISO } from '../../core/utils/date';
+import { extractApiError } from '../../core/utils/api-error';
 import { PaginatorComponent } from '../../shared/components/paginator/paginator.component';
 
 @Component({
@@ -49,7 +52,7 @@ export class PurchasesComponent implements OnInit {
 
   constructor(private api: Api, private fb: FormBuilder) {
     this.form = this.fb.group({
-      purchasedAt: [this.todayISO()],
+      purchasedAt: [todayISO()],
       supplierId:  [''],
       notes:       [''],
       items:       this.fb.array([], Validators.minLength(1)),
@@ -58,10 +61,6 @@ export class PurchasesComponent implements OnInit {
 
   async ngOnInit(): Promise<void> {
     await Promise.all([this.loadPurchases(), this.loadFormData()]);
-  }
-
-  private todayISO(): string {
-    return new Date().toISOString().substring(0, 10);
   }
 
   get items(): FormArray {
@@ -99,7 +98,7 @@ export class PurchasesComponent implements OnInit {
 
   openCreate(): void {
     this.items.clear();
-    this.form.reset({ purchasedAt: this.todayISO(), supplierId: '', notes: '' });
+    this.form.reset({ purchasedAt: todayISO(), supplierId: '', notes: '' });
     this.addItem();
     this.saveError.set(null);
     this.createOpen.set(true);
@@ -170,7 +169,7 @@ export class PurchasesComponent implements OnInit {
       this.createOpen.set(false);
       await this.loadPurchases();
     } catch (e: any) {
-      this.saveError.set(e?.error?.message ?? 'Error al registrar la compra');
+      this.saveError.set(extractApiError(e, 'Error al registrar la compra'));
     } finally {
       this.saving.set(false);
     }
@@ -209,13 +208,6 @@ export class PurchasesComponent implements OnInit {
     return !!(ctrl?.invalid && ctrl?.touched);
   }
 
-  formatARS(n?: number): string {
-    if (n == null) return '—';
-    return '$ ' + n.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-  }
-
-  formatDate(s?: string): string {
-    if (!s) return '—';
-    return new Date(s).toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit', year: 'numeric' });
-  }
+  readonly formatARS = formatARS;
+  readonly formatDate = formatDate;
 }

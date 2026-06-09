@@ -9,6 +9,7 @@ import { ProductStock } from '../../api/models/product-stock';
 import { AlertResponse } from '../../api/models/alert-response';
 import { PagedResponseAlertResponse } from '../../api/models/paged-response-alert-response';
 import { parseBlob } from '../../core/utils/parse-blob';
+import { formatARS } from '../../core/utils/format';
 
 @Component({
   selector: 'app-dashboard',
@@ -93,8 +94,5 @@ export class DashboardComponent implements OnInit {
     return t ? (map[t] ?? t.replace(/_/g, ' ')) : '—';
   }
 
-  formatARS(n?: number): string {
-    if (n == null) return '-';
-    return '$' + n.toLocaleString('es-AR');
-  }
+  readonly formatARS = formatARS;
 }

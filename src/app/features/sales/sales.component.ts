@@ -10,6 +10,9 @@ import { MenuItemResponse }        from '../../api/models/menu-item-response';
 import { PagedResponseSaleResponse }     from '../../api/models/paged-response-sale-response';
 import { PagedResponseMenuItemResponse } from '../../api/models/paged-response-menu-item-response';
 import { parseBlob } from '../../core/utils/parse-blob';
+import { formatARS, formatDate } from '../../core/utils/format';
+import { todayISO } from '../../core/utils/date';
+import { extractApiError } from '../../core/utils/api-error';
 import { PaginatorComponent } from '../../shared/components/paginator/paginator.component';
 
 @Component({
@@ -41,7 +44,7 @@ export class SalesComponent implements OnInit {
 
   constructor(private api: Api, private fb: FormBuilder) {
     this.form = this.fb.group({
-      soldAt: [this.todayISO()],
+      soldAt: [todayISO()],
       notes:  [''],
       items:  this.fb.array([], Validators.minLength(1)),
     });
@@ -49,10 +52,6 @@ export class SalesComponent implements OnInit {
 
   async ngOnInit(): Promise<void> {
     await Promise.all([this.loadSales(), this.loadMenuItems()]);
-  }
-
-  private todayISO(): string {
-    return new Date().toISOString().substring(0, 10);
   }
 
   get items(): FormArray {
@@ -84,7 +83,7 @@ export class SalesComponent implements OnInit {
 
   openCreate(): void {
     this.items.clear();
-    this.form.reset({ soldAt: this.todayISO(), notes: '' });
+    this.form.reset({ soldAt: todayISO(), notes: '' });
     this.addItem();
     this.saveError.set(null);
     this.createOpen.set(true);
@@ -149,7 +148,7 @@ export class SalesComponent implements OnInit {
       this.createOpen.set(false);
       await this.loadSales();
     } catch (e: any) {
-      this.saveError.set(e?.error?.message ?? 'Error al registrar la venta');
+      this.saveError.set(extractApiError(e, 'Error al registrar la venta'));
     } finally {
       this.saving.set(false);
     }
@@ -188,13 +187,6 @@ export class SalesComponent implements OnInit {
     return !!(ctrl?.invalid && ctrl?.touched);
   }
 
-  formatARS(n?: number | null): string {
-    if (n == null) return '—';
-    return '$ ' + n.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-  }
-
-  formatDate(s?: string): string {
-    if (!s) return '—';
-    return new Date(s).toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit', year: 'numeric' });
-  }
+  readonly formatARS = formatARS;
+  readonly formatDate = formatDate;
 }

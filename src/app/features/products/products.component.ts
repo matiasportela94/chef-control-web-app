@@ -15,6 +15,7 @@ import { PagedResponseProductResponse } from '../../api/models/paged-response-pr
 import { PaginatorComponent } from '../../shared/components/paginator/paginator.component';
 import { ActionDialogComponent } from '../../shared/components/action-dialog/action-dialog.component';
 import { parseBlob } from '../../core/utils/parse-blob';
+import { extractApiError } from '../../core/utils/api-error';
 
 @Component({
   selector: 'app-products',
@@ -143,7 +144,7 @@ export class ProductsComponent implements OnInit {
       this.drawerOpen.set(false);
       await this.loadProducts();
     } catch (e: any) {
-      this.saveError.set(e?.error?.message ?? 'Error al guardar el producto');
+      this.saveError.set(extractApiError(e, 'Error al guardar el producto'));
     } finally {
       this.saving.set(false);
     }

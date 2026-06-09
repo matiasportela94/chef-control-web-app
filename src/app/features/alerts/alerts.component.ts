@@ -6,6 +6,7 @@ import { resolve } from '../../api/fn/alert-controller/resolve';
 import { AlertResponse } from '../../api/models/alert-response';
 import { PagedResponseAlertResponse } from '../../api/models/paged-response-alert-response';
 import { parseBlob } from '../../core/utils/parse-blob';
+import { formatDate } from '../../core/utils/format';
 import { PaginatorComponent } from '../../shared/components/paginator/paginator.component';
 import { AlertNotificationService } from '../../core/services/alert-notification.service';
 
@@ -109,10 +110,7 @@ export class AlertsComponent implements OnInit {
     return t ? (map[t] ?? t.replace(/_/g, ' ')) : '—';
   }
 
-  formatDate(s?: string): string {
-    if (!s) return '—';
-    return new Date(s).toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit', year: 'numeric' });
-  }
+  readonly formatDate = formatDate;
 
   isActioning(id?: string): boolean {
     return id != null && this.actioning() === id;

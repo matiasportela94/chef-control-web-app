@@ -8,9 +8,11 @@ import { StockCountResponse } from '../../api/models/stock-count-response';
 import { ProductResponse } from '../../api/models/product-response';
 import { PagedResponseStockCountResponse } from '../../api/models/paged-response-stock-count-response';
 import { PagedResponseProductResponse } from '../../api/models/paged-response-product-response';
-import { parseBlob } from '../../core/utils/parse-blob';
-import { PaginatorComponent } from '../../shared/components/paginator/paginator.component';
 import { DecimalPipe } from '@angular/common';
+import { parseBlob } from '../../core/utils/parse-blob';
+import { formatDatetime } from '../../core/utils/format';
+import { extractApiError } from '../../core/utils/api-error';
+import { PaginatorComponent } from '../../shared/components/paginator/paginator.component';
 
 interface ProductMeta {
   name: string;
@@ -142,7 +144,7 @@ export class StockCountsComponent implements OnInit {
       this.drawerOpen.set(false);
       await this.loadCounts();
     } catch (e: any) {
-      this.saveError.set(e?.error?.message ?? 'Error al guardar el conteo');
+      this.saveError.set(extractApiError(e, 'Error al guardar el conteo'));
     } finally {
       this.saving.set(false);
     }
@@ -158,11 +160,5 @@ export class StockCountsComponent implements OnInit {
     return !!(ctrl?.invalid && ctrl?.touched);
   }
 
-  formatDate(s?: string): string {
-    if (!s) return '—';
-    return new Date(s).toLocaleDateString('es-AR', {
-      day: '2-digit', month: '2-digit', year: 'numeric',
-      hour: '2-digit', minute: '2-digit'
-    });
-  }
+  readonly formatDate = formatDatetime;
 }

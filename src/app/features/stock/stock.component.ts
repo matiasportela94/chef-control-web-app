@@ -14,6 +14,7 @@ import { PagedResponseStockMovementResponse } from '../../api/models/paged-respo
 import { listUnits } from '../../api/fn/unit-controller/list-units';
 import { UnitResponse } from '../../api/models/unit-response';
 import { parseBlob } from '../../core/utils/parse-blob';
+import { formatDatetime, formatNum } from '../../core/utils/format';
 import { PaginatorComponent } from '../../shared/components/paginator/paginator.component';
 
 interface StockInfo { productId: string; currentStock: number; }
@@ -157,13 +158,6 @@ export class StockComponent implements OnInit {
     return type ? (map[type] ?? type) : '—';
   }
 
-  formatDate(s?: string): string {
-    if (!s) return '—';
-    return new Date(s).toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
-  }
-
-  formatNum(n?: number): string {
-    if (n == null) return '—';
-    return n.toLocaleString('es-AR', { minimumFractionDigits: 0, maximumFractionDigits: 3 });
-  }
+  readonly formatDate = formatDatetime;
+  readonly formatNum = formatNum;
 }

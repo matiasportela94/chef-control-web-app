@@ -11,6 +11,8 @@ import { MenuItemResponse } from '../../api/models/menu-item-response';
 import { PagedResponseMenuItemResponse } from '../../api/models/paged-response-menu-item-response';
 import { RecipeCostResponse } from '../../api/models/recipe-cost-response';
 import { parseBlob } from '../../core/utils/parse-blob';
+import { formatARS, formatDate, formatNum, formatPct } from '../../core/utils/format';
+import { todayISO, firstOfMonth, thisMonth, lastMonth, lastNDays } from '../../core/utils/date';
 
 interface Preset { label: string; from: string; to: string; }
 
@@ -24,8 +26,8 @@ interface Preset { label: string; from: string; to: string; }
 export class FoodCostComponent implements OnInit {
   mode = signal<'global' | 'dish'>('global');
 
-  from = signal(this.firstOfMonth());
-  to   = signal(this.todayISO());
+  from = signal(firstOfMonth());
+  to   = signal(todayISO());
 
   // Global
   loading = signal(false);
@@ -46,10 +48,10 @@ export class FoodCostComponent implements OnInit {
   fcItemStale   = signal(false);
 
   readonly presets: Preset[] = [
-    { label: 'Este mes',       ...this.thisMonth()   },
-    { label: 'Mes anterior',   ...this.lastMonth()   },
-    { label: 'Últimos 7 días', ...this.lastNDays(7)  },
-    { label: 'Últimos 30 días',...this.lastNDays(30) },
+    { label: 'Este mes',       ...thisMonth()   },
+    { label: 'Mes anterior',   ...lastMonth()   },
+    { label: 'Últimos 7 días', ...lastNDays(7)  },
+    { label: 'Últimos 30 días',...lastNDays(30) },
   ];
 
   readonly Math = Math;
@@ -160,51 +162,8 @@ export class FoodCostComponent implements OnInit {
   recipeCostStatus() { return this.pctStatus(this.recipeCost()?.foodCostPercentage); }
   fcItemStatus()     { return this.pctStatus(this.fcItem()?.foodCostPercentage); }
 
-  formatARS(n?: number): string {
-    if (n == null) return '—';
-    return '$ ' + n.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-  }
-
-  formatNum(n?: number): string {
-    if (n == null) return '—';
-    return n.toLocaleString('es-AR', { minimumFractionDigits: 0, maximumFractionDigits: 3 });
-  }
-
-  formatPct(n?: number): string {
-    if (n == null) return '—';
-    return n.toFixed(1) + '%';
-  }
-
-  formatDate(s?: string): string {
-    if (!s) return '—';
-    return new Date(s).toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit', year: 'numeric' });
-  }
-
-  private todayISO(): string {
-    return new Date().toISOString().substring(0, 10);
-  }
-
-  private firstOfMonth(): string {
-    const d = new Date();
-    return new Date(d.getFullYear(), d.getMonth(), 1).toISOString().substring(0, 10);
-  }
-
-  private thisMonth(): { from: string; to: string } {
-    const d = new Date();
-    return { from: new Date(d.getFullYear(), d.getMonth(), 1).toISOString().substring(0, 10), to: this.todayISO() };
-  }
-
-  private lastMonth(): { from: string; to: string } {
-    const d = new Date();
-    return {
-      from: new Date(d.getFullYear(), d.getMonth() - 1, 1).toISOString().substring(0, 10),
-      to:   new Date(d.getFullYear(), d.getMonth(), 0).toISOString().substring(0, 10),
-    };
-  }
-
-  private lastNDays(n: number): { from: string; to: string } {
-    const to = new Date(), from = new Date();
-    from.setDate(to.getDate() - n + 1);
-    return { from: from.toISOString().substring(0, 10), to: to.toISOString().substring(0, 10) };
-  }
+  readonly formatARS = formatARS;
+  readonly formatDate = formatDate;
+  readonly formatNum = formatNum;
+  readonly formatPct = formatPct;
 }

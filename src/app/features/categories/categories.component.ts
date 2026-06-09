@@ -6,6 +6,7 @@ import { createCategory } from '../../api/fn/product-category-controller/create-
 import { deleteCategory } from '../../api/fn/product-category-controller/delete-category';
 import { CategoryResponse } from '../../api/models/category-response';
 import { parseBlob } from '../../core/utils/parse-blob';
+import { extractApiError } from '../../core/utils/api-error';
 import { ActionDialogComponent } from '../../shared/components/action-dialog/action-dialog.component';
 
 @Component({
@@ -79,7 +80,7 @@ export class CategoriesComponent implements OnInit {
       this.drawerOpen.set(false);
       await this.load();
     } catch (e: any) {
-      this.saveError.set(e?.error?.message ?? 'Error al guardar la categoría');
+      this.saveError.set(extractApiError(e, 'Error al guardar la categoría'));
     } finally {
       this.saving.set(false);
     }

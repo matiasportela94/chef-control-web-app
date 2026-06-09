@@ -7,6 +7,8 @@ import { updateUser } from '../../api/fn/user-controller/update-user';
 import { deactivateUser } from '../../api/fn/user-controller/deactivate-user';
 import { UserResponse } from '../../api/models/user-response';
 import { parseBlob } from '../../core/utils/parse-blob';
+import { formatDate } from '../../core/utils/format';
+import { extractApiError } from '../../core/utils/api-error';
 import { ActionDialogComponent } from '../../shared/components/action-dialog/action-dialog.component';
 
 type Role = 'OWNER' | 'MANAGER' | 'KITCHEN' | 'READONLY';
@@ -118,7 +120,7 @@ export class UsersComponent implements OnInit {
       this.drawerOpen.set(false);
       await this.load();
     } catch (e: any) {
-      this.saveError.set(e?.error?.message ?? 'Error al guardar el usuario');
+      this.saveError.set(extractApiError(e, 'Error al guardar el usuario'));
     } finally {
       this.saving.set(false);
     }
@@ -156,8 +158,5 @@ export class UsersComponent implements OnInit {
     return r ? (map[r] ?? 'badge-neutral') : 'badge-neutral';
   }
 
-  formatDate(s?: string): string {
-    if (!s) return '—';
-    return new Date(s).toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit', year: 'numeric' });
-  }
+  readonly formatDate = formatDate;
 }

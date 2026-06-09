@@ -11,6 +11,8 @@ import { UnitResponse } from '../../api/models/unit-response';
 import { PagedResponseWasteEventResponse } from '../../api/models/paged-response-waste-event-response';
 import { PagedResponseProductResponse } from '../../api/models/paged-response-product-response';
 import { parseBlob } from '../../core/utils/parse-blob';
+import { formatARS, formatDate } from '../../core/utils/format';
+import { extractApiError } from '../../core/utils/api-error';
 import { PaginatorComponent } from '../../shared/components/paginator/paginator.component';
 
 @Component({
@@ -136,7 +138,7 @@ export class WasteComponent implements OnInit {
       this.drawerOpen.set(false);
       await this.loadEvents();
     } catch (e: any) {
-      this.saveError.set(e?.error?.message ?? 'Error al registrar la merma');
+      this.saveError.set(extractApiError(e, 'Error al registrar la merma'));
     } finally {
       this.saving.set(false);
     }
@@ -174,13 +176,6 @@ export class WasteComponent implements OnInit {
     return r ? (map[r] ?? 'badge-neutral') : 'badge-neutral';
   }
 
-  formatDate(s?: string): string {
-    if (!s) return '—';
-    return new Date(s).toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit', year: 'numeric' });
-  }
-
-  formatARS(n?: number): string {
-    if (n == null) return '—';
-    return '$ ' + n.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-  }
+  readonly formatARS = formatARS;
+  readonly formatDate = formatDate;
 }

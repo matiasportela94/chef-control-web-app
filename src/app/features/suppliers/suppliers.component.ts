@@ -7,6 +7,7 @@ import { updateSupplier } from '../../api/fn/supplier-controller/update-supplier
 import { deactivateSupplier } from '../../api/fn/supplier-controller/deactivate-supplier';
 import { SupplierResponse } from '../../api/models/supplier-response';
 import { parseBlob } from '../../core/utils/parse-blob';
+import { extractApiError } from '../../core/utils/api-error';
 import { ActionDialogComponent } from '../../shared/components/action-dialog/action-dialog.component';
 
 @Component({
@@ -110,7 +111,7 @@ export class SuppliersComponent implements OnInit {
       this.drawerOpen.set(false);
       await this.load();
     } catch (e: any) {
-      this.saveError.set(e?.error?.message ?? 'Error al guardar el proveedor');
+      this.saveError.set(extractApiError(e, 'Error al guardar el proveedor'));
     } finally {
       this.saving.set(false);
     }
