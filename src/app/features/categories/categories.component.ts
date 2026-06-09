@@ -8,11 +8,13 @@ import { CategoryResponse } from '../../api/models/category-response';
 import { parseBlob } from '../../core/utils/parse-blob';
 import { extractApiError } from '../../core/utils/api-error';
 import { ActionDialogComponent } from '../../shared/components/action-dialog/action-dialog.component';
+import { DrawerComponent } from '../../shared/components/drawer/drawer.component';
+import { isFormFieldInvalid } from '../../core/utils/form';
 
 @Component({
   selector: 'app-categories',
   standalone: true,
-  imports: [ReactiveFormsModule, ActionDialogComponent],
+  imports: [ReactiveFormsModule, ActionDialogComponent, DrawerComponent],
   templateUrl: './categories.component.html',
   styleUrl: './categories.component.scss'
 })
@@ -100,8 +102,5 @@ export class CategoriesComponent implements OnInit {
     }
   }
 
-  isInvalid(field: string): boolean {
-    const ctrl = this.form.get(field);
-    return !!(ctrl?.invalid && ctrl?.touched);
-  }
+  isInvalid = (field: string) => isFormFieldInvalid(this.form, field);
 }

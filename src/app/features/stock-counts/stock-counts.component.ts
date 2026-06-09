@@ -13,6 +13,7 @@ import { parseBlob } from '../../core/utils/parse-blob';
 import { formatDatetime } from '../../core/utils/format';
 import { extractApiError } from '../../core/utils/api-error';
 import { PaginatorComponent } from '../../shared/components/paginator/paginator.component';
+import { DrawerComponent } from '../../shared/components/drawer/drawer.component';
 
 interface ProductMeta {
   name: string;
@@ -23,7 +24,7 @@ interface ProductMeta {
 @Component({
   selector: 'app-stock-counts',
   standalone: true,
-  imports: [ReactiveFormsModule, PaginatorComponent, DecimalPipe],
+  imports: [ReactiveFormsModule, PaginatorComponent, DecimalPipe, DrawerComponent],
   templateUrl: './stock-counts.component.html',
   styleUrl: './stock-counts.component.scss'
 })

@@ -14,11 +14,12 @@ import { formatARS, formatDate } from '../../core/utils/format';
 import { todayISO } from '../../core/utils/date';
 import { extractApiError } from '../../core/utils/api-error';
 import { PaginatorComponent } from '../../shared/components/paginator/paginator.component';
+import { DrawerComponent } from '../../shared/components/drawer/drawer.component';
 
 @Component({
   selector: 'app-sales',
   standalone: true,
-  imports: [ReactiveFormsModule, PaginatorComponent],
+  imports: [ReactiveFormsModule, PaginatorComponent, DrawerComponent],
   templateUrl: './sales.component.html',
   styleUrl: './sales.component.scss'
 })

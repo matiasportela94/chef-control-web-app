@@ -10,13 +10,15 @@ import { parseBlob } from '../../core/utils/parse-blob';
 import { formatDate } from '../../core/utils/format';
 import { extractApiError } from '../../core/utils/api-error';
 import { ActionDialogComponent } from '../../shared/components/action-dialog/action-dialog.component';
+import { DrawerComponent } from '../../shared/components/drawer/drawer.component';
+import { isFormFieldInvalid } from '../../core/utils/form';
 
 type Role = 'OWNER' | 'MANAGER' | 'KITCHEN' | 'READONLY';
 
 @Component({
   selector: 'app-users',
   standalone: true,
-  imports: [ReactiveFormsModule, ActionDialogComponent],
+  imports: [ReactiveFormsModule, ActionDialogComponent, DrawerComponent],
   templateUrl: './users.component.html',
   styleUrl: './users.component.scss'
 })
@@ -138,10 +140,7 @@ export class UsersComponent implements OnInit {
     finally { this.deactivateLoading.set(false); }
   }
 
-  isInvalid(field: string): boolean {
-    const ctrl = this.form.get(field);
-    return !!(ctrl?.invalid && ctrl?.touched);
-  }
+  isInvalid = (field: string) => isFormFieldInvalid(this.form, field);
 
   roleLabel(r?: string): string {
     const found = this.roles.find(x => x.value === r);

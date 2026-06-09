@@ -1,0 +1,40 @@
+<!-- Backdrop -->
+<div class="fixed inset-0 bg-black/50 backdrop-blur-sm z-[90] transition-opacity duration-300"
+     [class.opacity-100]="isOpen"
+     [class.opacity-0]="!isOpen"
+     [class.pointer-events-none]="!isOpen"
+     (click)="close()">
+</div>
+
+<!-- Panel -->
+<aside class="fixed inset-y-0 right-0 w-full bg-surface-900 border-l border-white/10 z-[100]
+              flex flex-col transform transition-transform duration-300 ease-in-out"
+       [class.max-w-md]="size === 'sm'"
+       [class.max-w-lg]="size === 'md'"
+       [class.max-w-2xl]="size === 'lg'"
+       [class.max-w-3xl]="size === 'xl'"
+       [class.max-w-4xl]="size === '2xl'"
+       [class.translate-x-0]="isOpen"
+       [class.translate-x-full]="!isOpen">
+
+  <!-- Header -->
+  <div class="flex items-center justify-between px-6 py-5 border-b border-white/5 shrink-0">
+    <div>
+      <h2 class="text-white font-semibold font-display">{{ title }}</h2>
+      @if (subtitle) {
+        <p class="text-surface-500 text-xs mt-0.5">{{ subtitle }}</p>
+      }
+    </div>
+    <button type="button" (click)="close()"
+            class="text-surface-400 hover:text-white transition-colors text-xl leading-none">✕</button>
+  </div>
+
+  <!-- Body -->
+  <div class="flex-1 overflow-y-auto px-6 py-6">
+    <ng-content></ng-content>
+  </div>
+
+  <!-- Footer slot (optional) -->
+  <ng-content select="[drawer-footer]"></ng-content>
+
+</aside>

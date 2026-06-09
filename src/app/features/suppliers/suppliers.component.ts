@@ -9,11 +9,13 @@ import { SupplierResponse } from '../../api/models/supplier-response';
 import { parseBlob } from '../../core/utils/parse-blob';
 import { extractApiError } from '../../core/utils/api-error';
 import { ActionDialogComponent } from '../../shared/components/action-dialog/action-dialog.component';
+import { DrawerComponent } from '../../shared/components/drawer/drawer.component';
+import { isFormFieldInvalid } from '../../core/utils/form';
 
 @Component({
   selector: 'app-suppliers',
   standalone: true,
-  imports: [ReactiveFormsModule, ActionDialogComponent],
+  imports: [ReactiveFormsModule, ActionDialogComponent, DrawerComponent],
   templateUrl: './suppliers.component.html',
   styleUrl: './suppliers.component.scss'
 })
@@ -131,8 +133,5 @@ export class SuppliersComponent implements OnInit {
     }
   }
 
-  isInvalid(field: string): boolean {
-    const ctrl = this.form.get(field);
-    return !!(ctrl?.invalid && ctrl?.touched);
-  }
+  isInvalid = (field: string) => isFormFieldInvalid(this.form, field);
 }

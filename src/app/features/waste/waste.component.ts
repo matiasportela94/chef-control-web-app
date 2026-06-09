@@ -14,11 +14,13 @@ import { parseBlob } from '../../core/utils/parse-blob';
 import { formatARS, formatDate } from '../../core/utils/format';
 import { extractApiError } from '../../core/utils/api-error';
 import { PaginatorComponent } from '../../shared/components/paginator/paginator.component';
+import { DrawerComponent } from '../../shared/components/drawer/drawer.component';
+import { isFormFieldInvalid } from '../../core/utils/form';
 
 @Component({
   selector: 'app-waste',
   standalone: true,
-  imports: [ReactiveFormsModule, PaginatorComponent],
+  imports: [ReactiveFormsModule, PaginatorComponent, DrawerComponent],
   templateUrl: './waste.component.html',
   styleUrl: './waste.component.scss'
 })
@@ -149,10 +151,7 @@ export class WasteComponent implements OnInit {
     await this.loadEvents();
   }
 
-  isInvalid(field: string): boolean {
-    const ctrl = this.form.get(field);
-    return !!(ctrl?.invalid && ctrl?.touched);
-  }
+  isInvalid = (field: string) => isFormFieldInvalid(this.form, field);
 
   reasonLabel(r?: string): string {
     const map: Record<string, string> = {

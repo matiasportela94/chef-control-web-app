@@ -20,11 +20,12 @@ import { formatARS, formatDate } from '../../core/utils/format';
 import { todayISO } from '../../core/utils/date';
 import { extractApiError } from '../../core/utils/api-error';
 import { PaginatorComponent } from '../../shared/components/paginator/paginator.component';
+import { DrawerComponent } from '../../shared/components/drawer/drawer.component';
 
 @Component({
   selector: 'app-purchases',
   standalone: true,
-  imports: [ReactiveFormsModule, DecimalPipe, PaginatorComponent],
+  imports: [ReactiveFormsModule, DecimalPipe, PaginatorComponent, DrawerComponent],
   templateUrl: './purchases.component.html',
   styleUrl: './purchases.component.scss'
 })

@@ -14,13 +14,15 @@ import { CategoryResponse } from '../../api/models/category-response';
 import { PagedResponseProductResponse } from '../../api/models/paged-response-product-response';
 import { PaginatorComponent } from '../../shared/components/paginator/paginator.component';
 import { ActionDialogComponent } from '../../shared/components/action-dialog/action-dialog.component';
+import { DrawerComponent } from '../../shared/components/drawer/drawer.component';
 import { parseBlob } from '../../core/utils/parse-blob';
 import { extractApiError } from '../../core/utils/api-error';
+import { isFormFieldInvalid } from '../../core/utils/form';
 
 @Component({
   selector: 'app-products',
   standalone: true,
-  imports: [ReactiveFormsModule, DecimalPipe, PaginatorComponent, ActionDialogComponent],
+  imports: [ReactiveFormsModule, DecimalPipe, PaginatorComponent, ActionDialogComponent, DrawerComponent],
   templateUrl: './products.component.html',
   styleUrl: './products.component.scss'
 })
@@ -169,8 +171,5 @@ export class ProductsComponent implements OnInit {
     await this.loadProducts();
   }
 
-  isInvalid(field: string): boolean {
-    const ctrl = this.form.get(field);
-    return !!(ctrl?.invalid && ctrl?.touched);
-  }
+  isInvalid = (field: string) => isFormFieldInvalid(this.form, field);
 }

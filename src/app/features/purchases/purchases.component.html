@@ -109,27 +109,8 @@
 
 <!-- ══ CREATE DRAWER ════════════════════════════════════════════ -->
 
-<div class="fixed inset-0 bg-black/50 backdrop-blur-sm z-[90] transition-opacity duration-300"
-     [class.opacity-100]="createOpen()"
-     [class.opacity-0]="!createOpen()"
-     [class.pointer-events-none]="!createOpen()"
-     (click)="closeCreate()">
-</div>
-
-<aside class="fixed inset-y-0 right-0 w-full max-w-4xl bg-surface-900 border-l border-white/10 z-[100]
-              flex flex-col transform transition-transform duration-300 ease-in-out"
-       [class.translate-x-0]="createOpen()"
-       [class.translate-x-full]="!createOpen()">
-
-  <!-- Drawer header -->
-  <div class="flex items-center justify-between px-6 py-5 border-b border-white/5 shrink-0">
-    <h2 class="text-white font-semibold font-display">Registrar compra</h2>
-    <button (click)="closeCreate()" class="text-surface-400 hover:text-white transition-colors text-xl leading-none">✕</button>
-  </div>
-
-  <!-- Drawer body -->
-  <div class="flex-1 overflow-y-auto px-6 py-6">
-    <form id="purchase-form" [formGroup]="form" (ngSubmit)="save()" class="space-y-6">
+<app-drawer [isOpen]="createOpen()" title="Registrar compra" size="2xl" (closed)="closeCreate()">
+  <form id="purchase-form" [formGroup]="form" (ngSubmit)="save()" class="space-y-6">
 
       <!-- Meta fields -->
       <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -248,10 +229,8 @@
       }
 
     </form>
-  </div>
 
-  <!-- Drawer footer -->
-  <div class="shrink-0 flex items-center justify-between px-6 py-4 border-t border-white/5">
+  <div drawer-footer class="shrink-0 flex items-center justify-between px-6 py-4 border-t border-white/5">
     <div class="text-sm">
       <span class="text-surface-500">Total:</span>
       <span class="text-white font-bold text-base ml-2 tabular-nums">{{ formatARS(grandTotal) }}</span>
@@ -269,31 +248,13 @@
       </button>
     </div>
   </div>
-
-</aside>
+</app-drawer>
 
 <!-- ══ DETAIL DRAWER ════════════════════════════════════════════ -->
 
-<div class="fixed inset-0 bg-black/50 backdrop-blur-sm z-[90] transition-opacity duration-300"
-     [class.opacity-100]="detailOpen()"
-     [class.opacity-0]="!detailOpen()"
-     [class.pointer-events-none]="!detailOpen()"
-     (click)="closeDetail()">
-</div>
+<app-drawer [isOpen]="detailOpen()" title="Detalle de compra" size="lg" (closed)="closeDetail()">
 
-<aside class="fixed inset-y-0 right-0 w-full max-w-2xl bg-surface-900 border-l border-white/10 z-[100]
-              flex flex-col transform transition-transform duration-300 ease-in-out"
-       [class.translate-x-0]="detailOpen()"
-       [class.translate-x-full]="!detailOpen()">
-
-  <div class="flex items-center justify-between px-6 py-5 border-b border-white/5 shrink-0">
-    <h2 class="text-white font-semibold font-display">Detalle de compra</h2>
-    <button (click)="closeDetail()" class="text-surface-400 hover:text-white transition-colors text-xl leading-none">✕</button>
-  </div>
-
-  <div class="flex-1 overflow-y-auto px-6 py-6">
-
-    @if (detailLoading()) {
+  @if (detailLoading()) {
       <div class="space-y-4 animate-pulse">
         <div class="grid grid-cols-3 gap-4">
           @for (_ of [1,2,3]; track $index) {
@@ -389,6 +350,4 @@
 
     }
 
-  </div>
-
-</aside>
+</app-drawer>

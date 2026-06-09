@@ -22,11 +22,13 @@ import { formatARS } from '../../core/utils/format';
 import { extractApiError } from '../../core/utils/api-error';
 import { PaginatorComponent } from '../../shared/components/paginator/paginator.component';
 import { ActionDialogComponent } from '../../shared/components/action-dialog/action-dialog.component';
+import { DrawerComponent } from '../../shared/components/drawer/drawer.component';
+import { isFormFieldInvalid } from '../../core/utils/form';
 
 @Component({
   selector: 'app-menu',
   standalone: true,
-  imports: [ReactiveFormsModule, DecimalPipe, PaginatorComponent, ActionDialogComponent],
+  imports: [ReactiveFormsModule, DecimalPipe, PaginatorComponent, ActionDialogComponent, DrawerComponent],
   templateUrl: './menu.component.html',
   styleUrl: './menu.component.scss'
 })
@@ -283,10 +285,7 @@ export class MenuComponent implements OnInit {
     await this.loadMenuItems();
   }
 
-  isInvalid(form: FormGroup, field: string): boolean {
-    const ctrl = form.get(field);
-    return !!(ctrl?.invalid && ctrl?.touched);
-  }
+  isInvalid = (form: FormGroup, field: string) => isFormFieldInvalid(form, field);
 
   isRecipeItemInvalid(index: number, field: string): boolean {
     const ctrl = this.recipeItems.at(index).get(field);

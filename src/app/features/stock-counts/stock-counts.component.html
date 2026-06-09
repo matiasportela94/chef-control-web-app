@@ -129,29 +129,8 @@
 
 </div>
 
-<!-- ── DRAWER BACKDROP ─────────────────────────────────────── -->
-<div class="fixed inset-0 bg-black/50 backdrop-blur-sm z-[90] transition-opacity duration-300"
-     [class.opacity-100]="drawerOpen()"
-     [class.opacity-0]="!drawerOpen()"
-     [class.pointer-events-none]="!drawerOpen()"
-     (click)="closeDrawer()">
-</div>
-
-<!-- ── DRAWER (wide para la tabla de productos) ─────────────── -->
-<aside class="fixed inset-y-0 right-0 w-full max-w-2xl bg-surface-900 border-l border-white/10 z-[100]
-              flex flex-col transform transition-transform duration-300 ease-in-out"
-       [class.translate-x-0]="drawerOpen()"
-       [class.translate-x-full]="!drawerOpen()">
-
-  <div class="flex items-center justify-between px-6 py-5 border-b border-white/5 shrink-0">
-    <div>
-      <h2 class="text-white font-semibold font-display">Nuevo conteo de stock</h2>
-      <p class="text-surface-500 text-xs mt-0.5">Ingresá la cantidad física contada para cada producto</p>
-    </div>
-    <button (click)="closeDrawer()" class="text-surface-400 hover:text-white transition-colors text-xl leading-none">✕</button>
-  </div>
-
-  <div class="flex-1 overflow-y-auto">
+<app-drawer [isOpen]="drawerOpen()" title="Nuevo conteo de stock" size="lg" (closed)="closeDrawer()">
+  <div class="-mx-6 -mt-6 overflow-y-auto">
     @if (loadingForm()) {
       <div class="flex items-center justify-center py-16">
         <span class="loader-lg"></span>
@@ -218,7 +197,7 @@
     }
   </div>
 
-  <div class="shrink-0 flex items-center justify-between px-6 py-4 border-t border-white/5">
+  <div drawer-footer class="shrink-0 flex items-center justify-between px-6 py-4 border-t border-white/5">
     <p class="text-xs text-surface-600">
       {{ items.length }} producto{{ items.length !== 1 ? 's' : '' }} · Los campos vacíos se omiten
     </p>
@@ -235,5 +214,4 @@
       </button>
     </div>
   </div>
-
-</aside>
+</app-drawer>
