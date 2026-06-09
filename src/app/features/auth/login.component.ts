@@ -3,8 +3,9 @@ import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angula
 import { Router, ActivatedRoute, RouterLink } from '@angular/router';
 import { take } from 'rxjs';
 import { AuthService } from '../../core/services/auth.service';
+import { RestaurantSummary } from '../../api/models/restaurant-summary';
 
-export type AuthView = 'login' | 'register' | 'forgot';
+export type AuthView = 'login' | 'register' | 'forgot' | 'restaurant-select';
 
 @Component({
   selector: 'app-login',
@@ -18,6 +19,7 @@ export class LoginComponent implements OnInit {
   loading = signal(false);
   errorMsg = signal<string | null>(null);
   forgotSent = signal(false);
+  restaurants = signal<RestaurantSummary[]>([]);
 
   loginForm: FormGroup;
   registerForm: FormGroup;
@@ -62,8 +64,14 @@ export class LoginComponent implements OnInit {
     if (this.loginForm.invalid) { this.loginForm.markAllAsTouched(); return; }
     this.loading.set(true);
     try {
-      await this.authService.login(this.loginForm.getRawValue());
-      this.router.navigate(['/dashboard']);
+      const response = await this.authService.login(this.loginForm.getRawValue());
+      const list = response.restaurants ?? [];
+      if (list.length > 1) {
+        this.restaurants.set(list);
+        this.view.set('restaurant-select');
+      } else {
+        this.router.navigate(['/dashboard']);
+      }
     } catch (e: any) {
       const msg = e?.error?.message ?? 'Email o contraseña incorrectos';
       const ctrl = this.loginForm.get('password')!;
@@ -106,8 +114,22 @@ export class LoginComponent implements OnInit {
     }
   }
 
+  async selectRestaurant(r: RestaurantSummary): Promise<void> {
+    if (!r.id || this.loading()) return;
+    this.loading.set(true);
+    this.errorMsg.set(null);
+    try {
+      await this.authService.switchToRestaurant(r.id);
+      this.router.navigate(['/dashboard']);
+    } catch (e: any) {
+      this.errorMsg.set(e?.error?.message ?? 'Error al conectar con el restaurante');
+    } finally {
+      this.loading.set(false);
+    }
+  }
+
   isInvalid(form: 'login' | 'register' | 'forgot', field: string): boolean {
-    const map: Record<AuthView, FormGroup> = {
+    const map: Record<string, FormGroup> = {
       login:    this.loginForm,
       register: this.registerForm,
       forgot:   this.forgotForm

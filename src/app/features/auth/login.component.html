@@ -215,6 +215,51 @@
         </div>
       }
 
+      <!-- ── RESTAURANT SELECT ─────────────────────────────────── -->
+      @if (view() === 'restaurant-select') {
+        <div class="view-enter">
+          <div class="mb-8">
+            <h1 class="text-2xl font-bold text-white mb-2 font-display">
+              ¿A qué restaurante ingresás?
+            </h1>
+            <p class="text-surface-400 text-sm">Tu cuenta tiene acceso a varios restaurantes.</p>
+          </div>
+
+          @if (errorMsg()) {
+            <div class="bg-danger-500/10 border border-danger-500/20 text-danger-400 text-sm rounded-xl px-4 py-3 mb-4">
+              {{ errorMsg() }}
+            </div>
+          }
+
+          <div class="space-y-3">
+            @for (r of restaurants(); track r.id) {
+              <button (click)="selectRestaurant(r)"
+                      [disabled]="loading()"
+                      class="w-full flex items-center justify-between px-5 py-4 rounded-2xl
+                             bg-surface-900 border border-white/5 hover:border-brand-500/40
+                             hover:bg-surface-800 transition-all text-left group disabled:opacity-50">
+                <div>
+                  <p class="text-white font-semibold group-hover:text-brand-300 transition-colors">{{ r.name }}</p>
+                  @if (r.role) {
+                    <p class="text-xs text-surface-500 mt-0.5">{{ r.role }}</p>
+                  }
+                </div>
+                <svg class="w-5 h-5 text-surface-600 group-hover:text-brand-400 transition-colors shrink-0"
+                     fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                </svg>
+              </button>
+            }
+          </div>
+
+          <p class="text-center text-sm text-surface-500 mt-6">
+            <button (click)="setView('login')" class="text-brand-400 hover:text-brand-300 transition-colors">
+              ← Volver al inicio de sesión
+            </button>
+          </p>
+        </div>
+      }
+
     </div>
   </div>
 </div>

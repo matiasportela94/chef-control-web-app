@@ -3,10 +3,12 @@ import { Api } from '../../api/api';
 import { login } from '../../api/fn/auth-controller/login';
 import { register } from '../../api/fn/auth-controller/register';
 import { forgotPassword } from '../../api/fn/auth-controller/forgot-password';
+import { switchRestaurant } from '../../api/fn/auth-controller/switch-restaurant';
 import { LoginRequest } from '../../api/models/login-request';
 import { LoginResponse } from '../../api/models/login-response';
 import { RegisterRequest } from '../../api/models/register-request';
 import { ForgotPasswordRequest } from '../../api/models/forgot-password-request';
+import { RestaurantSummary } from '../../api/models/restaurant-summary';
 import { parseBlob } from '../utils/parse-blob';
 import { logout as logoutFn } from '../../api/fn/auth-controller/logout';
 
@@ -15,12 +17,13 @@ const USER_KEY = 'cc_user';
 export interface CurrentUser {
   name: string;
   email: string;
+  restaurantId: string;
   restaurantName: string;
+  restaurants: RestaurantSummary[];
 }
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
-  /** Datos de display — no sensibles, persisten en sessionStorage */
   readonly currentUser = signal<CurrentUser | null>(this.loadUser());
 
   constructor(private api: Api) {}
@@ -45,6 +48,13 @@ export class AuthService {
     await this.api.invoke(forgotPassword, { body });
   }
 
+  async switchToRestaurant(restaurantId: string): Promise<void> {
+    const response = await parseBlob<LoginResponse>(
+      await this.api.invoke(switchRestaurant, { body: { restaurantId } }) as unknown
+    );
+    this.persistUser(response);
+  }
+
   async logout(): Promise<void> {
     try {
       await this.api.invoke(logoutFn);
@@ -57,7 +67,9 @@ export class AuthService {
     const user: CurrentUser = {
       name:           r.name                ?? '',
       email:          r.email               ?? '',
+      restaurantId:   r.activeRestaurantId  ?? '',
       restaurantName: r.activeRestaurantName ?? '',
+      restaurants:    r.restaurants          ?? [],
     };
     sessionStorage.setItem(USER_KEY, JSON.stringify(user));
     this.currentUser.set(user);
