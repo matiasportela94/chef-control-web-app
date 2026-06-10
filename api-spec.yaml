@@ -12,6 +12,26 @@ servers:
 security:
 - bearerAuth: []
 paths:
+  /ai/interpret:
+    post:
+      tags:
+      - ai-controller
+      operationId: interpretText
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/InterpretTextRequest'
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InterpretTextResponse'
+      security:
+      - bearerAuth: []
   /users/{id}:
     get:
       tags:
@@ -1058,6 +1078,36 @@ paths:
           description: OK
 components:
   schemas:
+    InterpretTextRequest:
+      required:
+      - message
+      type: object
+      properties:
+        message:
+          type: string
+          maxLength: 500
+    InterpretTextResponse:
+      type: object
+      properties:
+        intent:
+          type: string
+          enum:
+          - purchase
+          - waste
+          - sale
+          - stock_adjustment
+          - query
+          - multi
+          - unknown
+        confidence:
+          type: integer
+        needsConfirmation:
+          type: boolean
+        data:
+          type: object
+          additionalProperties: true
+        responseToUser:
+          type: string
     UpdateUserRequest:
       required:
       - name

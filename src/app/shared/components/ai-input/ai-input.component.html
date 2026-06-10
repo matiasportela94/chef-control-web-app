@@ -1,0 +1,95 @@
+@if (isOpen) {
+  <div class="fixed inset-0 bg-black/60 backdrop-blur-sm z-[200] flex items-center justify-center p-4"
+       (click)="close()">
+    <div class="bg-surface-900 border border-white/10 rounded-2xl w-full max-w-lg shadow-2xl"
+         (click)="$event.stopPropagation()">
+
+      <!-- Header -->
+      <div class="flex items-start justify-between px-6 pt-5 pb-4 border-b border-white/10">
+        <div>
+          <h2 class="text-white font-semibold font-display text-base">Entrada rápida</h2>
+          <p class="text-surface-400 text-sm mt-0.5">Describí una operación en lenguaje natural</p>
+        </div>
+        <button (click)="close()"
+                class="text-surface-400 hover:text-white transition-colors p-1 rounded-lg hover:bg-white/5 -mt-0.5 -mr-1">
+          <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M18 6 6 18M6 6l12 12"/>
+          </svg>
+        </button>
+      </div>
+
+      <!-- Body -->
+      <div class="p-6 space-y-4">
+
+        <!-- Textarea -->
+        <div class="space-y-1.5">
+          <textarea
+            [(ngModel)]="message"
+            (keydown)="$any($event).ctrlKey && $any($event).key === 'Enter' && interpret()"
+            placeholder="Ej: compramos 10kg de tomate a $5000 / se rompieron 3 botellas de aceite / vendimos 8 milanesas..."
+            rows="3"
+            [disabled]="loading()"
+            class="w-full bg-surface-800 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-surface-500 text-sm resize-none focus:outline-none focus:border-brand-500 transition-colors disabled:opacity-50">
+          </textarea>
+          <p class="text-surface-500 text-xs">Ctrl+Enter para interpretar</p>
+        </div>
+
+        <!-- Error -->
+        @if (error()) {
+          <p class="text-danger-400 text-sm flex items-center gap-2">
+            <svg class="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/>
+            </svg>
+            {{ error() }}
+          </p>
+        }
+
+        <!-- Result -->
+        @if (result(); as r) {
+          <div class="bg-surface-800/80 border border-white/5 rounded-xl p-4 space-y-3">
+            <!-- Intent + confidence -->
+            <div class="flex items-center gap-2 flex-wrap">
+              <span class="px-2.5 py-0.5 rounded-full text-xs font-semibold {{ intentBadgeClass(r.intent) }}">
+                {{ intentLabel(r.intent) }}
+              </span>
+              <div class="flex items-center gap-1.5 flex-1 min-w-0">
+                <div class="flex-1 bg-surface-700 rounded-full h-1.5 max-w-[80px]">
+                  <div class="h-1.5 rounded-full transition-all {{ confidenceBarClass(r.confidence) }}"
+                       [style.width.%]="r.confidence ?? 0"></div>
+                </div>
+                <span class="text-surface-400 text-xs">{{ r.confidence }}%</span>
+              </div>
+              @if (r.needsConfirmation) {
+                <span class="text-warning-400 text-xs flex items-center gap-1">
+                  <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z"/>
+                  </svg>
+                  Verificar antes de registrar
+                </span>
+              }
+            </div>
+            <!-- AI response -->
+            <p class="text-surface-200 text-sm leading-relaxed">{{ r.responseToUser }}</p>
+          </div>
+        }
+
+        <!-- Button -->
+        <button
+          (click)="interpret()"
+          [disabled]="loading() || !message.trim()"
+          class="w-full bg-brand-600 hover:bg-brand-500 text-white font-medium py-2.5 px-4 rounded-xl transition-colors disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2 text-sm">
+          @if (loading()) {
+            <div class="w-4 h-4 rounded-full border-2 border-white/30 border-t-white animate-spin"></div>
+            Interpretando...
+          } @else {
+            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904 9 18.75l-.813-2.846a4.5 4.5 0 0 0-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 0 0 3.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 0 0 3.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 0 0-3.09 3.09Z"/>
+            </svg>
+            Interpretar
+          }
+        </button>
+
+      </div>
+    </div>
+  </div>
+}
