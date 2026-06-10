@@ -23,6 +23,10 @@ export class AiInputComponent {
 
   constructor(private api: Api) {}
 
+  onKeydown(e: KeyboardEvent): void {
+    if (e.ctrlKey && e.key === 'Enter') void this.interpret();
+  }
+
   async interpret(): Promise<void> {
     const msg = this.message.trim();
     if (!msg || this.loading()) return;

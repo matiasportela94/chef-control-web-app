@@ -25,7 +25,7 @@
         <div class="space-y-1.5">
           <textarea
             [(ngModel)]="message"
-            (keydown)="$any($event).ctrlKey && $any($event).key === 'Enter' && interpret()"
+            (keydown)="onKeydown($event)"
             placeholder="Ej: compramos 10kg de tomate a $5000 / se rompieron 3 botellas de aceite / vendimos 8 milanesas..."
             rows="3"
             [disabled]="loading()"
