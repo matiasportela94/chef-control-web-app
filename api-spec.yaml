@@ -12,6 +12,26 @@ servers:
 security:
 - bearerAuth: []
 paths:
+  /ai/execute:
+    post:
+      tags:
+      - ai-controller
+      operationId: executeIntent
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ExecuteIntentRequest'
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExecuteIntentResponse'
+      security:
+      - bearerAuth: []
   /ai/interpret:
     post:
       tags:
@@ -1078,6 +1098,27 @@ paths:
           description: OK
 components:
   schemas:
+    ExecuteIntentRequest:
+      required:
+      - intent
+      type: object
+      properties:
+        intent:
+          type: string
+        data:
+          type: object
+          additionalProperties: true
+    ExecuteIntentResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        message:
+          type: string
+        created:
+          type: integer
+        skipped:
+          type: integer
     InterpretTextRequest:
       required:
       - message
