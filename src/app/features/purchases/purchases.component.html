@@ -66,10 +66,20 @@
                     {{ p.notes || '—' }}
                   </td>
                   <td class="px-6 py-4 text-right">
-                    <button (click)="openDetail(p)"
-                            class="text-xs text-surface-400 hover:text-white px-2.5 py-1.5 rounded-lg border border-white/10 hover:border-white/20 transition-all">
-                      Ver detalle
-                    </button>
+                    <div class="flex items-center justify-end gap-2">
+                      <button (click)="openEdit(p)"
+                              class="text-xs text-surface-400 hover:text-white px-2.5 py-1.5 rounded-lg border border-white/10 hover:border-white/20 transition-all">
+                        Editar precio
+                      </button>
+                      <button (click)="openReverseModal(p)"
+                              class="text-xs text-warning-400 hover:text-warning-300 px-2.5 py-1.5 rounded-lg border border-warning-500/20 hover:border-warning-500/40 transition-all">
+                        Corregir
+                      </button>
+                      <button (click)="openDetail(p)"
+                              class="text-xs text-surface-400 hover:text-white px-2.5 py-1.5 rounded-lg border border-white/10 hover:border-white/20 transition-all">
+                        Ver detalle
+                      </button>
+                    </div>
                   </td>
                 </tr>
               }
@@ -93,9 +103,11 @@
 
 </div>
 
-<!-- ══ CREATE DRAWER ════════════════════════════════════════════ -->
+<!-- ══ CREATE / EDIT DRAWER ══════════════════════════════════════ -->
 
-<app-drawer [isOpen]="createOpen()" title="Registrar compra" size="2xl" (closed)="closeCreate()">
+<app-drawer [isOpen]="createOpen()"
+            [title]="editMode() ? 'Editar compra' : 'Registrar compra'"
+            size="2xl" (closed)="closeCreate()">
   <form id="purchase-form" [formGroup]="form" (ngSubmit)="save()" class="space-y-6">
 
       <!-- Meta fields -->
@@ -128,10 +140,15 @@
       <div>
         <div class="flex items-center justify-between mb-3">
           <h3 class="text-sm font-semibold text-surface-300">Ítems de la compra</h3>
-          <button type="button" (click)="addItem()"
-                  class="text-xs text-brand-400 hover:text-brand-300 border border-brand-500/20 hover:border-brand-500/40 px-3 py-1.5 rounded-lg transition-all">
-            + Agregar ítem
-          </button>
+          @if (!editMode()) {
+            <button type="button" (click)="addItem()"
+                    class="text-xs text-brand-400 hover:text-brand-300 border border-brand-500/20 hover:border-brand-500/40 px-3 py-1.5 rounded-lg transition-all">
+              + Agregar ítem
+            </button>
+          }
+          @if (editMode()) {
+            <span class="text-xs text-surface-600">Producto y cantidad son inmutables. Solo podés editar el precio.</span>
+          }
         </div>
 
         <!-- Column headers -->
@@ -150,37 +167,59 @@
         <!-- Items list -->
         <div formArrayName="items" class="space-y-2">
           @for (item of items.controls; track $index; let i = $index) {
-            <div [formGroupName]="i" class="items-row bg-surface-800/50 rounded-xl p-3">
+            <div [formGroupName]="i" class="items-row bg-surface-800/50 rounded-xl p-3"
+                 [class.opacity-80]="editMode()">
 
-              <!-- Product -->
-              <select formControlName="productId" (change)="onProductChange(i)"
-                      class="input-field-sm" [class.input-error]="isItemInvalid(i, 'productId')">
-                <option value="">Seleccioná un producto</option>
-                @for (p of products(); track p.id) {
-                  <option [value]="p.id">{{ p.name }}@if (p.sku) { · {{ p.sku }} }</option>
-                }
-              </select>
+              @if (!editMode()) {
+                <!-- Product (create mode: select) -->
+                <select formControlName="productId" (change)="onProductChange(i)"
+                        class="input-field-sm" [class.input-error]="isItemInvalid(i, 'productId')">
+                  <option value="">Seleccioná un producto</option>
+                  @for (p of products(); track p.id) {
+                    <option [value]="p.id">{{ p.name }}@if (p.sku) { · {{ p.sku }} }</option>
+                  }
+                </select>
 
-              <!-- Unit -->
-              <select formControlName="unitId"
-                      class="input-field-sm" [class.input-error]="isItemInvalid(i, 'unitId')">
-                <option value="">Unidad</option>
-                @for (u of units(); track u.id) {
-                  <option [value]="u.id">{{ u.abbreviation }}</option>
-                }
-              </select>
+                <!-- Unit (create mode: select) -->
+                <select formControlName="unitId"
+                        class="input-field-sm" [class.input-error]="isItemInvalid(i, 'unitId')">
+                  <option value="">Unidad</option>
+                  @for (u of units(); track u.id) {
+                    <option [value]="u.id">{{ u.abbreviation }}</option>
+                  }
+                </select>
 
-              <!-- Quantity -->
-              <input formControlName="quantity" type="number" min="0.001" step="any" placeholder="0"
-                     class="input-field-sm" [class.input-error]="isItemInvalid(i, 'quantity')">
+                <!-- Quantity (create mode: editable) -->
+                <input formControlName="quantity" type="number" min="0.001" step="any" placeholder="0"
+                       class="input-field-sm" [class.input-error]="isItemInvalid(i, 'quantity')">
+              } @else {
+                <!-- Product (edit mode: read-only text) -->
+                <div class="flex items-center px-3 py-2 bg-surface-800 rounded-lg text-surface-300 text-sm">
+                  {{ item.get('_productName')?.value || '—' }}
+                </div>
 
-              <!-- Price per unit -->
-              <input formControlName="pricePerUnit" type="number" min="0" step="any" placeholder="$ 0,00"
-                     class="input-field-sm" [class.input-error]="isItemInvalid(i, 'pricePerUnit')">
+                <!-- Unit (edit mode: read-only) -->
+                <div class="flex items-center px-3 py-2 bg-surface-800 rounded-lg text-surface-500 text-sm">
+                  {{ item.get('_unitAbbr')?.value || '—' }}
+                </div>
 
-              <!-- Expiration date -->
-              <input formControlName="expirationDate" type="date"
-                     class="input-field-sm">
+                <!-- Quantity (edit mode: read-only) -->
+                <div class="flex items-center px-3 py-2 bg-surface-800 rounded-lg text-surface-500 text-sm tabular-nums">
+                  {{ item.get('quantity')?.value | number:'1.0-3' }}
+                </div>
+              }
+
+              <!-- Price per unit (always editable) -->
+              <input formControlName="pricePerUnit" type="number" min="0.01" step="any" placeholder="$ 0,00"
+                     class="input-field-sm" [class.input-error]="isItemInvalid(i, 'pricePerUnit')"
+                     [class.ring-1]="editMode()" [class.ring-brand-500]="editMode()">
+
+              <!-- Expiration date (create mode only) -->
+              @if (!editMode()) {
+                <input formControlName="expirationDate" type="date" class="input-field-sm">
+              } @else {
+                <div></div>
+              }
 
               <!-- Subtotal -->
               <div class="flex items-center justify-end">
@@ -189,19 +228,23 @@
                 </span>
               </div>
 
-              <!-- Remove -->
+              <!-- Remove (create mode only) -->
               <div class="flex items-center justify-center">
-                <button type="button" (click)="removeItem(i)"
-                        class="text-surface-500 hover:text-danger-400 transition-colors text-lg leading-none w-7 h-7 flex items-center justify-center rounded-lg hover:bg-danger-500/10">
-                  ✕
-                </button>
+                @if (!editMode()) {
+                  <button type="button" (click)="removeItem(i)"
+                          class="text-surface-500 hover:text-danger-400 transition-colors text-lg leading-none w-7 h-7 flex items-center justify-center rounded-lg hover:bg-danger-500/10">
+                    ✕
+                  </button>
+                } @else {
+                  <div class="w-7"></div>
+                }
               </div>
 
             </div>
           }
         </div>
 
-        @if (items.length === 0) {
+        @if (items.length === 0 && !editMode()) {
           <div class="border border-dashed border-white/10 rounded-xl p-8 text-center">
             <p class="text-surface-500 text-sm">Sin ítems — usá "+ Agregar ítem" para comenzar.</p>
           </div>
@@ -230,7 +273,7 @@
               class="flex items-center gap-2 bg-brand-600 hover:bg-brand-500 disabled:opacity-50 disabled:cursor-not-allowed
                      text-white font-semibold px-5 py-2.5 rounded-xl text-sm transition-all">
         @if (saving()) { <span class="loader"></span> }
-        Registrar compra
+        {{ editMode() ? 'Guardar cambios' : 'Registrar compra' }}
       </button>
     </div>
   </div>
@@ -337,3 +380,97 @@
     }
 
 </app-drawer>
+
+<!-- ══ MODAL CORREGIR COMPRA ════════════════════════════════════ -->
+
+@if (reverseModalOpen()) {
+  <div class="fixed inset-0 z-50 flex items-center justify-center p-4"
+       (click)="closeReverseModal()">
+    <div class="absolute inset-0 bg-black/60 backdrop-blur-sm"></div>
+    <div class="relative bg-surface-900 border border-white/10 rounded-2xl shadow-2xl w-full max-w-lg"
+         (click)="$event.stopPropagation()">
+
+      <!-- Header -->
+      <div class="px-6 py-5 border-b border-white/5">
+        <div class="flex items-center gap-3">
+          <span class="text-2xl">⚠️</span>
+          <div>
+            <h2 class="text-white font-semibold">Corregir compra</h2>
+            <p class="text-surface-500 text-sm mt-0.5">
+              Se revertirán los movimientos de stock y podrás re-ingresar la compra corregida.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Content -->
+      <div class="px-6 py-5">
+        @if (reverseLoading()) {
+          <div class="space-y-3 animate-pulse">
+            @for (_ of [1,2]; track $index) {
+              <div class="flex justify-between items-center bg-surface-800 rounded-xl px-4 py-3">
+                <div class="h-4 w-32 bg-surface-700 rounded"></div>
+                <div class="h-4 w-20 bg-surface-700 rounded"></div>
+              </div>
+            }
+          </div>
+        } @else if (reverseTarget(); as d) {
+          <div class="space-y-2 mb-5">
+            <div class="grid grid-cols-3 gap-2 text-xs text-surface-500 uppercase tracking-wider px-4 mb-1">
+              <span>Producto</span>
+              <span class="text-right">Comprado</span>
+              <span class="text-right">Disponible</span>
+            </div>
+            @for (item of d.items; track item.id) {
+              @let consumed = (item.quantity ?? 0) - (item.quantityRemaining ?? item.quantity ?? 0);
+              <div class="flex items-center bg-surface-800/60 rounded-xl px-4 py-3 gap-2"
+                   [ngClass]="consumed > 0 ? 'border border-warning-500/20' : ''">
+                <div class="flex-1 text-sm text-white font-medium">{{ item.productName }}</div>
+                <div class="text-sm text-surface-400 tabular-nums w-24 text-right">
+                  {{ item.quantity | number:'1.0-3' }} {{ item.unitAbbreviation }}
+                </div>
+                <div class="text-sm tabular-nums w-24 text-right"
+                     [class.text-warning-400]="consumed > 0"
+                     [class.text-surface-400]="consumed === 0">
+                  {{ (item.quantityRemaining ?? item.quantity) | number:'1.0-3' }} {{ item.unitAbbreviation }}
+                </div>
+              </div>
+              @if (consumed > 0) {
+                <p class="text-xs text-warning-500 px-4">
+                  {{ consumed | number:'1.0-3' }} {{ item.unitAbbreviation }} ya consumidos en ventas o mermas.
+                </p>
+              }
+            }
+          </div>
+
+          <div class="bg-surface-800/40 border border-white/5 rounded-xl px-4 py-3 text-xs text-surface-500 mb-4">
+            Los movimientos de stock existentes no se modifican — se crearán nuevos movimientos de reversión en el ledger.
+            Después se abrirá el formulario de carga pre-llenado para que puedas ingresar los datos correctos.
+          </div>
+        }
+
+        @if (reverseError()) {
+          <div class="bg-danger-500/10 border border-danger-500/20 text-danger-400 text-sm rounded-xl px-4 py-3 mb-4">
+            {{ reverseError() }}
+          </div>
+        }
+      </div>
+
+      <!-- Footer -->
+      <div class="flex items-center justify-end gap-3 px-6 py-4 border-t border-white/5">
+        <button (click)="closeReverseModal()"
+                class="text-sm text-surface-400 hover:text-white border border-white/10 hover:border-white/20 px-4 py-2.5 rounded-xl transition-all">
+          Cancelar
+        </button>
+        <button (click)="confirmReverse()" [disabled]="reversing() || reverseLoading()"
+                class="flex items-center gap-2 bg-warning-600 hover:bg-warning-500 disabled:opacity-50 disabled:cursor-not-allowed
+                       text-white font-semibold px-5 py-2.5 rounded-xl text-sm transition-all">
+          @if (reversing()) { <span class="loader"></span> }
+          Revertir y corregir
+        </button>
+      </div>
+
+    </div>
+  </div>
+}
+

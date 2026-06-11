@@ -1,11 +1,12 @@
-import { Component, OnInit, signal } from '@angular/core';
-import { DecimalPipe, DatePipe } from '@angular/common';
+import { Component, OnInit, DestroyRef, inject, signal, computed } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { DecimalPipe, DatePipe, PercentPipe } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { Api } from '../../api/api';
+import { AiRefreshService } from '../../core/services/ai-refresh.service';
 import { getSummary } from '../../api/fn/dashboard-controller/get-summary';
 import { list4 } from '../../api/fn/alert-controller/list-4';
 import { DashboardResponse } from '../../api/models/dashboard-response';
-import { ProductStock } from '../../api/models/product-stock';
 import { AlertResponse } from '../../api/models/alert-response';
 import { PagedResponseAlertResponse } from '../../api/models/paged-response-alert-response';
 import { parseBlob } from '../../core/utils/parse-blob';
@@ -15,11 +16,13 @@ import { SpinnerComponent } from '../../shared/components/spinner/spinner.compon
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [DecimalPipe, DatePipe, RouterLink, SpinnerComponent],
+  imports: [DecimalPipe, DatePipe, PercentPipe, RouterLink, SpinnerComponent],
   templateUrl: './dashboard.component.html',
   styleUrl: './dashboard.component.scss'
 })
 export class DashboardComponent implements OnInit {
+  private readonly destroyRef = inject(DestroyRef);
+
   loading = signal(true);
   error   = signal<string | null>(null);
   data    = signal<DashboardResponse | null>(null);
@@ -27,9 +30,20 @@ export class DashboardComponent implements OnInit {
 
   readonly today = new Date();
 
-  constructor(private api: Api) {}
+  foodCostPct = computed(() => {
+    const k = this.data()?.kpis;
+    if (!k) return null;
+    const cost  = Number(k.salesCostThisMonth  ?? 0);
+    const sales = Number(k.salesTotalThisMonth ?? 0);
+    return sales > 0 ? (cost / sales) : null;
+  });
+
+  constructor(private api: Api, private aiRefresh: AiRefreshService) {}
 
   async ngOnInit(): Promise<void> {
+    this.aiRefresh.executed$
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(() => void Promise.all([this.load(), this.loadAlerts()]));
     await Promise.all([this.load(), this.loadAlerts()]);
   }
 
@@ -54,28 +68,7 @@ export class DashboardComponent implements OnInit {
     } catch { /* non-critical */ }
   }
 
-  get kpis()     { return this.data()?.kpis; }
-  get products() { return this.data()?.products ?? []; }
-
-  statusLabel(s?: ProductStock['status']): string {
-    const map: Record<string, string> = {
-      OK:           'OK',
-      LOW_STOCK:    'Bajo stock',
-      OVERSTOCK:    'Sobrestock',
-      NO_THRESHOLD: 'Sin umbral'
-    };
-    return s ? (map[s] ?? '-') : '-';
-  }
-
-  statusClass(s?: ProductStock['status']): string {
-    const map: Record<string, string> = {
-      OK:           'badge-success',
-      LOW_STOCK:    'badge-warning',
-      OVERSTOCK:    'badge-brand',
-      NO_THRESHOLD: 'badge-neutral'
-    };
-    return s ? (map[s] ?? 'badge-neutral') : 'badge-neutral';
-  }
+  get kpis() { return this.data()?.kpis; }
 
   alertSeverityClass(s?: string): string {
     if (!s) return 'alert-low';

@@ -1,6 +1,8 @@
-import { Component, HostListener, OnInit, signal } from '@angular/core';
+import { Component, HostListener, OnInit, DestroyRef, inject, signal } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormArray, FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Api } from '../../api/api';
+import { AiRefreshService } from '../../core/services/ai-refresh.service';
 import { list1 as listSales }      from '../../api/fn/sale-controller/list-1';
 import { create1 as createSale }   from '../../api/fn/sale-controller/create-1';
 import { get2 as getSale }         from '../../api/fn/sale-controller/get-2';
@@ -11,7 +13,7 @@ import { PagedResponseSaleResponse }     from '../../api/models/paged-response-s
 import { PagedResponseMenuItemResponse } from '../../api/models/paged-response-menu-item-response';
 import { parseBlob } from '../../core/utils/parse-blob';
 import { formatARS, formatDate } from '../../core/utils/format';
-import { todayISO } from '../../core/utils/date';
+import { todayISO, dateToInstant } from '../../core/utils/date';
 import { extractApiError } from '../../core/utils/api-error';
 import { PaginatorComponent } from '../../shared/components/paginator/paginator.component';
 import { DrawerComponent } from '../../shared/components/drawer/drawer.component';
@@ -25,6 +27,8 @@ import { SpinnerComponent } from '../../shared/components/spinner/spinner.compon
   styleUrl: './sales.component.scss'
 })
 export class SalesComponent implements OnInit {
+  private readonly destroyRef = inject(DestroyRef);
+
   sales    = signal<SaleResponse[]>([]);
   loading  = signal(true);
   error    = signal<string | null>(null);
@@ -44,7 +48,7 @@ export class SalesComponent implements OnInit {
 
   form: FormGroup;
 
-  constructor(private api: Api, private fb: FormBuilder) {
+  constructor(private api: Api, private fb: FormBuilder, private aiRefresh: AiRefreshService) {
     this.form = this.fb.group({
       soldAt: [todayISO()],
       notes:  [''],
@@ -53,6 +57,9 @@ export class SalesComponent implements OnInit {
   }
 
   async ngOnInit(): Promise<void> {
+    this.aiRefresh.executed$
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(() => void this.loadSales());
     await Promise.all([this.loadSales(), this.loadMenuItems()]);
   }
 
@@ -142,7 +149,7 @@ export class SalesComponent implements OnInit {
         menuItemId: i.menuItemId,
         quantity:   +i.quantity,
       })),
-      ...(v.soldAt       ? { soldAt: v.soldAt }         : {}),
+      ...(v.soldAt       ? { soldAt: dateToInstant(v.soldAt) }   : {}),
       ...(v.notes?.trim() ? { notes: v.notes.trim() }   : {}),
     };
     try {

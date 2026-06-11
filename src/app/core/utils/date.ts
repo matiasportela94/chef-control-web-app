@@ -2,6 +2,11 @@ export function todayISO(): string {
   return new Date().toISOString().substring(0, 10);
 }
 
+/** Converts a YYYY-MM-DD date string to a UTC instant string accepted by the backend. */
+export function dateToInstant(dateStr: string): string {
+  return dateStr ? `${dateStr}T00:00:00.000Z` : '';
+}
+
 export function firstOfMonth(): string {
   const d = new Date();
   return new Date(d.getFullYear(), d.getMonth(), 1).toISOString().substring(0, 10);

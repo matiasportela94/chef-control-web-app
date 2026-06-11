@@ -33,74 +33,89 @@
   <!-- ── DATA ────────────────────────────────────────────── -->
   @if (!loading() && !error() && data()) {
 
-    <!-- KPI cards -->
-    <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
+    <!-- Fila 1: Ventas · Compras · Food cost -->
+    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4">
 
-      <div class="bg-surface-900 border border-white/5 rounded-2xl p-6">
-        <p class="text-xs font-semibold uppercase tracking-wider text-success-500 mb-3">Total activos</p>
-        <p class="text-4xl font-black text-white mb-1 font-display">
-          {{ kpis?.totalActiveProducts ?? 0 }}
+      <a routerLink="/sales"
+         class="block bg-surface-900 border border-white/5 rounded-2xl p-6 hover:border-success-500/30 hover:bg-success-500/5 transition-all group">
+        <p class="text-xs font-semibold uppercase tracking-wider text-success-500 mb-3">Ventas del mes</p>
+        <p class="text-3xl font-black text-white mb-1 font-display leading-none">
+          {{ formatARS(kpis?.salesTotalThisMonth) }}
         </p>
-        <p class="text-xs text-surface-500">productos registrados</p>
-      </div>
+        <p class="text-xs text-surface-500 mt-2 group-hover:text-success-400/60 transition-colors">
+          {{ kpis?.salesCountThisMonth ?? 0 }} ventas registradas →
+        </p>
+      </a>
+
+      <a routerLink="/purchases"
+         class="block bg-surface-900 border border-white/5 rounded-2xl p-6 hover:border-brand-500/30 hover:bg-brand-500/5 transition-all group">
+        <p class="text-xs font-semibold uppercase tracking-wider text-brand-400 mb-3">Compras del mes</p>
+        <p class="text-3xl font-black text-white mb-1 font-display leading-none">
+          {{ formatARS(kpis?.purchasesTotalThisMonth) }}
+        </p>
+        <p class="text-xs text-surface-500 mt-2 group-hover:text-brand-400/60 transition-colors">
+          {{ kpis?.purchasesThisMonth ?? 0 }} órdenes de compra →
+        </p>
+      </a>
+
+      <a routerLink="/food-cost"
+         class="block bg-surface-900 border border-white/5 rounded-2xl p-6 hover:border-warning-500/30 hover:bg-warning-500/5 transition-all group">
+        <p class="text-xs font-semibold uppercase tracking-wider text-warning-400 mb-3">Food cost</p>
+        @if (foodCostPct() !== null) {
+          <p class="text-3xl font-black mb-1 font-display leading-none"
+             [class]="(foodCostPct()! > 0.35) ? 'text-danger-400' : (foodCostPct()! > 0.28) ? 'text-warning-400' : 'text-success-400'">
+            {{ foodCostPct()! | percent:'1.1-1' }}
+          </p>
+          <p class="text-xs text-surface-500 mt-2">
+            costo / ventas · {{ formatARS(kpis?.salesCostThisMonth) }} insumos →
+          </p>
+        } @else {
+          <p class="text-3xl font-black text-surface-600 mb-1 font-display leading-none">—</p>
+          <p class="text-xs text-surface-500 mt-2">Sin ventas registradas este mes →</p>
+        }
+      </a>
+
+    </div>
+
+    <!-- Fila 2: Merma · Bajo stock · Sobrestock -->
+    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4">
+
+      <a routerLink="/waste"
+         class="block bg-surface-900 border border-white/5 rounded-2xl p-6 hover:border-danger-500/30 hover:bg-danger-500/5 transition-all group">
+        <p class="text-xs font-semibold uppercase tracking-wider text-danger-400 mb-3">Merma del mes</p>
+        <p class="text-3xl font-black text-danger-400 mb-1 font-display leading-none">
+          {{ formatARS(kpis?.wasteTotalArsThisMonth) }}
+        </p>
+        <p class="text-xs text-surface-500 mt-2 group-hover:text-danger-400/60 transition-colors">
+          {{ kpis?.wasteEventsThisMonth ?? 0 }} eventos registrados →
+        </p>
+      </a>
 
       <a routerLink="/stock"
          class="block bg-surface-900 border border-white/5 rounded-2xl p-6 hover:border-warning-500/30 hover:bg-warning-500/5 transition-all group">
         <p class="text-xs font-semibold uppercase tracking-wider text-warning-500 mb-3">Bajo stock</p>
-        <p class="text-4xl font-black text-white mb-1 font-display">
+        <p class="text-3xl font-black font-display leading-none mb-1"
+           [class]="(kpis?.lowStockProducts ?? 0) > 0 ? 'text-warning-400' : 'text-white'">
           {{ kpis?.lowStockProducts ?? 0 }}
         </p>
-        <p class="text-xs text-surface-500 group-hover:text-warning-400/60 transition-colors">
-          productos bajo mínimo →
+        <p class="text-xs text-surface-500 mt-2 group-hover:text-warning-400/60 transition-colors">
+          productos bajo su mínimo →
         </p>
       </a>
 
       <div class="bg-surface-900 border border-white/5 rounded-2xl p-6">
         <p class="text-xs font-semibold uppercase tracking-wider text-brand-400 mb-3">Sobrestock</p>
-        <p class="text-4xl font-black text-white mb-1 font-display">
+        <p class="text-3xl font-black text-white mb-1 font-display leading-none">
           {{ kpis?.overstockProducts ?? 0 }}
         </p>
-        <p class="text-xs text-surface-500">productos sobre máximo</p>
+        <p class="text-xs text-surface-500 mt-2">productos sobre su máximo</p>
       </div>
-
-      <a routerLink="/waste"
-         class="block bg-surface-900 border border-white/5 rounded-2xl p-6 hover:border-danger-500/30 hover:bg-danger-500/5 transition-all group">
-        <p class="text-xs font-semibold uppercase tracking-wider text-danger-400 mb-3">Mermas este mes</p>
-        <p class="text-4xl font-black text-danger-400 mb-1 font-display">
-          {{ kpis?.wasteEventsThisMonth ?? 0 }}
-        </p>
-        <p class="text-xs text-surface-500 group-hover:text-danger-400/60 transition-colors">
-          Ver mermas · Registrar →
-        </p>
-      </a>
 
     </div>
 
-    <!-- Compras summary + accesos rápidos -->
-    <div class="bg-surface-900 border border-white/5 rounded-2xl px-6 py-4 mb-4 flex flex-wrap items-center gap-6 text-sm">
-      <span class="text-surface-400">
-        Compras este mes:
-        <strong class="text-surface-200 ml-1">{{ kpis?.purchasesThisMonth ?? 0 }}</strong>
-      </span>
-      <span class="text-surface-400">
-        Monto total:
-        <strong class="text-surface-200 ml-1">{{ formatARS(kpis?.purchasesTotalThisMonth) }}</strong>
-      </span>
-      <div class="ml-auto flex items-center gap-2 flex-wrap">
-        <a routerLink="/waste"
-           class="text-xs text-surface-400 hover:text-white border border-white/10 hover:border-white/20 px-3 py-1.5 rounded-lg transition-all">
-          + Registrar merma
-        </a>
-        <a routerLink="/stock-counts"
-           class="text-xs text-surface-400 hover:text-white border border-white/10 hover:border-white/20 px-3 py-1.5 rounded-lg transition-all">
-          + Nuevo conteo
-        </a>
-      </div>
-    </div>
-
-    <!-- Alertas activas -->
+    <!-- Fila 3: Alertas activas -->
     @if (alerts().length > 0) {
-      <div class="bg-surface-900 border border-white/5 rounded-2xl overflow-hidden mb-4">
+      <div class="bg-surface-900 border border-white/5 rounded-2xl overflow-hidden">
         <div class="px-6 py-4 border-b border-white/5 flex items-center justify-between">
           <div class="flex items-center gap-2">
             <span class="w-2 h-2 rounded-full bg-warning-400 animate-pulse"></span>
@@ -126,63 +141,11 @@
           }
         </div>
       </div>
-    }
-
-    <!-- Products table -->
-    <div class="bg-surface-900 border border-white/5 rounded-2xl overflow-hidden">
-
-      <div class="px-6 py-4 border-b border-white/5 flex items-center justify-between">
-        <h2 class="text-sm font-semibold text-white">Stock de productos</h2>
-        <a routerLink="/stock-counts" class="text-xs text-surface-500 hover:text-surface-300 transition-colors">
-          Hacer conteo →
-        </a>
+    } @else {
+      <div class="bg-surface-900 border border-white/5 rounded-2xl px-6 py-8 text-center">
+        <p class="text-surface-500 text-sm">Sin alertas activas.</p>
       </div>
-
-      @if (products.length === 0) {
-        <p class="px-6 py-10 text-center text-surface-500 text-sm">Sin productos registrados.</p>
-      } @else {
-        <div class="overflow-x-auto">
-          <table class="w-full text-sm">
-            <thead>
-              <tr class="text-xs text-surface-500 uppercase tracking-wider border-b border-white/5">
-                <th class="text-left px-6 py-3 font-medium">Producto</th>
-                <th class="text-right px-6 py-3 font-medium">Stock actual</th>
-                <th class="text-right px-6 py-3 font-medium hidden md:table-cell">Mínimo</th>
-                <th class="text-right px-6 py-3 font-medium hidden md:table-cell">Máximo</th>
-                <th class="text-right px-6 py-3 font-medium">Estado</th>
-              </tr>
-            </thead>
-            <tbody class="divide-y divide-white/5">
-              @for (p of products; track p.productId) {
-                <tr class="hover:bg-surface-800/40 transition-colors">
-                  <td class="px-6 py-4 text-white font-medium">
-                    {{ p.name }}
-                    @if (p.sku) {
-                      <span class="ml-2 text-xs text-surface-600">{{ p.sku }}</span>
-                    }
-                  </td>
-                  <td class="px-6 py-4 text-right text-surface-300">
-                    {{ p.currentStock | number:'1.0-2' }} {{ p.unitAbbreviation }}
-                  </td>
-                  <td class="px-6 py-4 text-right text-surface-500 hidden md:table-cell">
-                    {{ p.minStock != null ? (p.minStock | number:'1.0-2') + ' ' + p.unitAbbreviation : '—' }}
-                  </td>
-                  <td class="px-6 py-4 text-right text-surface-500 hidden md:table-cell">
-                    {{ p.maxStock != null ? (p.maxStock | number:'1.0-2') + ' ' + p.unitAbbreviation : '—' }}
-                  </td>
-                  <td class="px-6 py-4 text-right">
-                    <span class="badge text-xs px-2.5 py-1 rounded-lg font-medium" [class]="statusClass(p.status)">
-                      {{ statusLabel(p.status) }}
-                    </span>
-                  </td>
-                </tr>
-              }
-            </tbody>
-          </table>
-        </div>
-      }
-
-    </div>
+    }
 
   }
 

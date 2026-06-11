@@ -1,6 +1,8 @@
-import { Component, HostListener, OnInit, signal } from '@angular/core';
+import { Component, HostListener, OnInit, DestroyRef, inject, signal } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Api } from '../../api/api';
+import { AiRefreshService } from '../../core/services/ai-refresh.service';
 import { listWasteEvents } from '../../api/fn/waste-event-controller/list-waste-events';
 import { createWasteEvent } from '../../api/fn/waste-event-controller/create-waste-event';
 import { listProducts } from '../../api/fn/product-controller/list-products';
@@ -26,6 +28,8 @@ import { isFormFieldInvalid } from '../../core/utils/form';
   styleUrl: './waste.component.scss'
 })
 export class WasteComponent implements OnInit {
+  private readonly destroyRef = inject(DestroyRef);
+
   events   = signal<WasteEventResponse[]>([]);
   loading  = signal(true);
   error    = signal<string | null>(null);
@@ -51,7 +55,7 @@ export class WasteComponent implements OnInit {
     { value: 'OTHER',          label: 'Otro'              },
   ];
 
-  constructor(private api: Api, private fb: FormBuilder) {
+  constructor(private api: Api, private fb: FormBuilder, private aiRefresh: AiRefreshService) {
     this.form = this.fb.group({
       productId: ['', Validators.required],
       unitId:    ['', Validators.required],
@@ -61,6 +65,9 @@ export class WasteComponent implements OnInit {
   }
 
   async ngOnInit(): Promise<void> {
+    this.aiRefresh.executed$
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(() => void this.loadEvents());
     await Promise.all([this.loadEvents(), this.loadFormData()]);
   }
 
