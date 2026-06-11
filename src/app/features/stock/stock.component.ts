@@ -1,8 +1,9 @@
-import { Component, OnInit, signal } from '@angular/core';
+import { Component, ElementRef, HostListener, OnInit, DestroyRef, inject, computed, signal } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { HttpClient, HttpContext, HttpResponse } from '@angular/common/http';
 import { filter, map } from 'rxjs/operators';
-import { FormsModule } from '@angular/forms';
 import { Api } from '../../api/api';
+import { AiRefreshService } from '../../core/services/ai-refresh.service';
 import { RequestBuilder } from '../../api/request-builder';
 import { StrictHttpResponse } from '../../api/strict-http-response';
 import { getStock } from '../../api/fn/product-controller/get-stock';
@@ -39,15 +40,28 @@ function listMovementsByProduct(
 @Component({
   selector: 'app-stock',
   standalone: true,
-  imports: [FormsModule, PaginatorComponent, SpinnerComponent],
+  imports: [PaginatorComponent, SpinnerComponent],
   templateUrl: './stock.component.html',
   styleUrl: './stock.component.scss'
 })
 export class StockComponent implements OnInit {
+  private readonly destroyRef = inject(DestroyRef);
+
   products  = signal<ProductResponse[]>([]);
   units     = signal<UnitResponse[]>([]);
 
-  selectedProductId = signal<string>('');
+  selectedProductId  = signal<string>('');
+  dropdownOpen       = signal(false);
+  productSearch      = signal('');
+
+  filteredProductsForSelect = computed(() => {
+    const term = this.productSearch().toLowerCase().trim();
+    if (!term) return this.products();
+    return this.products().filter(p =>
+      (p.name?.toLowerCase().includes(term) ?? false) ||
+      (p.sku?.toLowerCase().includes(term)  ?? false)
+    );
+  });
 
   stockInfo      = signal<StockInfo | null>(null);
   stockLoading   = signal(false);
@@ -59,9 +73,17 @@ export class StockComponent implements OnInit {
   pageSize = 50;
   total    = signal(0);
 
-  constructor(private api: Api) {}
+  private readonly el = inject(ElementRef);
+
+  constructor(private api: Api, private aiRefresh: AiRefreshService) {}
 
   async ngOnInit(): Promise<void> {
+    this.aiRefresh.executed$
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(() => {
+        const id = this.selectedProductId();
+        if (id) void Promise.all([this.loadStock(id), this.loadMovements(id)]);
+      });
     await Promise.all([this.loadProducts(), this.loadUnits()]);
   }
 
@@ -82,6 +104,33 @@ export class StockComponent implements OnInit {
 
   get selectedProduct(): ProductResponse | undefined {
     return this.products().find(p => p.id === this.selectedProductId());
+  }
+
+  toggleDropdown(event: Event): void {
+    event.stopPropagation();
+    this.dropdownOpen.update(v => !v);
+    if (!this.dropdownOpen()) this.productSearch.set('');
+  }
+
+  selectProduct(id: string): void {
+    this.selectedProductId.set(id);
+    this.dropdownOpen.set(false);
+    this.productSearch.set('');
+    void this.onProductChange();
+  }
+
+  @HostListener('document:click', ['$event'])
+  onDocumentClick(event: Event): void {
+    if (!this.el.nativeElement.contains(event.target)) {
+      this.dropdownOpen.set(false);
+      this.productSearch.set('');
+    }
+  }
+
+  @HostListener('document:keydown.escape')
+  onEscape(): void {
+    this.dropdownOpen.set(false);
+    this.productSearch.set('');
   }
 
   async onProductChange(): Promise<void> {

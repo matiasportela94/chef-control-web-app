@@ -137,9 +137,11 @@
       </div>
 
       <div class="space-y-1.5">
-        <label class="text-surface-400 text-sm">Teléfono <span class="text-surface-600">(opcional)</span></label>
+        <label class="text-surface-400 text-sm">Teléfono <span class="text-danger-400">*</span></label>
         <input formControlName="phone" type="tel" placeholder="+54 11 1234-5678"
-               class="input-field">
+               class="input-field" [class.input-error]="isInvalid('phone')">
+        @if (isInvalid('phone')) { <p class="text-danger-400 text-xs">Requerido para acceso vía Telegram</p> }
+        @else { <p class="text-surface-600 text-xs">Se usa como whitelist para el bot de Telegram</p> }
       </div>
 
       @if (saveError()) {

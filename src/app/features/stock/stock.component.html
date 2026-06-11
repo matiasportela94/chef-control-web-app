@@ -7,14 +7,76 @@
   </div>
 
   <!-- Product selector -->
-  <div class="mb-6">
-    <select [(ngModel)]="selectedProductId" (ngModelChange)="onProductChange()"
-            class="input-field max-w-sm">
-      <option value="">— Seleccioná un producto —</option>
-      @for (p of products(); track p.id) {
-        <option [value]="p.id">{{ p.name }}@if (p.sku) { · {{ p.sku }} }</option>
+  <div class="mb-6 relative max-w-sm">
+
+    <!-- Trigger -->
+    <button type="button" (click)="toggleDropdown($event)"
+            [class]="'input-field flex items-center justify-between gap-3 text-left cursor-pointer ' +
+                     (dropdownOpen() ? 'border-brand-500/50 ring-1 ring-brand-500/20' : '')">
+      @if (selectedProductId() && selectedProduct) {
+        <span class="flex-1 min-w-0 truncate text-white">
+          {{ selectedProduct.name }}
+          @if (selectedProduct.sku) {
+            <span class="text-surface-600"> · {{ selectedProduct.sku }}</span>
+          }
+        </span>
+      } @else {
+        <span class="text-surface-600 flex-1">— Seleccioná un producto —</span>
       }
-    </select>
+      <svg class="w-4 h-4 flex-shrink-0 text-surface-500 transition-transform duration-200"
+           [style.transform]="dropdownOpen() ? 'rotate(180deg)' : 'rotate(0deg)'"
+           fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+        <polyline points="6 9 12 15 18 9"/>
+      </svg>
+    </button>
+
+    <!-- Panel -->
+    @if (dropdownOpen()) {
+      <div class="absolute top-full left-0 right-0 mt-1.5 bg-surface-800 border border-white/10 rounded-xl shadow-2xl shadow-black/40 z-50 overflow-hidden">
+
+        <!-- Search inside dropdown -->
+        <div class="p-2 border-b border-white/5">
+          <div class="relative">
+            <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-surface-500 pointer-events-none"
+                 fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+            </svg>
+            <input #dropdownSearch type="text"
+                   (input)="productSearch.set(dropdownSearch.value)"
+                   placeholder="Buscar producto..."
+                   class="w-full bg-surface-700/50 border border-white/5 rounded-lg pl-9 pr-3 py-2 text-sm text-white placeholder-surface-500 focus:outline-none focus:border-brand-500/30 transition-all" />
+          </div>
+        </div>
+
+        <!-- Options list -->
+        <div class="dropdown-scroll max-h-64 overflow-y-auto py-1">
+          @if (filteredProductsForSelect().length === 0) {
+            <p class="px-4 py-3 text-sm text-surface-500 text-center">Sin resultados</p>
+          }
+          @for (p of filteredProductsForSelect(); track p.id) {
+            <button type="button" (click)="selectProduct(p.id!)"
+                    [class]="'w-full flex items-center gap-3 px-3.5 py-2.5 text-sm text-left transition-colors ' +
+                             (selectedProductId() === p.id
+                               ? 'text-brand-400 bg-brand-600/10'
+                               : 'text-surface-300 hover:bg-surface-700/50 hover:text-white')">
+              <span class="w-3.5 h-3.5 flex-shrink-0 flex items-center justify-center">
+                @if (selectedProductId() === p.id) {
+                  <svg fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24" class="w-3.5 h-3.5">
+                    <polyline points="20 6 9 17 4 12"/>
+                  </svg>
+                }
+              </span>
+              <span class="flex-1 min-w-0 truncate">
+                {{ p.name }}
+                @if (p.sku) { <span class="text-surface-600"> · {{ p.sku }}</span> }
+              </span>
+            </button>
+          }
+        </div>
+
+      </div>
+    }
+
   </div>
 
   @if (selectedProductId()) {

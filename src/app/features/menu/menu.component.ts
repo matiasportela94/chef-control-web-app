@@ -1,4 +1,4 @@
-import { Component, HostListener, OnInit, signal } from '@angular/core';
+import { Component, HostListener, OnInit, computed, signal } from '@angular/core';
 import { FormArray, FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Api } from '../../api/api';
 import { list2 as listMenuItems }      from '../../api/fn/menu-item-controller/list-2';
@@ -24,12 +24,13 @@ import { PaginatorComponent } from '../../shared/components/paginator/paginator.
 import { ActionDialogComponent } from '../../shared/components/action-dialog/action-dialog.component';
 import { DrawerComponent } from '../../shared/components/drawer/drawer.component';
 import { SpinnerComponent } from '../../shared/components/spinner/spinner.component';
+import { SearchFilterBarComponent, FilterBarState } from '../../shared/components/search-filter-bar/search-filter-bar.component';
 import { isFormFieldInvalid } from '../../core/utils/form';
 
 @Component({
   selector: 'app-menu',
   standalone: true,
-  imports: [ReactiveFormsModule, DecimalPipe, PaginatorComponent, ActionDialogComponent, DrawerComponent, SpinnerComponent],
+  imports: [ReactiveFormsModule, DecimalPipe, PaginatorComponent, ActionDialogComponent, DrawerComponent, SpinnerComponent, SearchFilterBarComponent],
   templateUrl: './menu.component.html',
   styleUrl: './menu.component.scss'
 })
@@ -38,8 +39,39 @@ export class MenuComponent implements OnInit {
   loading   = signal(true);
   error     = signal<string | null>(null);
   page      = signal(1);
-  pageSize  = 20;
-  total     = signal(0);
+  readonly pageSize = 20;
+
+  filterSearch     = signal('');
+  filterCategoryId = signal('');
+  filterOnlyActive = signal(true);
+
+  filteredItems = computed(() => {
+    const term       = this.filterSearch().toLowerCase().trim();
+    const cat        = this.filterCategoryId();
+    const onlyActive = this.filterOnlyActive();
+    return this.menuItems().filter(item => {
+      if (onlyActive && !item.active) return false;
+      if (cat && item.category !== cat) return false;
+      if (term) return item.name?.toLowerCase().includes(term) ?? false;
+      return true;
+    });
+  });
+
+  pagedItems = computed(() => {
+    const start = (this.page() - 1) * this.pageSize;
+    return this.filteredItems().slice(start, start + this.pageSize);
+  });
+
+  isFiltered = computed(() =>
+    this.filterSearch() !== '' || this.filterCategoryId() !== '' || !this.filterOnlyActive()
+  );
+
+  menuCategories = computed(() => {
+    const cats = [...new Set(
+      this.menuItems().map(i => i.category).filter((c): c is string => !!c)
+    )].sort();
+    return cats.map(c => ({ id: c, name: c }));
+  });
 
   products = signal<ProductResponse[]>([]);
   units    = signal<UnitResponse[]>([]);
@@ -87,10 +119,9 @@ export class MenuComponent implements OnInit {
     this.loading.set(true);
     this.error.set(null);
     try {
-      const raw = await this.api.invoke(listMenuItems, { page: this.page() - 1, size: this.pageSize }) as unknown;
+      const raw = await this.api.invoke(listMenuItems, { page: 0, size: 999 }) as unknown;
       const res = await parseBlob<PagedResponseMenuItemResponse>(raw);
       this.menuItems.set(res.content ?? []);
-      this.total.set(res.totalElements ?? 0);
     } catch {
       this.error.set('No se pudieron cargar los platos.');
     } finally {
@@ -283,9 +314,15 @@ export class MenuComponent implements OnInit {
     else if (this.deactivating()) this.deactivating.set(null);
   }
 
-  async goToPage(p: number): Promise<void> {
+  onFiltersChange(state: FilterBarState): void {
+    this.filterSearch.set(state.search);
+    this.filterCategoryId.set(state.categoryId);
+    this.filterOnlyActive.set(state.onlyActive);
+    this.page.set(1);
+  }
+
+  goToPage(p: number): void {
     this.page.set(p);
-    await this.loadMenuItems();
   }
 
   isInvalid = (form: FormGroup, field: string) => isFormFieldInvalid(form, field);

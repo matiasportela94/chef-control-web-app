@@ -50,7 +50,7 @@ export class UsersComponent implements OnInit {
       name:  ['', Validators.required],
       email: ['', [Validators.required, Validators.email]],
       role:  ['KITCHEN', Validators.required],
-      phone: [''],
+      phone: ['', Validators.required],
     });
   }
 
@@ -108,7 +108,7 @@ export class UsersComponent implements OnInit {
         const body = {
           name:  v.name,
           role:  v.role as Role,
-          ...(v.phone?.trim() ? { phone: v.phone.trim() } : {}),
+          phone: v.phone.trim(),
         };
         await this.api.invoke(updateUser, { id: u.id, body });
       } else {
@@ -116,7 +116,7 @@ export class UsersComponent implements OnInit {
           name:  v.name,
           email: v.email,
           role:  v.role as Role,
-          ...(v.phone?.trim() ? { phone: v.phone.trim() } : {}),
+          phone: v.phone.trim(),
         };
         await this.api.invoke(createUser, { body });
       }

@@ -1,4 +1,4 @@
-import { Component, HostListener, OnInit, signal } from '@angular/core';
+import { Component, HostListener, OnInit, computed, signal } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { DecimalPipe } from '@angular/common';
 import { Api } from '../../api/api';
@@ -16,6 +16,7 @@ import { PaginatorComponent } from '../../shared/components/paginator/paginator.
 import { ActionDialogComponent } from '../../shared/components/action-dialog/action-dialog.component';
 import { DrawerComponent } from '../../shared/components/drawer/drawer.component';
 import { SpinnerComponent } from '../../shared/components/spinner/spinner.component';
+import { SearchFilterBarComponent, FilterBarState } from '../../shared/components/search-filter-bar/search-filter-bar.component';
 import { parseBlob } from '../../core/utils/parse-blob';
 import { extractApiError } from '../../core/utils/api-error';
 import { isFormFieldInvalid } from '../../core/utils/form';
@@ -23,7 +24,7 @@ import { isFormFieldInvalid } from '../../core/utils/form';
 @Component({
   selector: 'app-products',
   standalone: true,
-  imports: [ReactiveFormsModule, DecimalPipe, PaginatorComponent, ActionDialogComponent, DrawerComponent, SpinnerComponent],
+  imports: [ReactiveFormsModule, DecimalPipe, PaginatorComponent, ActionDialogComponent, DrawerComponent, SpinnerComponent, SearchFilterBarComponent],
   templateUrl: './products.component.html',
   styleUrl: './products.component.scss'
 })
@@ -32,11 +33,41 @@ export class ProductsComponent implements OnInit {
   loading  = signal(true);
   error    = signal<string | null>(null);
   page     = signal(1);
-  pageSize = 20;
-  total    = signal(0);
+  readonly pageSize = 20;
 
-  units      = signal<UnitResponse[]>([]);
-  categories = signal<CategoryResponse[]>([]);
+  filterSearch     = signal('');
+  filterCategoryId = signal('');
+  filterOnlyActive = signal(true);
+
+  filteredProducts = computed(() => {
+    const term       = this.filterSearch().toLowerCase().trim();
+    const catId      = this.filterCategoryId();
+    const onlyActive = this.filterOnlyActive();
+    return this.products().filter(p => {
+      if (onlyActive && !p.isActive) return false;
+      if (catId && p.category?.id !== catId) return false;
+      if (term) {
+        return (p.name?.toLowerCase().includes(term) ?? false) ||
+               (p.sku?.toLowerCase().includes(term)  ?? false);
+      }
+      return true;
+    });
+  });
+
+  pagedProducts = computed(() => {
+    const start = (this.page() - 1) * this.pageSize;
+    return this.filteredProducts().slice(start, start + this.pageSize);
+  });
+
+  isFiltered = computed(() =>
+    this.filterSearch() !== '' || this.filterCategoryId() !== '' || !this.filterOnlyActive()
+  );
+
+  units        = signal<UnitResponse[]>([]);
+  categories   = signal<CategoryResponse[]>([]);
+  filterCategories = computed(() =>
+    this.categories().map(c => ({ id: c.id ?? '', name: c.name ?? '' }))
+  );
 
   drawerOpen     = signal(false);
   editingProduct = signal<ProductResponse | null>(null);
@@ -70,10 +101,9 @@ export class ProductsComponent implements OnInit {
     this.loading.set(true);
     this.error.set(null);
     try {
-      const raw = await this.api.invoke(listProducts, { page: this.page() - 1, size: this.pageSize }) as unknown;
+      const raw = await this.api.invoke(listProducts, { page: 0, size: 999 }) as unknown;
       const res = await parseBlob<PagedResponseProductResponse>(raw);
       this.products.set(res.content ?? []);
-      this.total.set(res.totalElements ?? 0);
     } catch {
       this.error.set('No se pudieron cargar los productos.');
     } finally {
@@ -167,9 +197,15 @@ export class ProductsComponent implements OnInit {
     }
   }
 
-  async goToPage(p: number): Promise<void> {
+  onFiltersChange(state: FilterBarState): void {
+    this.filterSearch.set(state.search);
+    this.filterCategoryId.set(state.categoryId);
+    this.filterOnlyActive.set(state.onlyActive);
+    this.page.set(1);
+  }
+
+  goToPage(p: number): void {
     this.page.set(p);
-    await this.loadProducts();
   }
 
   isInvalid = (field: string) => isFormFieldInvalid(this.form, field);

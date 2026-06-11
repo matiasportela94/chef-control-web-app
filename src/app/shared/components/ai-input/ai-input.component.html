@@ -29,10 +29,13 @@
               (keydown)="onKeydown($event)"
               placeholder="Ej: compramos 10kg de tomate a $5000 / se rompieron 3 botellas de aceite / vendimos 8 milanesas..."
               rows="3"
-              [disabled]="loading() || confirming()"
-              class="w-full bg-surface-800 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-surface-500 text-sm resize-none focus:outline-none focus:border-brand-500 transition-colors disabled:opacity-50">
+              [disabled]="loading() || confirming() || !!result()"
+              class="w-full bg-surface-800 border border-white/10 rounded-xl px-4 py-3 text-sm resize-none focus:outline-none focus:border-brand-500 transition-colors disabled:opacity-40
+                     {{ result() ? 'text-surface-400 cursor-default' : 'text-white' }}">
             </textarea>
-            <p class="text-surface-500 text-xs">Ctrl+Enter para interpretar</p>
+            @if (!result()) {
+              <p class="text-surface-500 text-xs">Ctrl+Enter para interpretar</p>
+            }
           </div>
         }
 
@@ -73,6 +76,19 @@
           </div>
         }
 
+        <!-- Input de aclaración cuando la IA tiene una pregunta -->
+        @if (result()?.needsConfirmation && !executeResult()) {
+          <div class="space-y-1.5">
+            <input
+              type="text"
+              [(ngModel)]="clarification"
+              (keydown)="onClarificationKeydown($event)"
+              [disabled]="loading()"
+              placeholder="Respondé la pregunta de la IA... (Enter para enviar)"
+              class="w-full bg-surface-800 border border-brand-500/50 rounded-xl px-4 py-2.5 text-white placeholder-surface-500 text-sm focus:outline-none focus:border-brand-500 transition-colors disabled:opacity-50">
+          </div>
+        }
+
         <!-- Resultado de ejecución -->
         @if (executeResult(); as ex) {
           @if (ex.success) {
@@ -106,13 +122,26 @@
               Cerrar
             </button>
           } @else if (result()) {
-            <!-- Post-interpretación: Nuevo intento o Confirmar -->
-            <button (click)="resetForNew()"
+            <!-- Post-interpretación -->
+            <button (click)="retry()"
                     [disabled]="confirming()"
                     class="flex-1 bg-surface-700 hover:bg-surface-600 text-white font-medium py-2.5 px-4 rounded-xl transition-colors disabled:opacity-40 text-sm">
               Cambiar
             </button>
-            @if (canExecute()) {
+            @if (result()?.needsConfirmation) {
+              <!-- Hay una pregunta: botón para enviar la aclaración -->
+              <button (click)="interpretWithClarification()"
+                      [disabled]="loading() || !clarification.trim()"
+                      class="flex-1 bg-brand-600 hover:bg-brand-500 text-white font-medium py-2.5 px-4 rounded-xl transition-colors disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2 text-sm">
+                @if (loading()) {
+                  <div class="w-4 h-4 rounded-full border-2 border-white/30 border-t-white animate-spin"></div>
+                  Interpretando...
+                } @else {
+                  Responder
+                }
+              </button>
+            } @else if (canExecute()) {
+              <!-- Sin duda: confirmar directo -->
               <button (click)="confirm()"
                       [disabled]="confirming()"
                       class="flex-1 bg-brand-600 hover:bg-brand-500 text-white font-medium py-2.5 px-4 rounded-xl transition-colors disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2 text-sm">

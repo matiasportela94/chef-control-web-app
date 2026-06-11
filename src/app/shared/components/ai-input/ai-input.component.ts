@@ -7,6 +7,7 @@ import { InterpretTextResponse } from '../../../api/models/interpret-text-respon
 import { ExecuteIntentResponse } from '../../../api/models/execute-intent-response';
 import { parseBlob } from '../../../core/utils/parse-blob';
 import { extractApiError } from '../../../core/utils/api-error';
+import { AiRefreshService } from '../../../core/services/ai-refresh.service';
 
 const EXECUTABLE_INTENTS = new Set(['purchase', 'waste', 'sale', 'stock_adjustment']);
 
@@ -21,16 +22,21 @@ export class AiInputComponent {
   @Output() closed = new EventEmitter<void>();
 
   message        = '';
+  clarification  = '';
   loading        = signal(false);
   confirming     = signal(false);
   error          = signal<string | null>(null);
   result         = signal<InterpretTextResponse | null>(null);
   executeResult  = signal<ExecuteIntentResponse | null>(null);
 
-  constructor(private api: Api) {}
+  constructor(private api: Api, private aiRefresh: AiRefreshService) {}
 
   onKeydown(e: KeyboardEvent): void {
     if (e.ctrlKey && e.key === 'Enter') void this.interpret();
+  }
+
+  onClarificationKeydown(e: KeyboardEvent): void {
+    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); void this.interpretWithClarification(); }
   }
 
   canExecute(): boolean {
@@ -45,6 +51,7 @@ export class AiInputComponent {
     this.error.set(null);
     this.result.set(null);
     this.executeResult.set(null);
+    this.clarification = '';
     try {
       const raw = await this.api.invoke(interpretText, { body: { message: msg } }) as unknown;
       this.result.set(await parseBlob<InterpretTextResponse>(raw));
@@ -53,6 +60,16 @@ export class AiInputComponent {
     } finally {
       this.loading.set(false);
     }
+  }
+
+  async interpretWithClarification(): Promise<void> {
+    const clarif = this.clarification.trim();
+    if (!clarif || this.loading()) return;
+    const aiQuestion = this.result()?.responseToUser ?? '';
+    const combined = `${this.message.trim()}\n\n[La IA preguntó: ${aiQuestion}]\nRespuesta del usuario: ${clarif}`;
+    this.message = combined;
+    this.clarification = '';
+    await this.interpret();
   }
 
   async confirm(): Promise<void> {
@@ -65,6 +82,7 @@ export class AiInputComponent {
         body: { intent: r.intent, data: r.data as Record<string, unknown> ?? {} }
       }) as unknown;
       this.executeResult.set(await parseBlob<ExecuteIntentResponse>(raw));
+      this.aiRefresh.notify();
     } catch (e) {
       this.error.set(extractApiError(e, 'No se pudo registrar la operación'));
     } finally {
@@ -72,11 +90,16 @@ export class AiInputComponent {
     }
   }
 
-  resetForNew(): void {
-    this.message = '';
+  retry(): void {
     this.result.set(null);
     this.executeResult.set(null);
     this.error.set(null);
+    this.clarification = '';
+  }
+
+  resetForNew(): void {
+    this.message = '';
+    this.retry();
   }
 
   close(): void {
