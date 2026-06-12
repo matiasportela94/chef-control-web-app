@@ -31,7 +31,13 @@ import { ToastService } from '../../../core/services/toast.service';
         </span>
         <div class="flex-1 min-w-0">
           <p class="text-sm font-semibold leading-snug text-white">{{ toast.title }}</p>
-          <p *ngIf="toast.message" class="mt-1 text-brand-300 text-xs leading-snug">{{ toast.message }}</p>
+          <p *ngIf="toast.message" class="mt-1 text-xs leading-snug"
+             [ngClass]="{
+               'text-success-300': toast.type === 'success',
+               'text-danger-300':  toast.type === 'error',
+               'text-warning-300': toast.type === 'warning',
+               'text-brand-300':   toast.type === 'info'
+             }">{{ toast.message }}</p>
         </div>
         <button
           (click)="toastService.dismiss(toast.id)"
