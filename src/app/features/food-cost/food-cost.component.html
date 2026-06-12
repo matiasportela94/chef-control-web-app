@@ -162,12 +162,19 @@
               <p class="text-xs text-surface-500 mt-0.5">Desglose de costo por insumo</p>
             </div>
             @if (!recipeCostLoading() && recipeCost(); as rc) {
-              <div class="px-3 py-1.5 rounded-xl border text-sm font-bold flex-shrink-0"
-                   [class.fc-great]="recipeCostStatus() === 'great'"
-                   [class.fc-ok]="recipeCostStatus() === 'ok'"
-                   [class.fc-high]="recipeCostStatus() === 'high'"
-                   [class.fc-danger]="recipeCostStatus() === 'danger'">
-                {{ formatPct(rc.foodCostPercentage) }}
+              <div class="relative flex-shrink-0 group">
+                <div class="px-3 py-1.5 rounded-xl border text-sm font-bold cursor-default"
+                     [class.fc-great]="recipeCostStatus() === 'great'"
+                     [class.fc-ok]="recipeCostStatus() === 'ok'"
+                     [class.fc-high]="recipeCostStatus() === 'high'"
+                     [class.fc-danger]="recipeCostStatus() === 'danger'">
+                  {{ formatPct(rc.foodCostPercentage) }}
+                </div>
+                <div class="absolute bottom-full right-0 mb-2 px-2.5 py-1.5 bg-surface-700 border border-white/10
+                            text-xs text-surface-200 rounded-lg whitespace-nowrap shadow-lg
+                            opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity duration-150 z-10">
+                  Food cost teórico: costo receta ÷ precio de venta
+                </div>
               </div>
             }
           </div>
