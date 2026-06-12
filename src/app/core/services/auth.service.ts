@@ -20,6 +20,7 @@ export interface CurrentUser {
   restaurantId: string;
   restaurantName: string;
   restaurants: RestaurantSummary[];
+  expiresAt?: number;
 }
 
 @Injectable({ providedIn: 'root' })
@@ -29,7 +30,14 @@ export class AuthService {
   constructor(private api: Api) {}
 
   get isAuthenticated(): boolean {
-    return this.currentUser() !== null;
+    const user = this.currentUser();
+    if (!user) return false;
+    if (user.expiresAt && Date.now() > user.expiresAt) {
+      sessionStorage.removeItem(USER_KEY);
+      this.currentUser.set(null);
+      return false;
+    }
+    return true;
   }
 
   async login(body: LoginRequest): Promise<LoginResponse> {
@@ -70,6 +78,7 @@ export class AuthService {
       restaurantId:   r.activeRestaurantId  ?? '',
       restaurantName: r.activeRestaurantName ?? '',
       restaurants:    r.restaurants          ?? [],
+      expiresAt:      r.expiresAt,
     };
     sessionStorage.setItem(USER_KEY, JSON.stringify(user));
     this.currentUser.set(user);
