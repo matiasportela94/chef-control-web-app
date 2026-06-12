@@ -3,9 +3,11 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormArray, FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Api } from '../../api/api';
 import { AiRefreshService } from '../../core/services/ai-refresh.service';
+import { AlertNotificationService } from '../../core/services/alert-notification.service';
 import { list1 as listSales }      from '../../api/fn/sale-controller/list-1';
 import { create1 as createSale }   from '../../api/fn/sale-controller/create-1';
 import { get2 as getSale }         from '../../api/fn/sale-controller/get-2';
+import { reverseSale }             from '../../api/fn/sale-controller/reverse-sale';
 import { list2 as listMenuItems }  from '../../api/fn/menu-item-controller/list-2';
 import { SaleResponse }            from '../../api/models/sale-response';
 import { MenuItemResponse }        from '../../api/models/menu-item-response';
@@ -15,6 +17,7 @@ import { parseBlob } from '../../core/utils/parse-blob';
 import { formatARS, formatDate } from '../../core/utils/format';
 import { todayISO, dateToInstant } from '../../core/utils/date';
 import { extractApiError } from '../../core/utils/api-error';
+import { NgClass } from '@angular/common';
 import { PaginatorComponent } from '../../shared/components/paginator/paginator.component';
 import { DrawerComponent } from '../../shared/components/drawer/drawer.component';
 import { SpinnerComponent } from '../../shared/components/spinner/spinner.component';
@@ -22,7 +25,7 @@ import { SpinnerComponent } from '../../shared/components/spinner/spinner.compon
 @Component({
   selector: 'app-sales',
   standalone: true,
-  imports: [ReactiveFormsModule, PaginatorComponent, DrawerComponent, SpinnerComponent],
+  imports: [ReactiveFormsModule, NgClass, PaginatorComponent, DrawerComponent, SpinnerComponent],
   templateUrl: './sales.component.html',
   styleUrl: './sales.component.scss'
 })
@@ -46,9 +49,16 @@ export class SalesComponent implements OnInit {
   detail        = signal<SaleResponse | null>(null);
   detailLoading = signal(false);
 
+  reverseModalOpen = signal(false);
+  reverseTarget    = signal<SaleResponse | null>(null);
+  reverseTargetId  = signal<string | null>(null);
+  reverseLoading   = signal(false);
+  reversing        = signal(false);
+  reverseError     = signal<string | null>(null);
+
   form: FormGroup;
 
-  constructor(private api: Api, private fb: FormBuilder, private aiRefresh: AiRefreshService) {
+  constructor(private api: Api, private fb: FormBuilder, private aiRefresh: AiRefreshService, private alertNotification: AlertNotificationService) {
     this.form = this.fb.group({
       soldAt: [todayISO()],
       notes:  [''],
@@ -156,11 +166,70 @@ export class SalesComponent implements OnInit {
       await this.api.invoke(createSale, { body });
       this.createOpen.set(false);
       await this.loadSales();
+      void this.alertNotification.refresh();
     } catch (e: any) {
       this.saveError.set(extractApiError(e, 'Error al registrar la venta'));
     } finally {
       this.saving.set(false);
     }
+  }
+
+  async openReverseModal(sale: SaleResponse): Promise<void> {
+    this.reverseTarget.set(null);
+    this.reverseTargetId.set(sale.id ?? null);
+    this.reverseError.set(null);
+    this.reverseLoading.set(true);
+    this.reverseModalOpen.set(true);
+    try {
+      const raw = await this.api.invoke(getSale, { id: sale.id! }) as unknown;
+      this.reverseTarget.set(await parseBlob<SaleResponse>(raw));
+    } catch { /* modal shows loading state */ }
+    finally {
+      this.reverseLoading.set(false);
+    }
+  }
+
+  closeReverseModal(): void {
+    this.reverseModalOpen.set(false);
+    this.reverseTargetId.set(null);
+    this.reverseTarget.set(null);
+  }
+
+  async confirmReverse(): Promise<void> {
+    const id = this.reverseTargetId();
+    if (!id) return;
+    this.reversing.set(true);
+    this.reverseError.set(null);
+    try {
+      await this.api.invoke(reverseSale, { id });
+      this.closeReverseModal();
+      await this.loadSales();
+      void this.alertNotification.refresh();
+      const target = this.reverseTarget();
+      if (target) this.openCreatePrefilled(target);
+    } catch (e: any) {
+      this.reverseError.set(extractApiError(e, 'Error al revertir la venta'));
+    } finally {
+      this.reversing.set(false);
+    }
+  }
+
+  private openCreatePrefilled(d: SaleResponse): void {
+    this.items.clear();
+    this.saveError.set(null);
+    const soldDate = d.soldAt
+      ? new Date(d.soldAt).toISOString().substring(0, 10)
+      : todayISO();
+    this.form.reset({ soldAt: soldDate, notes: d.notes ?? '' });
+    if (d.items) {
+      for (const item of d.items) {
+        this.items.push(this.fb.group({
+          menuItemId: [item.menuItemId ?? '', Validators.required],
+          quantity:   [item.quantity  ?? 1,  [Validators.required, Validators.min(1)]],
+        }));
+      }
+    }
+    this.createOpen.set(true);
   }
 
   async openDetail(sale: SaleResponse): Promise<void> {
@@ -182,7 +251,8 @@ export class SalesComponent implements OnInit {
 
   @HostListener('document:keydown.escape')
   onEscape(): void {
-    if (this.createOpen()) this.closeCreate();
+    if (this.reverseModalOpen()) this.closeReverseModal();
+    else if (this.createOpen()) this.closeCreate();
     else if (this.detailOpen()) this.closeDetail();
   }
 
