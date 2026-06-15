@@ -38,6 +38,41 @@ export class DashboardComponent implements OnInit {
     return sales > 0 ? (cost / sales) : null;
   });
 
+  salesPct = computed(() => this.pctChange(
+    this.data()?.kpis?.salesTotalThisMonth,
+    this.data()?.kpis?.salesTotalLastMonth
+  ));
+
+  purchasesPct = computed(() => this.pctChange(
+    this.data()?.kpis?.purchasesTotalThisMonth,
+    this.data()?.kpis?.purchasesTotalLastMonth
+  ));
+
+  wastePct = computed(() => this.pctChange(
+    this.data()?.kpis?.wasteTotalArsThisMonth,
+    this.data()?.kpis?.wasteTotalArsLastMonth
+  ));
+
+  foodCostPctDelta = computed(() => {
+    const k = this.data()?.kpis;
+    if (!k) return null;
+    const curCost  = Number(k.salesCostThisMonth  ?? 0);
+    const curSales = Number(k.salesTotalThisMonth ?? 0);
+    const prevCost  = Number(k.salesCostLastMonth  ?? 0);
+    const prevSales = Number(k.salesTotalLastMonth ?? 0);
+    const cur  = curSales  > 0 ? curCost  / curSales  : null;
+    const prev = prevSales > 0 ? prevCost / prevSales : null;
+    if (cur === null || prev === null || prev === 0) return null;
+    return (cur - prev) / Math.abs(prev);
+  });
+
+  private pctChange(current?: number, previous?: number): number | null {
+    const c = Number(current  ?? 0);
+    const p = Number(previous ?? 0);
+    if (p === 0) return null;
+    return (c - p) / Math.abs(p);
+  }
+
   constructor(private api: Api, private aiRefresh: AiRefreshService) {}
 
   async ngOnInit(): Promise<void> {

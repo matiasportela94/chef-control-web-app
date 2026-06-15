@@ -69,9 +69,14 @@
               </button>
 
               <!-- Expanded adjustments -->
-              @if (expanded() === c.id && c.adjustments && c.adjustments.length > 0) {
-                <div style="border-top:1px solid var(--border);background:var(--bg-input);">
-                  <div style="padding:14px 20px;">
+              @if (expanded() === c.id) {
+                <div style="border-top:1px solid var(--border);background:var(--bg-input);padding:14px 20px;">
+                  @if (loadingDetail() === c.id) {
+                    <div style="display:flex;align-items:center;gap:8px;">
+                      <span class="loader"></span>
+                      <span style="font-size:12px;color:var(--text-3);">Cargando ajustes...</span>
+                    </div>
+                  } @else if (c.adjustments != null && c.adjustments.length > 0) {
                     <p class="section-title" style="margin-bottom:10px;">Movimientos de ajuste generados</p>
                     <div style="display:flex;flex-direction:column;gap:6px;">
                       @for (m of c.adjustments; track m.id) {
@@ -79,21 +84,18 @@
                           <span class="badge"
                                 [class.badge-accent]="m.direction === 'IN'"
                                 [class.badge-red]="m.direction === 'OUT'">
-                            {{ m.direction === 'IN' ? '+' : '−' }}{{ m.quantity | number:'1.0-2' }}
+                            {{ m.direction === 'IN' ? '+' : '−' }}{{ m.quantity | number:'1.0-2' }} {{ unitAbbr(m.unitId) }}
                           </span>
-                          <span style="color:var(--text-2);">{{ m.type }}</span>
+                          <span style="color:var(--text-2);">{{ productName(m.productId) }}</span>
                           <span style="margin-left:auto;color:var(--text-3);font-size:11px;">
-                            {{ m.stockBefore | number:'1.0-2' }} → {{ m.stockAfter | number:'1.0-2' }}
+                            {{ m.stockBefore | number:'1.0-2' }} {{ unitAbbr(m.unitId) }} → {{ m.stockAfter | number:'1.0-2' }} {{ unitAbbr(m.unitId) }}
                           </span>
                         </div>
                       }
                     </div>
-                  </div>
-                </div>
-              }
-              @if (expanded() === c.id && (!c.adjustments || c.adjustments.length === 0)) {
-                <div style="border-top:1px solid var(--border);background:var(--bg-input);padding:14px 20px;">
-                  <p style="font-size:12px;color:var(--text-3);">Sin ajustes generados — el stock contado coincidió con el registrado.</p>
+                  } @else if (c.adjustments != null) {
+                    <p style="font-size:12px;color:var(--text-3);">Sin ajustes generados — el stock contado coincidió con el registrado.</p>
+                  }
                 </div>
               }
             </div>

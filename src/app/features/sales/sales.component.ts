@@ -7,7 +7,7 @@ import { AlertNotificationService } from '../../core/services/alert-notification
 import { list1 as listSales }      from '../../api/fn/sale-controller/list-1';
 import { create1 as createSale }   from '../../api/fn/sale-controller/create-1';
 import { get2 as getSale }         from '../../api/fn/sale-controller/get-2';
-import { reverseSale }             from '../../api/fn/sale-controller/reverse-sale';
+import { reverse1 as reverseSale } from '../../api/fn/sale-controller/reverse-1';
 import { list2 as listMenuItems }  from '../../api/fn/menu-item-controller/list-2';
 import { SaleResponse }            from '../../api/models/sale-response';
 import { MenuItemResponse }        from '../../api/models/menu-item-response';

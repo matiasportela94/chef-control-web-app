@@ -3,6 +3,7 @@ import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angula
 import { Api } from '../../api/api';
 import { listCategories } from '../../api/fn/product-category-controller/list-categories';
 import { createCategory } from '../../api/fn/product-category-controller/create-category';
+import { updateCategory } from '../../api/fn/product-category-controller/update-category';
 import { deleteCategory } from '../../api/fn/product-category-controller/delete-category';
 import { CategoryResponse } from '../../api/models/category-response';
 import { parseBlob } from '../../core/utils/parse-blob';
@@ -25,6 +26,7 @@ export class CategoriesComponent implements OnInit {
   error      = signal<string | null>(null);
 
   drawerOpen = signal(false);
+  editing    = signal<CategoryResponse | null>(null);
   saving     = signal(false);
   saveError  = signal<string | null>(null);
 
@@ -35,8 +37,10 @@ export class CategoriesComponent implements OnInit {
 
   constructor(private api: Api, private fb: FormBuilder) {
     this.form = this.fb.group({
-      name:  ['', Validators.required],
-      color: ['#6366f1'],
+      name:        ['', Validators.required],
+      description: [''],
+      color:       ['#6366f1'],
+      icon:        [''],
     });
   }
 
@@ -58,7 +62,20 @@ export class CategoriesComponent implements OnInit {
   }
 
   openCreate(): void {
-    this.form.reset({ name: '', color: '#6366f1' });
+    this.editing.set(null);
+    this.form.reset({ name: '', description: '', color: '#6366f1', icon: '' });
+    this.saveError.set(null);
+    this.drawerOpen.set(true);
+  }
+
+  openEdit(cat: CategoryResponse): void {
+    this.editing.set(cat);
+    this.form.reset({
+      name:        cat.name        ?? '',
+      description: cat.description ?? '',
+      color:       cat.color       ?? '#6366f1',
+      icon:        cat.icon        ?? '',
+    });
     this.saveError.set(null);
     this.drawerOpen.set(true);
   }
@@ -77,9 +94,22 @@ export class CategoriesComponent implements OnInit {
     if (this.form.invalid) { this.form.markAllAsTouched(); return; }
     this.saving.set(true);
     this.saveError.set(null);
-    const { name, color } = this.form.getRawValue();
+    const { name, description, color, icon } = this.form.getRawValue();
+    const desc  = description?.trim() || undefined;
+    const clr   = color?.trim()       || undefined;
+    const icn   = icon?.trim()        || undefined;
     try {
-      await this.api.invoke(createCategory, { body: { name, color } });
+      const ed = this.editing();
+      if (ed?.id) {
+        await this.api.invoke(updateCategory, {
+          id: ed.id,
+          body: { name, description: desc, color: clr, icon: icn },
+        });
+      } else {
+        await this.api.invoke(createCategory, {
+          body: { name, description: desc, color: clr, icon: icn },
+        });
+      }
       this.drawerOpen.set(false);
       await this.load();
     } catch (e: any) {
@@ -97,10 +127,12 @@ export class CategoriesComponent implements OnInit {
       await this.api.invoke(deleteCategory, { id: cat.id });
       this.deleting.set(null);
       await this.load();
-    } catch { /* error stays in dialog */ }
-    finally {
-      this.deleteLoading.set(false);
-    }
+    } catch { /* stays in dialog */ }
+    finally { this.deleteLoading.set(false); }
+  }
+
+  get iconPreview(): string {
+    return (this.form.get('icon')?.value as string)?.trim() || '';
   }
 
   isInvalid = (field: string) => isFormFieldInvalid(this.form, field);

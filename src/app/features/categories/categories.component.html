@@ -1,6 +1,5 @@
 <div class="page-wrap">
 
-  <!-- Header -->
   <div class="page-header">
     <div>
       <h1 class="page-title">Categorías de Insumos</h1>
@@ -15,7 +14,6 @@
 
   @if (loading()) { <app-spinner /> }
 
-  <!-- Error -->
   @if (!loading() && error()) {
     <div style="background:var(--red-bg);border:1.5px solid var(--red);border-radius:14px;padding:20px;text-align:center;">
       <p style="font-size:12px;color:var(--red);margin-bottom:12px;">{{ error() }}</p>
@@ -23,7 +21,6 @@
     </div>
   }
 
-  <!-- Table -->
   @if (!loading() && !error()) {
     @if (categories().length === 0) {
       <div class="empty-state">
@@ -36,84 +33,145 @@
       </div>
     } @else {
       <div class="table-wrap">
-        <div style="overflow-x:auto;">
-          <table class="data-table">
-            <thead>
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Categoría</th>
+              <th class="hidden md:table-cell">Descripción</th>
+              <th class="hidden sm:table-cell" style="text-align:center;">Ícono</th>
+              <th style="text-align:right;">Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (cat of categories(); track cat.id) {
               <tr>
-                <th>Nombre</th>
-                <th class="hidden sm:table-cell">Color</th>
-                <th style="text-align:right;">Acciones</th>
-              </tr>
-            </thead>
-            <tbody>
-              @for (cat of categories(); track cat.id) {
-                <tr>
-                  <td>
-                    <div style="display:flex;align-items:center;gap:10px;">
-                      @if (cat.color) {
-                        <span style="width:12px;height:12px;border-radius:50%;flex-shrink:0;border:1px solid var(--border);"
-                              [style.background-color]="cat.color"></span>
+                <!-- Nombre + ícono/color chip -->
+                <td>
+                  <div style="display:flex;align-items:center;gap:10px;">
+                    <span style="width:32px;height:32px;border-radius:9px;flex-shrink:0;display:flex;align-items:center;justify-content:center;"
+                          [style.background]="cat.color ? cat.color + '22' : 'var(--bg-input)'">
+                      @if (cat.icon) {
+                        <i [class]="'ti ti-' + cat.icon" style="font-size:16px;" [style.color]="cat.color ?? 'var(--accent)'"></i>
+                      } @else {
+                        <i class="ti ti-tag" style="font-size:14px;color:var(--text-3);opacity:.5;"></i>
                       }
-                      <span style="color:var(--text-1);font-weight:600;">{{ cat.name }}</span>
+                    </span>
+                    <div>
+                      <p style="color:var(--text-1);font-weight:600;">{{ cat.name }}</p>
                       @if (cat.isSystem) {
-                        <span class="badge badge-neutral">Sistema</span>
+                        <span class="badge badge-neutral" style="margin-top:2px;">Sistema</span>
                       }
                     </div>
-                  </td>
-                  <td class="hidden sm:table-cell" style="color:var(--text-3);font-family:monospace;font-size:11px;">
-                    {{ cat.color ?? '—' }}
-                  </td>
-                  <td style="text-align:right;">
-                    @if (!cat.isSystem) {
+                  </div>
+                </td>
+
+                <!-- Descripción -->
+                <td class="hidden md:table-cell" style="color:var(--text-3);font-size:11px;max-width:200px;">
+                  {{ cat.description ?? '—' }}
+                </td>
+
+                <!-- Ícono + código -->
+                <td class="hidden sm:table-cell" style="text-align:center;">
+                  @if (cat.icon) {
+                    <div style="display:inline-flex;align-items:center;gap:5px;background:var(--bg-input);border:1px solid var(--border);border-radius:7px;padding:4px 8px;">
+                      <i [class]="'ti ti-' + cat.icon" style="font-size:13px;" [style.color]="cat.color ?? 'var(--accent)'"></i>
+                      <span style="font-family:monospace;font-size:10px;color:var(--text-3);">{{ cat.icon }}</span>
+                    </div>
+                  } @else {
+                    <span style="color:var(--text-3);">—</span>
+                  }
+                </td>
+
+                <!-- Acciones -->
+                <td style="text-align:right;">
+                  @if (!cat.isSystem) {
+                    <div style="display:flex;align-items:center;justify-content:flex-end;gap:6px;">
+                      <button (click)="openEdit(cat)" class="btn-secondary btn-sm">
+                        <i class="ti ti-edit"></i>
+                      </button>
                       <button (click)="deleting.set(cat)" class="btn-danger btn-sm">
                         <i class="ti ti-trash"></i>
                       </button>
-                    }
-                  </td>
-                </tr>
-              }
-            </tbody>
-          </table>
-        </div>
+                    </div>
+                  }
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
       </div>
     }
   }
 
 </div>
 
-<app-drawer [isOpen]="drawerOpen()" title="Nueva categoría" size="sm" (closed)="closeDrawer()">
-  <form id="cat-form" [formGroup]="form" (ngSubmit)="save()" style="display:flex;flex-direction:column;gap:16px;">
+<!-- ══ DRAWER ══ -->
+<app-drawer
+  [isOpen]="drawerOpen()"
+  [title]="editing() ? 'Editar categoría' : 'Nueva categoría'"
+  [subtitle]="editing() ? ('Editando: ' + (editing()?.name ?? '')) : 'Organizá tus insumos por categoría'"
+  (closed)="closeDrawer()">
 
-      <div style="margin-bottom:0;">
-        <label class="field-label">Nombre <span style="color:var(--red);">*</span></label>
-        <input formControlName="name" type="text" placeholder="Lácteos"
-               class="field-input" [class.input-error]="isInvalid('name')">
-        @if (isInvalid('name')) { <p style="font-size:11px;color:var(--red);margin-top:4px;">Campo requerido</p> }
-      </div>
+  <form id="cat-form" [formGroup]="form" (ngSubmit)="save()" style="display:flex;flex-direction:column;gap:14px;">
 
-      <div style="margin-bottom:0;">
-        <label class="field-label">Color <span style="color:var(--text-3);font-weight:400;">(opcional)</span></label>
-        <div style="display:flex;align-items:center;gap:10px;">
-          <input formControlName="color" type="color"
-                 style="width:40px;height:40px;border-radius:10px;border:1.5px solid var(--border);background:var(--bg-input);cursor:pointer;padding:4px;flex-shrink:0;">
-          <input formControlName="color" type="text" placeholder="#6366f1"
-                 class="field-input" style="flex:1;font-family:monospace;">
+    <div>
+      <label class="field-label">Nombre <span style="color:var(--red);">*</span></label>
+      <input formControlName="name" type="text" placeholder="Lácteos"
+             class="field-input" [class.input-error]="isInvalid('name')">
+      @if (isInvalid('name')) { <p style="font-size:11px;color:var(--red);margin-top:4px;">Campo requerido</p> }
+    </div>
+
+    <div>
+      <label class="field-label">Descripción <span style="color:var(--text-3);font-weight:400;">(opcional)</span></label>
+      <textarea formControlName="description" rows="2" placeholder="Ej: Productos lácteos — quesos, yogures, crema"
+                class="field-input" style="resize:none;"></textarea>
+    </div>
+
+    <div class="sec-div">Identidad visual</div>
+
+    <!-- Ícono -->
+    <div>
+      <label class="field-label">Ícono <span style="color:var(--text-3);font-weight:400;">(nombre de Tabler Icons, sin "ti-")</span></label>
+      <div style="display:flex;align-items:center;gap:10px;">
+        <div style="width:42px;height:42px;border-radius:10px;border:1.5px solid var(--border);background:var(--bg-input);flex-shrink:0;display:flex;align-items:center;justify-content:center;">
+          @if (iconPreview) {
+            <i [class]="'ti ti-' + iconPreview" style="font-size:22px;" [style.color]="form.get('color')?.value || 'var(--accent)'"></i>
+          } @else {
+            <i class="ti ti-icons" style="font-size:18px;color:var(--text-3);opacity:.35;"></i>
+          }
         </div>
+        <input formControlName="icon" type="text" placeholder="pizza, leaf, meat, fish, droplet..."
+               class="field-input" style="flex:1;font-family:monospace;">
       </div>
+      <p style="font-size:10px;color:var(--text-3);margin-top:5px;">
+        Buscá en <span style="color:var(--accent);">tabler.io/icons</span> y copiá el nombre. Ej: <code style="background:var(--bg-input);padding:1px 4px;border-radius:4px;">pizza</code>, <code style="background:var(--bg-input);padding:1px 4px;border-radius:4px;">leaf</code>
+      </p>
+    </div>
 
-      @if (saveError()) {
-        <div style="background:var(--red-bg);border:1.5px solid var(--red);border-radius:10px;padding:12px 16px;font-size:12px;color:var(--red);">
-          {{ saveError() }}
-        </div>
-      }
+    <!-- Color -->
+    <div>
+      <label class="field-label">Color <span style="color:var(--text-3);font-weight:400;">(opcional — tinte del ícono)</span></label>
+      <div style="display:flex;align-items:center;gap:10px;">
+        <input formControlName="color" type="color"
+               style="width:42px;height:42px;border-radius:10px;border:1.5px solid var(--border);background:var(--bg-input);cursor:pointer;padding:4px;flex-shrink:0;">
+        <input formControlName="color" type="text" placeholder="#6366f1"
+               class="field-input" style="flex:1;font-family:monospace;">
+      </div>
+    </div>
 
-    </form>
+    @if (saveError()) {
+      <div style="background:var(--red-bg);border:1.5px solid var(--red);border-radius:10px;padding:12px 16px;font-size:12px;color:var(--red);">
+        {{ saveError() }}
+      </div>
+    }
 
-  <div drawer-footer style="padding:14px 20px;border-top:1px solid var(--border);display:flex;gap:8px;background:var(--bg-card);">
-    <button type="button" (click)="closeDrawer()" class="btn-secondary btn-sm">Cancelar</button>
-    <button type="submit" form="cat-form" [disabled]="saving()" class="btn-primary btn-sm" style="flex:1;justify-content:center;">
+  </form>
+
+  <div drawer-footer class="panel-footer">
+    <button type="button" (click)="closeDrawer()" class="btn-secondary">Cancelar</button>
+    <button type="submit" form="cat-form" [disabled]="saving()" class="btn-primary" style="flex:1;justify-content:center;">
       @if (saving()) { <span class="loader"></span> }
-      Crear categoría
+      {{ editing() ? 'Guardar cambios' : 'Crear categoría' }}
     </button>
   </div>
 </app-drawer>

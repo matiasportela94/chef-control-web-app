@@ -41,9 +41,15 @@
         <div style="position:absolute;top:14px;right:14px;width:34px;height:34px;border-radius:11px;background:rgba(255,255,255,.12);display:flex;align-items:center;justify-content:center;font-size:16px;color:var(--pop-text);">
           <i class="ti ti-chart-bar"></i>
         </div>
-        <span style="display:inline-flex;align-items:center;gap:3px;font-size:10px;font-weight:700;background:rgba(255,255,255,.18);color:var(--pop-text);padding:3px 8px;border-radius:20px;margin-bottom:6px;">
-          <i class="ti ti-arrow-up-right" style="font-size:9px;"></i> Ventas
-        </span>
+        @if (salesPct() !== null) {
+          <span style="display:inline-flex;font-size:10px;font-weight:700;padding:3px 8px;border-radius:20px;margin-bottom:6px;"
+                [style.background]="salesPct()! >= 0 ? 'rgba(255,255,255,.25)' : 'rgba(255,255,255,.12)'"
+                [style.color]="'var(--pop-text)'">
+            {{ salesPct()! >= 0 ? '+' : '' }}{{ salesPct()! | percent:'1.1-1' }} vs mes ant.
+          </span>
+        } @else {
+          <div style="height:22px;margin-bottom:6px;"></div>
+        }
         <p style="font-size:11px;color:var(--pop-sub);margin-bottom:4px;">Ventas del mes</p>
         <p style="font-size:22px;font-weight:700;color:var(--pop-text);letter-spacing:-.5px;line-height:1.1;">
           {{ formatARS(kpis?.salesTotalThisMonth) }}
@@ -71,6 +77,15 @@
         <div style="position:absolute;top:14px;right:14px;width:34px;height:34px;border-radius:11px;background:var(--bg-input);display:flex;align-items:center;justify-content:center;font-size:16px;color:var(--text-3);transition:background .2s,color .2s;" class="kpi-icon">
           <i class="ti ti-shopping-cart"></i>
         </div>
+        @if (purchasesPct() !== null) {
+          <span style="display:inline-flex;font-size:10px;font-weight:700;padding:3px 8px;border-radius:20px;margin-bottom:6px;"
+                [style.background]="purchasesPct()! <= 0 ? 'rgba(22,163,74,.12)' : 'rgba(220,38,38,.1)'"
+                [style.color]="purchasesPct()! <= 0 ? '#16a34a' : 'var(--red)'">
+            {{ purchasesPct()! >= 0 ? '+' : '' }}{{ purchasesPct()! | percent:'1.1-1' }} vs mes ant.
+          </span>
+        } @else {
+          <div style="height:22px;margin-bottom:6px;"></div>
+        }
         <p style="font-size:11px;color:var(--text-3);margin-bottom:4px;">Compras del mes</p>
         <p style="font-size:22px;font-weight:700;color:var(--text-1);letter-spacing:-.5px;line-height:1.1;">
           {{ formatARS(kpis?.purchasesTotalThisMonth) }}
@@ -98,6 +113,15 @@
         <div style="position:absolute;top:14px;right:14px;width:34px;height:34px;border-radius:11px;background:var(--bg-input);display:flex;align-items:center;justify-content:center;font-size:16px;color:var(--text-3);transition:background .2s,color .2s;" class="kpi-icon">
           <i class="ti ti-coin"></i>
         </div>
+        @if (foodCostPctDelta() !== null) {
+          <span style="display:inline-flex;font-size:10px;font-weight:700;padding:3px 8px;border-radius:20px;margin-bottom:6px;"
+                [style.background]="foodCostPctDelta()! <= 0 ? 'rgba(22,163,74,.12)' : 'rgba(220,38,38,.1)'"
+                [style.color]="foodCostPctDelta()! <= 0 ? '#16a34a' : 'var(--red)'">
+            {{ foodCostPctDelta()! >= 0 ? '+' : '' }}{{ foodCostPctDelta()! | percent:'1.1-1' }} pts vs mes ant.
+          </span>
+        } @else {
+          <div style="height:22px;margin-bottom:6px;"></div>
+        }
         <p style="font-size:11px;color:var(--text-3);margin-bottom:4px;">Food Cost</p>
         @if (foodCostPct() !== null) {
           <p style="font-size:26px;font-weight:700;letter-spacing:-.5px;line-height:1.1;"
@@ -131,7 +155,15 @@
         <div style="position:absolute;top:14px;right:14px;width:34px;height:34px;border-radius:11px;background:var(--red-bg);display:flex;align-items:center;justify-content:center;font-size:16px;color:var(--red);">
           <i class="ti ti-trash"></i>
         </div>
-        <span class="badge badge-red" style="margin-bottom:6px;">Merma</span>
+        @if (wastePct() !== null) {
+          <span style="display:inline-flex;font-size:10px;font-weight:700;padding:3px 8px;border-radius:20px;margin-bottom:6px;"
+                [style.background]="wastePct()! <= 0 ? 'rgba(22,163,74,.12)' : 'rgba(220,38,38,.1)'"
+                [style.color]="wastePct()! <= 0 ? '#16a34a' : 'var(--red)'">
+            {{ wastePct()! >= 0 ? '+' : '' }}{{ wastePct()! | percent:'1.1-1' }} vs mes ant.
+          </span>
+        } @else {
+          <div style="height:22px;margin-bottom:6px;"></div>
+        }
         <p style="font-size:11px;color:var(--text-3);margin-bottom:4px;">Merma del mes</p>
         <p style="font-size:22px;font-weight:700;color:var(--red);letter-spacing:-.5px;line-height:1.1;">
           {{ formatARS(kpis?.wasteTotalArsThisMonth) }}

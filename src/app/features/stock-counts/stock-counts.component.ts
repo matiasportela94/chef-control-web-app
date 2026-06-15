@@ -2,10 +2,13 @@ import { Component, HostListener, OnInit, signal } from '@angular/core';
 import { FormArray, FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Api } from '../../api/api';
 import { list as listStockCounts } from '../../api/fn/stock-count-controller/list';
+import { get1 as getStockCount }    from '../../api/fn/stock-count-controller/get-1';
 import { create as createStockCount } from '../../api/fn/stock-count-controller/create';
 import { listProducts } from '../../api/fn/product-controller/list-products';
+import { listUnits }    from '../../api/fn/unit-controller/list-units';
 import { StockCountResponse } from '../../api/models/stock-count-response';
 import { ProductResponse } from '../../api/models/product-response';
+import { UnitResponse } from '../../api/models/unit-response';
 import { PagedResponseStockCountResponse } from '../../api/models/paged-response-stock-count-response';
 import { PagedResponseProductResponse } from '../../api/models/paged-response-product-response';
 import { DecimalPipe } from '@angular/common';
@@ -38,7 +41,10 @@ export class StockCountsComponent implements OnInit {
   pageSize = 20;
   total    = signal(0);
 
-  expanded = signal<string | null>(null);
+  expanded      = signal<string | null>(null);
+  loadingDetail = signal<string | null>(null);
+  products      = signal<ProductResponse[]>([]);
+  units         = signal<UnitResponse[]>([]);
 
   drawerOpen    = signal(false);
   loadingForm   = signal(false);
@@ -56,7 +62,30 @@ export class StockCountsComponent implements OnInit {
   }
 
   async ngOnInit(): Promise<void> {
-    await this.loadCounts();
+    await Promise.all([this.loadCounts(), this.loadProducts(), this.loadUnits()]);
+  }
+
+  async loadProducts(): Promise<void> {
+    try {
+      const raw = await this.api.invoke(listProducts, { page: 0, size: 999 }) as unknown;
+      const res = await parseBlob<PagedResponseProductResponse>(raw);
+      this.products.set(res.content ?? []);
+    } catch { /* non-critical */ }
+  }
+
+  async loadUnits(): Promise<void> {
+    try {
+      const raw = await this.api.invoke(listUnits) as unknown;
+      this.units.set(await parseBlob<UnitResponse[]>(raw));
+    } catch { /* non-critical */ }
+  }
+
+  productName(id?: string): string {
+    return this.products().find(p => p.id === id)?.name ?? '—';
+  }
+
+  unitAbbr(id?: string): string {
+    return this.units().find(u => u.id === id)?.abbreviation ?? '';
   }
 
   get items(): FormArray {
@@ -117,9 +146,19 @@ export class StockCountsComponent implements OnInit {
     if (this.drawerOpen()) this.closeDrawer();
   }
 
-  toggleExpand(id?: string): void {
+  async toggleExpand(id?: string): Promise<void> {
     if (!id) return;
-    this.expanded.set(this.expanded() === id ? null : id);
+    if (this.expanded() === id) { this.expanded.set(null); return; }
+    this.expanded.set(id);
+    const count = this.counts().find(c => c.id === id);
+    if (!count || count.adjustments != null) return; // already loaded
+    this.loadingDetail.set(id);
+    try {
+      const raw = await this.api.invoke(getStockCount, { id }) as unknown;
+      const detail = await parseBlob<typeof count>(raw);
+      this.counts.update(list => list.map(c => c.id === id ? { ...c, adjustments: detail.adjustments ?? [] } : c));
+    } catch { /* silencioso — el expandido queda sin ajustes */ }
+    finally { this.loadingDetail.set(null); }
   }
 
   async save(): Promise<void> {

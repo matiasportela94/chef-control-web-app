@@ -67,6 +67,7 @@
                   <th>Producto</th>
                   <th class="hidden md:table-cell">Unidad</th>
                   <th class="hidden lg:table-cell">Categoría</th>
+                  <th style="text-align:right;">Stock</th>
                   <th class="hidden md:table-cell" style="text-align:right;">Mín</th>
                   <th class="hidden md:table-cell" style="text-align:right;">Máx</th>
                   <th style="text-align:center;">Estado</th>
@@ -88,8 +89,35 @@
                         <span style="color:var(--text-3);">({{ p.defaultUnit?.abbreviation }})</span>
                       }
                     </td>
-                    <td class="hidden lg:table-cell" style="color:var(--text-2);">
-                      {{ p.category?.name ?? '—' }}
+                    <td class="hidden lg:table-cell">
+                      @if (p.category) {
+                        <div style="display:flex;align-items:center;gap:6px;">
+                          @if (p.category.icon) {
+                            <i [class]="'ti ti-' + p.category.icon" style="font-size:13px;" [style.color]="p.category.color ?? 'var(--accent)'"></i>
+                          } @else if (p.category.color) {
+                            <span style="width:8px;height:8px;border-radius:50%;flex-shrink:0;" [style.background]="p.category.color"></span>
+                          }
+                          <span style="color:var(--text-2);">{{ p.category.name }}</span>
+                        </div>
+                      } @else {
+                        <span style="color:var(--text-3);">—</span>
+                      }
+                    </td>
+                    <!-- Stock actual -->
+                    <td style="text-align:right;">
+                      @if (p.currentStock != null) {
+                        <span style="font-weight:600;"
+                              [style.color]="(p.minStock != null && p.currentStock < p.minStock) ? 'var(--red)'
+                                           : (p.maxStock != null && p.currentStock > p.maxStock) ? '#d97706'
+                                           : '#16a34a'">
+                          {{ p.currentStock | number:'1.0-2' }}
+                        </span>
+                        @if (p.defaultUnit?.abbreviation) {
+                          <span style="font-size:10px;color:var(--text-3);margin-left:3px;">{{ p.defaultUnit!.abbreviation }}</span>
+                        }
+                      } @else {
+                        <span style="color:var(--text-3);">—</span>
+                      }
                     </td>
                     <td class="hidden md:table-cell" style="text-align:right;color:var(--text-2);">
                       {{ p.minStock != null ? (p.minStock | number:'1.0-2') : '—' }}
@@ -139,39 +167,53 @@
 
 </div>
 
-<app-drawer [isOpen]="drawerOpen()" [title]="editingProduct() ? 'Editar producto' : 'Nuevo producto'" (closed)="closeDrawer()">
-  <form id="product-form" [formGroup]="form" (ngSubmit)="saveProduct()" style="display:flex;flex-direction:column;gap:16px;">
+<app-drawer
+  [isOpen]="drawerOpen()"
+  [title]="editingProduct() ? 'Editar producto' : 'Nuevo producto'"
+  [subtitle]="editingProduct() ? ('Editando: ' + (editingProduct()?.name ?? '')) : 'Agregá un insumo al inventario'"
+  (closed)="closeDrawer()">
 
-      <div style="margin-bottom:0;">
-        <label class="field-label">
-          Nombre
-          @if (!editingProduct()) { <span style="color:var(--red);">*</span> }
-          @if (editingProduct()) { <span style="color:var(--text-3);font-weight:400;">(no editable)</span> }
-        </label>
-        <input formControlName="name" type="text" placeholder="Ojo de bife"
-               class="field-input" [class.input-error]="isInvalid('name')"
-               [class.opacity-50]="editingProduct()" [class.cursor-not-allowed]="editingProduct()">
-        @if (isInvalid('name')) { <p style="font-size:11px;color:var(--red);margin-top:4px;">Campo requerido</p> }
-      </div>
+  <form id="product-form" [formGroup]="form" (ngSubmit)="saveProduct()" style="display:flex;flex-direction:column;gap:12px;">
 
-      <div style="margin-bottom:0;">
-        <label class="field-label">SKU <span style="color:var(--text-3);font-weight:400;">(opcional)</span></label>
-        <input formControlName="sku" type="text" placeholder="OJO-BIFE-01" class="field-input">
-      </div>
+    <!-- Nombre -->
+    <div>
+      <label class="field-label">
+        Nombre
+        @if (!editingProduct()) { <span style="color:var(--red);">*</span> }
+        @else { <span style="color:var(--text-3);font-weight:400;">(no editable)</span> }
+      </label>
+      <input formControlName="name" type="text" placeholder="Ej: Ojo de bife"
+             class="field-input" [class.input-error]="isInvalid('name')"
+             [class.opacity-50]="!!editingProduct()" [class.cursor-not-allowed]="!!editingProduct()">
+      @if (isInvalid('name')) {
+        <p style="font-size:11px;color:var(--red);margin-top:4px;">Campo requerido</p>
+      }
+    </div>
 
-      <div style="margin-bottom:0;">
-        <label class="field-label">Unidad de medida <span style="color:var(--red);">*</span></label>
+    <!-- SKU -->
+    <div>
+      <label class="field-label">SKU <span style="color:var(--text-3);font-weight:400;">(opcional)</span></label>
+      <input formControlName="sku" type="text" placeholder="Ej: OJO-BIFE-01" class="field-input">
+    </div>
+
+    <!-- Configuración -->
+    <div class="sec-div">Configuración</div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+      <div>
+        <label class="field-label">Unidad <span style="color:var(--red);">*</span></label>
         <select formControlName="defaultUnitId" class="field-select" [class.input-error]="isInvalid('defaultUnitId')">
-          <option value="">Seleccioná una unidad</option>
+          <option value="">Seleccioná</option>
           @for (u of units(); track u.id) {
             <option [value]="u.id">{{ u.name }} ({{ u.abbreviation }})</option>
           }
         </select>
-        @if (isInvalid('defaultUnitId')) { <p style="font-size:11px;color:var(--red);margin-top:4px;">Seleccioná una unidad</p> }
+        @if (isInvalid('defaultUnitId')) {
+          <p style="font-size:11px;color:var(--red);margin-top:4px;">Requerida</p>
+        }
       </div>
-
-      <div style="margin-bottom:0;">
-        <label class="field-label">Categoría <span style="color:var(--text-3);font-weight:400;">(opcional)</span></label>
+      <div>
+        <label class="field-label">Categoría <span style="color:var(--text-3);font-weight:400;">(opc.)</span></label>
         <select formControlName="categoryId" class="field-select">
           <option value="">Sin categoría</option>
           @for (c of categories(); track c.id) {
@@ -179,33 +221,58 @@
           }
         </select>
       </div>
+    </div>
 
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
-        <div style="margin-bottom:0;">
-          <label class="field-label">Stock mínimo <span style="color:var(--text-3);font-weight:400;">(opcional)</span></label>
-          <input formControlName="minStock" type="number" min="0" step="0.01" placeholder="0" class="field-input">
-        </div>
-        <div style="margin-bottom:0;">
-          <label class="field-label">Stock máximo <span style="color:var(--text-3);font-weight:400;">(opcional)</span></label>
-          <input formControlName="maxStock" type="number" min="0" step="0.01" placeholder="0" class="field-input">
-        </div>
+    <!-- Estado -->
+    <div class="sec-div">Estado</div>
+    <div class="status-toggle">
+      <button type="button" class="status-btn"
+              [class.on]="!editingProduct() || (editingProduct()?.isActive ?? true)">
+        <i class="ti ti-circle-check" style="font-size:13px;margin-right:4px;"></i> Activo
+      </button>
+      <button type="button" class="status-btn"
+              [class.on]="!!editingProduct() && !(editingProduct()?.isActive ?? true)"
+              [disabled]="true" style="cursor:default;">
+        <i class="ti ti-circle-x" style="font-size:13px;margin-right:4px;"></i> Inactivo
+      </button>
+    </div>
+    @if (editingProduct() && !editingProduct()?.isActive) {
+      <p style="font-size:10px;color:var(--text-3);margin-top:-6px;">
+        <i class="ti ti-info-circle"></i> Producto inactivo. Para reactivarlo usá el botón de la tabla.
+      </p>
+    }
+
+    <!-- Límites de stock -->
+    <div class="sec-div">Límites de stock</div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+      <div>
+        <label class="field-label">Mínimo <span style="color:var(--text-3);font-weight:400;">(opc.)</span></label>
+        <input formControlName="minStock" type="number" min="0" step="0.01" placeholder="0" class="field-input">
       </div>
+      <div>
+        <label class="field-label">Máximo <span style="color:var(--text-3);font-weight:400;">(opc.)</span></label>
+        <input formControlName="maxStock" type="number" min="0" step="0.01" placeholder="0" class="field-input">
+      </div>
+    </div>
 
-      @if (saveError()) {
-        <div style="background:var(--red-bg);border:1.5px solid var(--red);border-radius:10px;padding:12px 16px;font-size:12px;color:var(--red);">
-          {{ saveError() }}
-        </div>
-      }
+    @if (saveError()) {
+      <div style="background:var(--red-bg);border:1.5px solid var(--red);border-radius:10px;padding:12px 16px;font-size:12px;color:var(--red);margin-top:4px;">
+        {{ saveError() }}
+      </div>
+    }
 
-    </form>
+  </form>
 
-  <div drawer-footer style="padding:14px 20px;border-top:1px solid var(--border);display:flex;gap:8px;background:var(--bg-card);">
-    <button type="button" (click)="closeDrawer()" class="btn-secondary btn-sm">Cancelar</button>
-    <button type="submit" form="product-form" [disabled]="saving()" class="btn-primary btn-sm" style="flex:1;justify-content:center;">
+  <div drawer-footer class="panel-footer">
+    <button type="button" (click)="closeDrawer()" class="btn-secondary">Cancelar</button>
+    <button type="submit" form="product-form" [disabled]="saving()" class="btn-primary" style="flex:1;justify-content:center;">
       @if (saving()) { <span class="loader"></span> }
+      <i class="ti ti-device-floppy"></i>
       {{ editingProduct() ? 'Guardar cambios' : 'Crear producto' }}
     </button>
   </div>
+
 </app-drawer>
 
 <!-- DEACTIVATE DIALOG -->

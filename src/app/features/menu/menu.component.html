@@ -21,7 +21,6 @@
 
   @if (loading()) { <app-spinner /> }
 
-  <!-- Error -->
   @if (!loading() && error()) {
     <div style="background:var(--red-bg);border:1.5px solid var(--red);border-radius:14px;padding:20px;text-align:center;">
       <p style="font-size:12px;color:var(--red);margin-bottom:12px;">{{ error() }}</p>
@@ -29,7 +28,6 @@
     </div>
   }
 
-  <!-- Table -->
   @if (!loading() && !error()) {
     @if (menuItems().length === 0) {
       <div class="empty-state">
@@ -42,7 +40,6 @@
       </div>
     } @else {
 
-      <!-- Filter bar -->
       <div style="margin-bottom:16px;">
         <app-search-filter-bar
           placeholder="Buscar por nombre..."
@@ -51,7 +48,6 @@
         </app-search-filter-bar>
       </div>
 
-      <!-- No filter results -->
       @if (pagedItems().length === 0) {
         <div class="empty-state">
           <i class="ti ti-search"></i>
@@ -67,6 +63,8 @@
                   <th>Plato</th>
                   <th class="hidden md:table-cell">Categoría</th>
                   <th class="hidden sm:table-cell" style="text-align:right;">Precio</th>
+                  <th class="hidden lg:table-cell" style="text-align:right;">Costo</th>
+                  <th class="hidden lg:table-cell" style="text-align:center;">Food cost</th>
                   <th style="text-align:center;">Estado</th>
                   <th style="text-align:right;">Acciones</th>
                 </tr>
@@ -80,11 +78,27 @@
                         <p style="font-size:11px;color:var(--text-3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:240px;">{{ item.description }}</p>
                       }
                     </td>
-                    <td class="hidden md:table-cell" style="color:var(--text-2);">
-                      {{ item.category || '—' }}
+                    <td class="hidden md:table-cell" style="color:var(--text-2);">{{ item.category || '—' }}</td>
+                    <td class="hidden sm:table-cell" style="text-align:right;color:var(--text-2);">{{ formatARS(item.price) }}</td>
+                    <td class="hidden lg:table-cell" style="text-align:right;">
+                      @let cost = itemCosts().get(item.id!);
+                      @if (cost) {
+                        <span style="color:var(--text-2);">{{ formatARS(cost.costPerServing) }}</span>
+                      } @else {
+                        <span style="color:var(--text-3);">—</span>
+                      }
                     </td>
-                    <td class="hidden sm:table-cell" style="text-align:right;color:var(--text-2);">
-                      {{ formatARS(item.price) }}
+                    <td class="hidden lg:table-cell" style="text-align:center;">
+                      @let fc = itemCosts().get(item.id!);
+                      @if (fc && fc.foodCostPercentage != null) {
+                        <span style="font-size:11px;font-weight:700;padding:2px 7px;border-radius:20px;"
+                              [style.color]="fc.foodCostPercentage > 35 ? 'var(--red)' : fc.foodCostPercentage > 28 ? '#d97706' : '#16a34a'"
+                              [style.background]="fc.foodCostPercentage > 35 ? 'var(--red-bg)' : fc.foodCostPercentage > 28 ? '#fef3c7' : '#dcfce7'">
+                          {{ fc.foodCostPercentage | number:'1.1-1' }}%
+                        </span>
+                      } @else {
+                        <span style="color:var(--text-3);">—</span>
+                      }
                     </td>
                     <td style="text-align:center;">
                       @if (item.active) {
@@ -95,11 +109,11 @@
                     </td>
                     <td style="text-align:right;">
                       <div style="display:flex;align-items:center;justify-content:flex-end;gap:6px;">
-                        <button (click)="openEdit(item)" class="btn-secondary btn-sm">
-                          <i class="ti ti-edit"></i>
+                        <button (click)="openView(item)" class="btn-secondary btn-sm" title="Ver detalle">
+                          <i class="ti ti-eye"></i>
                         </button>
-                        <button (click)="openRecipe(item)" class="btn-ghost btn-sm">
-                          Receta
+                        <button (click)="openEdit(item)" class="btn-secondary btn-sm" title="Editar">
+                          <i class="ti ti-edit"></i>
                         </button>
                         @if (item.active) {
                           <button (click)="deactivating.set(item)" class="btn-danger btn-sm">
@@ -131,160 +145,270 @@
 
 </div>
 
-<!-- ITEM DRAWER -->
+<!-- ══ DRAWER UNIFICADO ══ -->
+<app-drawer
+  [isOpen]="drawerOpen()"
+  [title]="readOnly() ? (viewing()?.name ?? 'Ver plato') : (editing() ? 'Editar plato' : 'Nuevo plato')"
+  [subtitle]="readOnly() ? (viewing()?.category ?? 'Detalle del plato') : (editing() ? ('Editando: ' + (editing()?.name ?? '')) : 'Agregá un plato al menú con su receta')"
+  size="lg"
+  (closed)="closeDrawer()">
 
-<app-drawer [isOpen]="itemDrawerOpen()" [title]="editing() ? 'Editar plato' : 'Nuevo plato'" (closed)="closeItemDrawer()">
-  <form id="item-form" [formGroup]="itemForm" (ngSubmit)="saveItem()" style="display:flex;flex-direction:column;gap:16px;">
+  <!-- ══ VISTA READ-ONLY ══ -->
+  @if (readOnly()) {
+    <div style="display:flex;flex-direction:column;gap:12px;">
 
-      <div style="margin-bottom:0;">
-        <label class="field-label">Nombre <span style="color:var(--red);">*</span></label>
-        <input formControlName="name" type="text" placeholder="Milanesa napolitana"
-               class="field-input" [class.input-error]="isInvalid(itemForm, 'name')">
-        @if (isInvalid(itemForm, 'name')) { <p style="font-size:11px;color:var(--red);margin-top:4px;">Campo requerido</p> }
-      </div>
-
-      <div style="margin-bottom:0;">
-        <label class="field-label">Descripción <span style="color:var(--text-3);font-weight:400;">(opcional)</span></label>
-        <textarea formControlName="description" rows="2" placeholder="Acompañada de papas fritas y ensalada"
-                  class="field-textarea" style="resize:none;"></textarea>
-      </div>
-
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
-        <div style="margin-bottom:0;">
-          <label class="field-label">
-            Precio
-            @if (editing()) { <span style="color:var(--text-3);font-weight:400;">(opcional)</span> }
-            @else { <span style="color:var(--red);">*</span> }
-          </label>
-          <input formControlName="price" type="number" min="0" step="any" placeholder="$ 0"
-                 class="field-input" [class.input-error]="isInvalid(itemForm, 'price')">
-          @if (isInvalid(itemForm, 'price')) { <p style="font-size:11px;color:var(--red);margin-top:4px;">Precio requerido para calcular el food cost</p> }
-        </div>
-        <div style="margin-bottom:0;">
-          <label class="field-label">Categoría <span style="color:var(--text-3);font-weight:400;">(opcional)</span></label>
-          <input formControlName="category" type="text" placeholder="Principales" class="field-input">
-        </div>
-      </div>
-
-      @if (saveError()) {
-        <div style="background:var(--red-bg);border:1.5px solid var(--red);border-radius:10px;padding:12px 16px;font-size:12px;color:var(--red);">
-          {{ saveError() }}
+      <!-- Precio + descripción -->
+      @if (viewing()?.price || viewing()?.description) {
+        <div style="padding-bottom:14px;border-bottom:1px solid var(--border);">
+          @if (viewing()?.price) {
+            <div style="font-size:22px;font-weight:700;color:var(--accent);line-height:1.1;">{{ formatARS(viewing()!.price) }}</div>
+          }
+          @if (viewing()?.description) {
+            <p style="font-size:12px;color:var(--text-3);margin-top:5px;">{{ viewing()?.description }}</p>
+          }
         </div>
       }
 
-    </form>
+      <!-- Estado -->
+      <div class="sec-div" style="margin-top:0;">Estado</div>
+      <div class="status-toggle" style="pointer-events:none;">
+        <button class="status-btn" [class.on]="viewing()?.active">
+          <i class="ti ti-circle-check" style="font-size:13px;margin-right:4px;"></i> Activo
+        </button>
+        <button class="status-btn" [class.on]="!viewing()?.active">
+          <i class="ti ti-circle-x" style="font-size:13px;margin-right:4px;"></i> Inactivo
+        </button>
+      </div>
 
-  <div drawer-footer style="padding:14px 20px;border-top:1px solid var(--border);display:flex;gap:8px;background:var(--bg-card);">
-    <button type="button" (click)="closeItemDrawer()" class="btn-secondary btn-sm">Cancelar</button>
-    <button type="submit" form="item-form" [disabled]="saving()" class="btn-primary btn-sm" style="flex:1;justify-content:center;">
-      @if (saving()) { <span class="loader"></span> }
-      {{ editing() ? 'Guardar cambios' : 'Crear plato' }}
-    </button>
-  </div>
+      <!-- Ingredientes -->
+      <div class="sec-div">Ingredientes <span style="font-weight:400;letter-spacing:0;text-transform:none;">(receta)</span></div>
 
-</app-drawer>
-
-<!-- RECIPE DRAWER -->
-
-<app-drawer [isOpen]="recipeDrawerOpen()" title="Receta" size="xl" [subtitle]="recipeItem()?.name ?? ''" (closed)="closeRecipeDrawer()">
-
-  @if (recipeLoading()) {
-    <div style="display:flex;flex-direction:column;gap:10px;">
-      <div style="height:40px;background:var(--bg-input);border-radius:10px;width:120px;"></div>
-      @for (_ of [1,2,3]; track $index) {
-        <div style="height:48px;background:var(--bg-input);border-radius:10px;"></div>
+      @if (recipeLoading()) {
+        <div style="display:flex;flex-direction:column;gap:6px;">
+          @for (_ of [1,2,3]; track $index) {
+            <div style="height:40px;background:var(--bg-input);border-radius:10px;"></div>
+          }
+        </div>
+      } @else if (recipeItems.length === 0) {
+        <p style="font-size:12px;color:var(--text-3);padding:4px 0 8px;">Sin receta asignada.</p>
+      } @else {
+        <div>
+          @for (ctrl of recipeItems.controls; track $index) {
+            <div class="ing-row">
+              <i [class]="'ti ' + ingredientCategoryIcon(ctrl.get('productId')?.value)"
+                 [style.color]="ingredientCategoryColor(ctrl.get('productId')?.value)"></i>
+              <span class="ing-tag">{{ productName(ctrl.get('productId')?.value) }}</span>
+              <span class="ing-qty">{{ ctrl.get('quantity')?.value | number:'1.0-2' }} {{ unitAbbr(ctrl.get('unitId')?.value) }}</span>
+            </div>
+          }
+          @if ((recipeForm.get('servings')?.value ?? 1) > 1) {
+            <p style="font-size:11px;color:var(--text-3);margin-top:6px;">Rinde {{ recipeForm.get('servings')?.value }} porciones</p>
+          }
+        </div>
       }
+
+      <!-- Costo estimado -->
+      @if (recipeCost()) {
+        <div class="sec-div">Costo estimado</div>
+        <div class="cost-box">
+          <span>Costo teórico por porción</span>
+          <span>{{ formatARS(recipeCost()!.costPerServing) }}</span>
+        </div>
+        @if (recipeCost()!.foodCostPercentage != null) {
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:6px 2px 0;">
+            <span style="font-size:11px;color:var(--text-3);">Food cost teórico</span>
+            <span style="font-size:12px;font-weight:700;"
+                  [style.color]="(recipeCost()!.foodCostPercentage! > 35) ? 'var(--red)' : (recipeCost()!.foodCostPercentage! > 28) ? '#d97706' : '#16a34a'">
+              {{ recipeCost()!.foodCostPercentage! | number:'1.1-1' }}%
+            </span>
+          </div>
+        }
+      }
+
     </div>
   }
 
-  @if (!recipeLoading()) {
-    <form id="recipe-form" [formGroup]="recipeForm" (ngSubmit)="saveRecipe()" style="display:flex;flex-direction:column;gap:16px;">
+  <!-- ══ FORMULARIO EDICIÓN / CREACIÓN ══ -->
+  @if (!readOnly()) {
+  <form id="item-form" [formGroup]="itemForm" (ngSubmit)="saveItem()" style="display:flex;flex-direction:column;gap:12px;">
 
-      <div style="margin-bottom:0;width:120px;">
-        <label class="field-label">Porciones</label>
-        <input formControlName="servings" type="number" min="1" step="1" placeholder="1" class="field-input">
-      </div>
+    <!-- Nombre -->
+    <div>
+      <label class="field-label">Nombre <span style="color:var(--red);">*</span></label>
+      <input formControlName="name" type="text" placeholder="Ej: Caesar Tradicional"
+             class="field-input" [class.input-error]="isInvalid(itemForm, 'name')">
+      @if (isInvalid(itemForm, 'name')) {
+        <p style="font-size:11px;color:var(--red);margin-top:4px;">Campo requerido</p>
+      }
+    </div>
 
-      <!-- Ingredients -->
+    <!-- Descripción -->
+    <div>
+      <label class="field-label">Descripción <span style="color:var(--text-3);font-weight:400;">(opcional)</span></label>
+      <textarea formControlName="description" rows="2" placeholder="Mix de verdes, queso parmesano..."
+                class="field-textarea" style="resize:none;"></textarea>
+    </div>
+
+    <!-- Precio + Categoría -->
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
       <div>
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
-          <span class="section-title">Ingredientes</span>
-          <button type="button" (click)="addRecipeItem()" class="btn-ghost btn-sm">
-            <i class="ti ti-plus"></i> Agregar ingrediente
-          </button>
+        <label class="field-label">
+          Precio
+          @if (!editing()) { <span style="color:var(--red);">*</span> }
+          @else { <span style="color:var(--text-3);font-weight:400;">(opcional)</span> }
+        </label>
+        <input formControlName="price" type="number" min="0" step="any" placeholder="0"
+               class="field-input" [class.input-error]="isInvalid(itemForm, 'price')">
+        @if (isInvalid(itemForm, 'price')) {
+          <p style="font-size:11px;color:var(--red);margin-top:4px;">Requerido</p>
+        }
+      </div>
+      <div>
+        <label class="field-label">Categoría <span style="color:var(--text-3);font-weight:400;">(opcional)</span></label>
+        <input formControlName="category" type="text" placeholder="Principales" class="field-input">
+      </div>
+    </div>
+
+    <!-- Estado -->
+    <div class="sec-div">Estado</div>
+    <div class="status-toggle">
+      <button type="button" class="status-btn" [class.on]="isActiveLocal()"
+              (click)="toggleActive(true)">
+        <i class="ti ti-circle-check" style="font-size:13px;margin-right:4px;"></i> Activo
+      </button>
+      <button type="button" class="status-btn" [class.on]="!isActiveLocal()"
+              [disabled]="!!editing() && !editing()?.active"
+              (click)="toggleActive(false)">
+        <i class="ti ti-circle-x" style="font-size:13px;margin-right:4px;"></i> Inactivo
+      </button>
+    </div>
+    @if (editing() && !editing()?.active) {
+      <p style="font-size:10px;color:var(--text-3);margin-top:-6px;">
+        <i class="ti ti-info-circle"></i> Plato inactivo — no se puede reactivar desde aquí.
+      </p>
+    }
+    @if (editing()?.active && !isActiveLocal()) {
+      <p style="font-size:10px;color:var(--red);margin-top:-6px;">
+        <i class="ti ti-alert-triangle"></i> El plato será desactivado al guardar.
+      </p>
+    }
+
+    <!-- Ingredientes -->
+    <div class="sec-div">Ingredientes <span style="font-weight:400;letter-spacing:0;text-transform:none;">(receta opcional)</span></div>
+
+    @if (recipeLoading()) {
+      <div style="display:flex;flex-direction:column;gap:6px;">
+        @for (_ of [1,2,3]; track $index) {
+          <div style="height:44px;background:var(--bg-input);border-radius:10px;"></div>
+        }
+      </div>
+    } @else {
+
+      @if (recipeItems.length > 0) {
+        <!-- Porciones -->
+        <div style="width:110px;" [formGroup]="recipeForm">
+          <label class="field-label">Porciones</label>
+          <input formControlName="servings" type="number" min="1" step="1" placeholder="1" class="field-input">
         </div>
 
-        @if (recipeItems.length > 0) {
-          <div class="recipe-header hidden md:grid" style="margin-bottom:4px;">
-            <span class="field-label">Insumo</span>
-            <span class="field-label">Unidad</span>
-            <span class="field-label">Cantidad</span>
-            <span></span>
-          </div>
-        }
+        <!-- Lista de ingredientes -->
+        <div [formGroup]="recipeForm">
+          <div formArrayName="items" style="display:flex;flex-direction:column;gap:6px;">
+            @for (item of recipeItems.controls; track $index; let i = $index) {
+              <div [formGroupName]="i" style="display:grid;grid-template-columns:1fr auto auto auto;gap:6px;align-items:center;background:var(--bg-input);border:1.5px solid var(--border);border-radius:10px;padding:8px 10px;">
 
-        <div formArrayName="items" style="display:flex;flex-direction:column;gap:6px;">
-          @for (item of recipeItems.controls; track $index; let i = $index) {
-            <div [formGroupName]="i" class="recipe-row ing-row" style="background:var(--bg-input);border-radius:10px;padding:10px;">
+                <select formControlName="productId" (change)="onRecipeProductChange(i)"
+                        class="field-select" style="font-size:12px;padding:6px 10px;"
+                        [class.input-error]="isRecipeItemInvalid(i, 'productId')">
+                  <option value="">Insumo</option>
+                  @for (p of products(); track p.id) {
+                    <option [value]="p.id">{{ p.name }}</option>
+                  }
+                </select>
 
-              <select formControlName="productId" (change)="onRecipeProductChange(i)"
-                      class="field-select" [class.input-error]="isRecipeItemInvalid(i, 'productId')" style="font-size:12px;padding:6px 10px;">
-                <option value="">Seleccioná un insumo</option>
-                @for (p of products(); track p.id) {
-                  <option [value]="p.id">{{ p.name }}</option>
-                }
-              </select>
+                <input formControlName="quantity" type="number" min="0.001" step="any" placeholder="0"
+                       class="field-input" style="width:70px;font-size:12px;padding:6px 8px;"
+                       [class.input-error]="isRecipeItemInvalid(i, 'quantity')">
 
-              <select formControlName="unitId"
-                      class="field-select" [class.input-error]="isRecipeItemInvalid(i, 'unitId')" style="font-size:12px;padding:6px 10px;">
-                <option value="">Unidad</option>
-                @for (u of units(); track u.id) {
-                  <option [value]="u.id">{{ u.abbreviation }}</option>
-                }
-              </select>
+                <select formControlName="unitId"
+                        class="field-select" style="width:64px;font-size:12px;padding:6px 8px;"
+                        [class.input-error]="isRecipeItemInvalid(i, 'unitId')">
+                  <option value="">U.</option>
+                  @for (u of units(); track u.id) {
+                    <option [value]="u.id">{{ u.abbreviation }}</option>
+                  }
+                </select>
 
-              <input formControlName="quantity" type="number" min="0.001" step="any" placeholder="0"
-                     class="field-input" [class.input-error]="isRecipeItemInvalid(i, 'quantity')" style="font-size:12px;padding:6px 10px;">
-
-              <div style="display:flex;align-items:center;justify-content:center;">
-                <button type="button" (click)="removeRecipeItem(i)" class="btn-icon" style="color:var(--text-3);">
+                <button type="button" (click)="removeRecipeItem(i)" class="btn-icon" style="width:30px;height:30px;font-size:13px;color:var(--text-3);">
                   <i class="ti ti-x"></i>
                 </button>
               </div>
-
-            </div>
-          }
-        </div>
-
-        @if (recipeItems.length === 0) {
-          <div style="border:1.5px dashed var(--border);border-radius:12px;padding:32px;text-align:center;">
-            <p style="font-size:12px;color:var(--text-3);">Sin ingredientes — usá "+ Agregar ingrediente" para comenzar.</p>
+            }
           </div>
-        }
-      </div>
-
-      @if (recipeError()) {
-        <div style="background:var(--red-bg);border:1.5px solid var(--red);border-radius:10px;padding:12px 16px;font-size:12px;color:var(--red);">
-          {{ recipeError() }}
         </div>
       }
 
-    </form>
-  }
-
-  <div drawer-footer style="padding:14px 20px;border-top:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;background:var(--bg-card);">
-    <button type="button" (click)="confirmDeleteRecipe()" [disabled]="deleteRecipeLoading() || recipeLoading()"
-            class="btn-danger btn-sm">
-      @if (deleteRecipeLoading()) { <span class="loader"></span> }
-      @else { <i class="ti ti-trash"></i> Eliminar receta }
-    </button>
-    <div style="display:flex;align-items:center;gap:8px;">
-      <button type="button" (click)="closeRecipeDrawer()" class="btn-secondary btn-sm">Cancelar</button>
-      <button type="submit" form="recipe-form" [disabled]="recipeSaving() || recipeLoading()" class="btn-primary btn-sm" style="min-width:120px;justify-content:center;">
-        @if (recipeSaving()) { <span class="loader"></span> }
-        Guardar receta
+      <!-- Agregar ingrediente -->
+      <button type="button" (click)="addRecipeItem()"
+              style="display:flex;align-items:center;gap:5px;width:100%;background:none;border:1.5px dashed var(--border);border-radius:10px;padding:9px 12px;cursor:pointer;font-family:'Poppins',sans-serif;font-size:12px;color:var(--text-3);transition:border-color .15s,color .15s;"
+              onmouseover="this.style.borderColor='var(--accent)';this.style.color='var(--accent)'"
+              onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--text-3)'">
+        <i class="ti ti-plus"></i> Agregar ingrediente
       </button>
-    </div>
+
+      <!-- Eliminar receta -->
+      @if (editing()?.id && recipeItems.length > 0) {
+        <button type="button" (click)="removeRecipe()"
+                style="font-size:11px;color:var(--red);background:none;border:none;cursor:pointer;text-align:left;padding:0;">
+          <i class="ti ti-trash"></i> Eliminar receta
+        </button>
+      }
+
+    }
+
+    <!-- Costo estimado (solo si hay ingredientes y se cargó el costo) -->
+    @if (recipeCost() && recipeItems.length > 0) {
+      <div class="sec-div">Costo estimado</div>
+      <div class="cost-box">
+        <span style="font-size:11px;color:var(--text-3);">Costo teórico por porción</span>
+        <span style="font-size:15px;font-weight:700;color:var(--accent);">
+          {{ formatARS(recipeCost()!.costPerServing) }}
+        </span>
+      </div>
+      @if (recipeCost()!.foodCostPercentage != null) {
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:0 2px;">
+          <span style="font-size:11px;color:var(--text-3);">Food cost teórico</span>
+          <span style="font-size:12px;font-weight:700;"
+                [style.color]="(recipeCost()!.foodCostPercentage! > 35) ? 'var(--red)' : (recipeCost()!.foodCostPercentage! > 28) ? '#d97706' : '#16a34a'">
+            {{ recipeCost()!.foodCostPercentage! | number:'1.1-1' }}%
+          </span>
+        </div>
+      }
+    }
+
+    @if (saveError()) {
+      <div style="background:var(--red-bg);border:1.5px solid var(--red);border-radius:10px;padding:12px 16px;font-size:12px;color:var(--red);margin-top:4px;">
+        {{ saveError() }}
+      </div>
+    }
+
+  </form>
+  } <!-- end @if (!readOnly()) -->
+
+  <div drawer-footer class="panel-footer">
+    @if (readOnly()) {
+      <button type="button" (click)="closeDrawer()" class="btn-secondary">Cerrar</button>
+      <button type="button" (click)="switchToEdit()" class="btn-primary" style="flex:1;justify-content:center;">
+        <i class="ti ti-edit"></i> Editar
+      </button>
+    } @else {
+      <button type="button" (click)="closeDrawer()" class="btn-secondary">Cancelar</button>
+      <button type="submit" form="item-form" [disabled]="saving()" class="btn-primary" style="flex:1;justify-content:center;">
+        @if (saving()) { <span class="loader"></span> }
+        <i class="ti ti-device-floppy"></i>
+        {{ editing() ? 'Guardar cambios' : 'Crear plato' }}
+      </button>
+    }
   </div>
 
 </app-drawer>

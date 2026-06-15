@@ -9,6 +9,8 @@ export class DrawerComponent implements AfterViewInit {
   @Input() isOpen = false;
   @Input() title = '';
   @Input() subtitle = '';
+  @Input() titleIcon = '';
+  @Input() accentHeader = false;
   /** sm=max-w-md · md=max-w-lg (default) · lg=max-w-2xl · xl=max-w-3xl · 2xl=max-w-4xl */
   @Input() size: 'sm' | 'md' | 'lg' | 'xl' | '2xl' = 'md';
   @Output() closed = new EventEmitter<void>();

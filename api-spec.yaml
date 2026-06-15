@@ -12,46 +12,6 @@ servers:
 security:
 - bearerAuth: []
 paths:
-  /ai/execute:
-    post:
-      tags:
-      - ai-controller
-      operationId: executeIntent
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/ExecuteIntentRequest'
-      responses:
-        "200":
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ExecuteIntentResponse'
-      security:
-      - bearerAuth: []
-  /ai/interpret:
-    post:
-      tags:
-      - ai-controller
-      operationId: interpretText
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/InterpretTextRequest'
-      responses:
-        "200":
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/InterpretTextResponse'
-      security:
-      - bearerAuth: []
   /users/{id}:
     get:
       tags:
@@ -148,6 +108,49 @@ paths:
       responses:
         "200":
           description: OK
+  /purchases/{id}:
+    get:
+      tags:
+      - purchase-controller
+      operationId: getPurchase
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/PurchaseDetailResponse"
+    put:
+      tags:
+      - purchase-controller
+      operationId: updatePurchase
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdatePurchaseRequest"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/PurchaseDetailResponse"
   /products/{id}:
     get:
       tags:
@@ -309,6 +312,45 @@ paths:
       tags:
       - menu-item-controller
       operationId: deleteRecipe
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        "200":
+          description: OK
+  /categories/{id}:
+    put:
+      tags:
+      - product-category-controller
+      operationId: updateCategory
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateCategoryRequest"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/CategoryResponse"
+    delete:
+      tags:
+      - product-category-controller
+      operationId: deleteCategory
       parameters:
       - name: id
         in: path
@@ -570,6 +612,25 @@ paths:
             '*/*':
               schema:
                 $ref: "#/components/schemas/SaleResponse"
+  /sales/{id}/reverse:
+    post:
+      tags:
+      - sale-controller
+      operationId: reverse_1
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/SaleResponse"
   /purchases:
     get:
       tags:
@@ -607,6 +668,25 @@ paths:
             schema:
               $ref: "#/components/schemas/CreatePurchaseRequest"
         required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/PurchaseDetailResponse"
+  /purchases/{id}/reverse:
+    post:
+      tags:
+      - purchase-controller
+      operationId: reversePurchase
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
       responses:
         "200":
           description: OK
@@ -823,6 +903,42 @@ paths:
       responses:
         "200":
           description: OK
+  /ai/interpret:
+    post:
+      tags:
+      - ai-controller
+      operationId: interpret
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/InterpretRequest"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/InterpretResponse"
+  /ai/execute:
+    post:
+      tags:
+      - ai-controller
+      operationId: execute
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ExecuteRequest"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ExecuteResponse"
   /waste-events/{id}:
     get:
       tags:
@@ -927,25 +1043,6 @@ paths:
             '*/*':
               schema:
                 $ref: "#/components/schemas/SaleResponse"
-  /purchases/{id}:
-    get:
-      tags:
-      - purchase-controller
-      operationId: getPurchase
-      parameters:
-      - name: id
-        in: path
-        required: true
-        schema:
-          type: string
-          format: uuid
-      responses:
-        "200":
-          description: OK
-          content:
-            '*/*':
-              schema:
-                $ref: "#/components/schemas/PurchaseDetailResponse"
   /products/{id}/stock:
     get:
       tags:
@@ -1081,74 +1178,8 @@ paths:
             '*/*':
               schema:
                 $ref: "#/components/schemas/PagedResponseAlertResponse"
-  /categories/{id}:
-    delete:
-      tags:
-      - product-category-controller
-      operationId: deleteCategory
-      parameters:
-      - name: id
-        in: path
-        required: true
-        schema:
-          type: string
-          format: uuid
-      responses:
-        "200":
-          description: OK
 components:
   schemas:
-    ExecuteIntentRequest:
-      required:
-      - intent
-      type: object
-      properties:
-        intent:
-          type: string
-        data:
-          type: object
-          additionalProperties: true
-    ExecuteIntentResponse:
-      type: object
-      properties:
-        success:
-          type: boolean
-        message:
-          type: string
-        created:
-          type: integer
-        skipped:
-          type: integer
-    InterpretTextRequest:
-      required:
-      - message
-      type: object
-      properties:
-        message:
-          type: string
-          maxLength: 500
-    InterpretTextResponse:
-      type: object
-      properties:
-        intent:
-          type: string
-          enum:
-          - purchase
-          - waste
-          - sale
-          - stock_adjustment
-          - query
-          - multi
-          - unknown
-        confidence:
-          type: integer
-        needsConfirmation:
-          type: boolean
-        data:
-          type: object
-          additionalProperties: true
-        responseToUser:
-          type: string
     UpdateUserRequest:
       required:
       - name
@@ -1228,6 +1259,89 @@ components:
           type: string
         isActive:
           type: boolean
+    ItemPriceUpdate:
+      required:
+      - id
+      - pricePerUnit
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        pricePerUnit:
+          minimum: 0.01
+          exclusiveMinimum: false
+          type: number
+    UpdatePurchaseRequest:
+      type: object
+      properties:
+        supplierId:
+          type: string
+          format: uuid
+        notes:
+          maxLength: 1000
+          minLength: 0
+          type: string
+        purchasedAt:
+          type: string
+          format: date-time
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/ItemPriceUpdate"
+    ItemDetail:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        productId:
+          type: string
+          format: uuid
+        productName:
+          type: string
+        productSku:
+          type: string
+        quantity:
+          type: number
+        quantityRemaining:
+          type: number
+        unitId:
+          type: string
+          format: uuid
+        unitName:
+          type: string
+        unitAbbreviation:
+          type: string
+        pricePerUnit:
+          type: number
+        subtotal:
+          type: number
+    PurchaseDetailResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        supplierId:
+          type: string
+          format: uuid
+        supplierName:
+          type: string
+        total:
+          type: number
+        notes:
+          type: string
+        purchasedAt:
+          type: string
+          format: date-time
+        createdAt:
+          type: string
+          format: date-time
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/ItemDetail"
     UpdateProductRequest:
       required:
       - defaultUnitId
@@ -1388,6 +1502,43 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/RecipeItemResponse"
+    UpdateCategoryRequest:
+      type: object
+      properties:
+        name:
+          maxLength: 100
+          minLength: 0
+          type: string
+        description:
+          maxLength: 255
+          minLength: 0
+          type: string
+        color:
+          pattern: "^#[0-9A-Fa-f]{6}$"
+          type: string
+        icon:
+          maxLength: 64
+          minLength: 0
+          type: string
+    CategoryResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        description:
+          type: string
+        color:
+          type: string
+        icon:
+          type: string
+        isSystem:
+          type: boolean
+        parentId:
+          type: string
+          format: uuid
     AlertResponse:
       type: object
       properties:
@@ -1436,10 +1587,6 @@ components:
           - OVERPRODUCTION
           - THEFT
           - OTHER
-        cost:
-          minimum: 0
-          exclusiveMinimum: false
-          type: number
     WasteEventResponse:
       type: object
       properties:
@@ -1682,6 +1829,11 @@ components:
         itemCount:
           type: integer
           format: int32
+        status:
+          type: string
+          enum:
+          - ACTIVE
+          - REVERSED
         items:
           type: array
           items:
@@ -1730,57 +1882,6 @@ components:
         expirationDate:
           type: string
           format: date
-    ItemDetail:
-      type: object
-      properties:
-        id:
-          type: string
-          format: uuid
-        productId:
-          type: string
-          format: uuid
-        productName:
-          type: string
-        productSku:
-          type: string
-        quantity:
-          type: number
-        unitId:
-          type: string
-          format: uuid
-        unitName:
-          type: string
-        unitAbbreviation:
-          type: string
-        pricePerUnit:
-          type: number
-        subtotal:
-          type: number
-    PurchaseDetailResponse:
-      type: object
-      properties:
-        id:
-          type: string
-          format: uuid
-        supplierId:
-          type: string
-          format: uuid
-        supplierName:
-          type: string
-        total:
-          type: number
-        notes:
-          type: string
-        purchasedAt:
-          type: string
-          format: date-time
-        createdAt:
-          type: string
-          format: date-time
-        items:
-          type: array
-          items:
-            $ref: "#/components/schemas/ItemDetail"
     CreateProductRequest:
       required:
       - defaultUnitId
@@ -1831,24 +1932,17 @@ components:
           maxLength: 100
           minLength: 0
           type: string
+        description:
+          maxLength: 255
+          minLength: 0
+          type: string
         color:
           pattern: "^#[0-9A-Fa-f]{6}$"
           type: string
-        parentId:
+        icon:
+          maxLength: 64
+          minLength: 0
           type: string
-          format: uuid
-    CategoryResponse:
-      type: object
-      properties:
-        id:
-          type: string
-          format: uuid
-        name:
-          type: string
-        color:
-          type: string
-        isSystem:
-          type: boolean
         parentId:
           type: string
           format: uuid
@@ -1877,6 +1971,9 @@ components:
           type: string
         role:
           type: string
+        expiresAt:
+          type: integer
+          format: int64
         restaurants:
           type: array
           items:
@@ -1943,6 +2040,53 @@ components:
       properties:
         email:
           type: string
+    InterpretRequest:
+      required:
+      - message
+      type: object
+      properties:
+        message:
+          maxLength: 500
+          minLength: 0
+          type: string
+    InterpretResponse:
+      type: object
+      properties:
+        intent:
+          type: string
+        confidence:
+          type: integer
+          format: int32
+        needsConfirmation:
+          type: boolean
+        data:
+          type: object
+        responseToUser:
+          type: string
+    ExecuteRequest:
+      required:
+      - intent
+      type: object
+      properties:
+        intent:
+          type: string
+        data:
+          type: object
+          additionalProperties:
+            type: object
+    ExecuteResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        message:
+          type: string
+        created:
+          type: integer
+          format: int32
+        skipped:
+          type: integer
+          format: int32
     PagedResponseWasteEventResponse:
       type: object
       properties:
@@ -1978,6 +2122,11 @@ components:
           type: string
         type:
           type: string
+        baseUnitId:
+          type: string
+          format: uuid
+        toBaseFactor:
+          type: number
     PagedResponseStockMovementResponse:
       type: object
       properties:
@@ -2220,10 +2369,6 @@ components:
     DashboardResponse:
       type: object
       properties:
-        products:
-          type: array
-          items:
-            $ref: "#/components/schemas/ProductStock"
         kpis:
           $ref: "#/components/schemas/Kpis"
     Kpis:
@@ -2243,34 +2388,35 @@ components:
           format: int64
         purchasesTotalThisMonth:
           type: number
+        salesCountThisMonth:
+          type: integer
+          format: int64
+        salesTotalThisMonth:
+          type: number
         wasteEventsThisMonth:
           type: integer
           format: int64
-    ProductStock:
-      type: object
-      properties:
-        productId:
-          type: string
-          format: uuid
-        name:
-          type: string
-        sku:
-          type: string
-        unitAbbreviation:
-          type: string
-        currentStock:
+        wasteTotalArsThisMonth:
           type: number
-        minStock:
+        salesCostThisMonth:
           type: number
-        maxStock:
+        purchasesLastMonth:
+          type: integer
+          format: int64
+        purchasesTotalLastMonth:
           type: number
-        status:
-          type: string
-          enum:
-          - OK
-          - LOW_STOCK
-          - OVERSTOCK
-          - NO_THRESHOLD
+        salesCountLastMonth:
+          type: integer
+          format: int64
+        salesTotalLastMonth:
+          type: number
+        wasteEventsLastMonth:
+          type: integer
+          format: int64
+        wasteTotalArsLastMonth:
+          type: number
+        salesCostLastMonth:
+          type: number
     PagedResponseAlertResponse:
       type: object
       properties:

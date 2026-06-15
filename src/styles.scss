@@ -290,6 +290,10 @@ html, body {
   @extend .field-input;
   appearance: none;
   cursor: pointer;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%239A9390' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+  padding-right: 30px;
 }
 
 .field-textarea {
@@ -421,12 +425,36 @@ html, body {
   font-weight: 600;
   cursor: pointer;
   color: var(--text-3);
-  transition: background .15s, color .15s, border-color .15s;
+  transition: background .15s, color .15s, border-color .15s, transform .08s, box-shadow .15s;
+  user-select: none;
+
+  &:hover:not(:disabled):not(.on) {
+    border-color: var(--accent);
+    color: var(--text-1);
+  }
+
+  &:active:not(:disabled) {
+    transform: scale(.97);
+  }
+
+  &:disabled {
+    opacity: .45;
+    cursor: not-allowed;
+  }
+
+  /* clase usada en el HTML con [class.on] */
+  &.on {
+    background: var(--accent);
+    color: #000;
+    border-color: var(--accent);
+    box-shadow: 0 2px 8px rgba(243, 101, 37, .30);
+  }
 
   &.active {
     background: var(--accent);
     color: #000;
     border-color: var(--accent);
+    box-shadow: 0 2px 8px rgba(243, 101, 37, .30);
   }
 }
 
@@ -447,6 +475,28 @@ html, body {
   text-transform: uppercase;
   color: var(--text-3);
   margin-bottom: 8px;
+}
+
+/* ── SEC-DIV: separador de sección en drawers ── */
+.sec-div {
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: .9px;
+  text-transform: uppercase;
+  color: var(--text-2);
+  margin: 16px 0 10px;
+  padding-bottom: 5px;
+  border-bottom: 1px solid var(--border);
+}
+
+/* ── PANEL FOOTER (drawer footer con botones altos) ── */
+.panel-footer {
+  padding: 12px 20px;
+  border-top: 1px solid var(--border);
+  display: flex;
+  gap: 8px;
+  flex-shrink: 0;
+  background: var(--bg-card);
 }
 
 /* ── COST BOX ── */
@@ -470,16 +520,19 @@ html, body {
   gap: 8px;
   background: var(--bg-input);
   border: 1.5px solid var(--border);
-  border-radius: 9px;
-  padding: 7px 10px;
-  font-size: 11px;
+  border-radius: 10px;
+  padding: 8px 12px;
+  font-size: 12px;
   color: var(--text-2);
   margin-bottom: 6px;
   transition: border-color .15s;
 
   &:hover { border-color: var(--accent); }
-  i { color: var(--accent); font-size: 13px; }
+  i { color: var(--accent); font-size: 14px; }
 }
+
+.ing-tag { flex: 1; font-weight: 500; }
+.ing-qty { font-size: 10px; color: var(--text-3); }
 
 /* ── KPI CARD HOVER ── */
 .kpi-hover:hover {
@@ -493,6 +546,14 @@ html, body {
     color: #000 !important;
   }
 }
+
+/* ── NUMBER INPUT — ocultar spinners ── */
+input[type=number]::-webkit-inner-spin-button,
+input[type=number]::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+input[type=number] { -moz-appearance: textfield; }
 
 /* ── SCROLLBAR ── */
 ::-webkit-scrollbar { width: 4px; height: 4px; }
