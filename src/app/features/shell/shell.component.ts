@@ -4,6 +4,7 @@ import { Subscription } from 'rxjs';
 import { AuthService } from '../../core/services/auth.service';
 import { AlertNotificationService } from '../../core/services/alert-notification.service';
 import { AiRefreshService } from '../../core/services/ai-refresh.service';
+import { ThemeService } from '../../core/services/theme.service';
 import { AiInputComponent } from '../../shared/components/ai-input/ai-input.component';
 
 @Component({
@@ -21,6 +22,7 @@ export class ShellComponent implements OnInit, OnDestroy {
   constructor(
     public authService: AuthService,
     public alertNotification: AlertNotificationService,
+    public theme: ThemeService,
     private aiRefresh: AiRefreshService,
     private router: Router,
   ) {}

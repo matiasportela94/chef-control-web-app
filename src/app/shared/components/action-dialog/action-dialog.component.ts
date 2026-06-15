@@ -7,90 +7,61 @@ import { FormsModule } from '@angular/forms';
   standalone: true,
   imports: [CommonModule, FormsModule],
   template: `
-    <div
-      *ngIf="visible"
-      class="fixed inset-0 z-[450] overflow-y-auto"
-      (click)="cancel.emit()"
-    >
-      <div class="flex min-h-screen items-center justify-center px-2 py-4 md:px-4">
-        <div class="fixed inset-0 bg-surface-900/75"></div>
+    <div *ngIf="visible" style="position:fixed;inset:0;z-index:450;overflow-y:auto;background:rgba(0,0,0,.6);"
+         (click)="cancel.emit()">
+      <div style="display:flex;min-height:100vh;align-items:center;justify-content:center;padding:16px;">
 
-        <div
-          class="relative w-full max-w-lg overflow-hidden rounded-2xl bg-white text-left shadow-xl"
-          (click)="$event.stopPropagation()"
-        >
-          <div class="flex items-center justify-between border-b border-surface-200 px-4 py-3 md:px-6 md:py-4">
-            <div class="flex items-center gap-3">
-              <span
-                class="text-2xl"
-                [class.text-brand-600]="tone === 'primary'"
-                [class.text-danger-500]="tone === 'danger'"
-              >
-                {{ icon }}
-              </span>
-              <h3 class="text-base font-semibold text-surface-900 md:text-lg">{{ title }}</h3>
+        <div style="position:relative;width:100%;max-width:480px;background:var(--bg-card);border-radius:18px;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.2);"
+             (click)="$event.stopPropagation()">
+
+          <!-- Header -->
+          <div style="display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border);padding:14px 20px;">
+            <div style="display:flex;align-items:center;gap:10px;">
+              <span style="font-size:20px;"
+                    [style.color]="tone === 'danger' ? 'var(--red)' : 'var(--accent)'">{{ icon }}</span>
+              <h3 style="font-size:14px;font-weight:700;color:var(--text-1);">{{ title }}</h3>
             </div>
-
-            <button type="button" (click)="cancel.emit()" class="text-surface-400 hover:text-surface-600 text-xl leading-none">✕</button>
+            <button type="button" (click)="cancel.emit()"
+                    style="background:none;border:none;cursor:pointer;color:var(--text-3);font-size:16px;">
+              <i class="ti ti-x"></i>
+            </button>
           </div>
 
-          <div class="px-4 py-4 md:px-6">
-            <p *ngIf="message" class="mb-4 text-sm text-surface-600">{{ message }}</p>
+          <!-- Body -->
+          <div style="padding:16px 20px;">
+            <p *ngIf="message" style="margin-bottom:14px;font-size:12px;color:var(--text-2);line-height:1.6;">{{ message }}</p>
 
-            <div *ngIf="itemTitle || itemSubtitle || itemMeta" class="mb-4 rounded-lg bg-surface-50 p-4">
-              <p *ngIf="itemTitle" class="font-semibold text-surface-900">{{ itemTitle }}</p>
-              <p *ngIf="itemSubtitle" class="mt-1 text-sm text-surface-500">{{ itemSubtitle }}</p>
-              <p *ngIf="itemMeta" class="mt-1 text-xs text-surface-500">{{ itemMeta }}</p>
+            <div *ngIf="itemTitle || itemSubtitle || itemMeta"
+                 style="margin-bottom:14px;background:var(--bg-input);border-radius:10px;padding:12px 14px;">
+              <p *ngIf="itemTitle" style="font-size:13px;font-weight:600;color:var(--text-1);">{{ itemTitle }}</p>
+              <p *ngIf="itemSubtitle" style="margin-top:3px;font-size:11px;color:var(--text-3);">{{ itemSubtitle }}</p>
+              <p *ngIf="itemMeta" style="margin-top:3px;font-size:10px;color:var(--text-3);">{{ itemMeta }}</p>
             </div>
 
-            <div *ngIf="inputLabel" class="space-y-2">
-              <label class="block text-sm font-medium text-surface-900">{{ inputLabel }}</label>
-
-              <textarea
-                *ngIf="inputType === 'textarea'; else textInput"
-                [ngModel]="inputValue"
-                (ngModelChange)="onInputChange($event)"
-                [rows]="inputRows"
-                [placeholder]="inputPlaceholder"
-                class="w-full rounded-lg border border-surface-300 px-3 py-2 text-sm text-surface-900 outline-none transition-colors placeholder:text-surface-400 focus:border-brand-600 focus:ring-2 focus:ring-brand-600/20"
-              ></textarea>
-
+            <div *ngIf="inputLabel" style="margin-bottom:4px;">
+              <label class="field-label">{{ inputLabel }}</label>
+              <textarea *ngIf="inputType === 'textarea'; else textInput"
+                        [ngModel]="inputValue" (ngModelChange)="onInputChange($event)"
+                        [rows]="inputRows" [placeholder]="inputPlaceholder"
+                        class="field-textarea"></textarea>
               <ng-template #textInput>
-                <input
-                  type="text"
-                  [ngModel]="inputValue"
-                  (ngModelChange)="onInputChange($event)"
-                  [placeholder]="inputPlaceholder"
-                  class="w-full rounded-lg border border-surface-300 px-3 py-2 text-sm text-surface-900 outline-none transition-colors placeholder:text-surface-400 focus:border-brand-600 focus:ring-2 focus:ring-brand-600/20"
-                />
+                <input type="text" [ngModel]="inputValue" (ngModelChange)="onInputChange($event)"
+                       [placeholder]="inputPlaceholder" class="field-input">
               </ng-template>
             </div>
 
-            <p *ngIf="helperText" class="mt-3 text-xs text-surface-500">{{ helperText }}</p>
+            <p *ngIf="helperText" style="margin-top:10px;font-size:10px;color:var(--text-3);">{{ helperText }}</p>
           </div>
 
-          <div class="flex flex-col items-stretch justify-end gap-2 bg-surface-50 px-4 py-3 md:flex-row md:items-center md:gap-3 md:px-6 md:py-4">
-            <button
-              type="button"
-              (click)="cancel.emit()"
-              class="rounded-lg border border-surface-300 px-4 py-2 text-sm font-medium text-surface-700 transition-colors hover:bg-surface-100"
-            >
-              {{ cancelLabel }}
-            </button>
-
-            <button
-              type="button"
-              (click)="onConfirm()"
-              [disabled]="confirmDisabled || isInputInvalid"
-              [class.bg-brand-600]="tone === 'primary'"
-              [class.hover:bg-brand-700]="tone === 'primary'"
-              [class.bg-danger-500]="tone === 'danger'"
-              [class.hover:bg-danger-600]="tone === 'danger'"
-              class="rounded-lg px-4 py-2 text-sm font-medium text-white transition-colors disabled:cursor-not-allowed disabled:opacity-50"
-            >
+          <!-- Footer -->
+          <div style="display:flex;justify-content:flex-end;gap:8px;padding:12px 20px;border-top:1px solid var(--border);background:var(--bg-input);">
+            <button type="button" (click)="cancel.emit()" class="btn-secondary btn-sm">{{ cancelLabel }}</button>
+            <button type="button" (click)="onConfirm()" [disabled]="confirmDisabled || isInputInvalid"
+                    [class]="tone === 'danger' ? 'btn-danger btn-sm' : 'btn-primary btn-sm'">
               {{ confirmLabel }}
             </button>
           </div>
+
         </div>
       </div>
     </div>

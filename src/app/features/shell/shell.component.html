@@ -1,171 +1,186 @@
-<div class="min-h-screen bg-surface-950">
+<div class="min-h-screen" style="background:var(--bg);">
 
-  <!-- ── TOPBAR ─────────────────────────────────────────────── -->
-  <nav class="fixed top-0 inset-x-0 z-50 h-16 border-b border-white/5 backdrop-blur-xl bg-surface-950/80 flex items-center px-6 gap-4">
-    <span class="text-lg font-bold tracking-tight shrink-0 font-display">
-      <span class="text-brand-400">Chef</span><span class="text-white"> Control</span>
-    </span>
+  <!-- ── TOPBAR ──────────────────────────────────────────────── -->
+  <header style="
+    position:fixed; top:0; left:0; right:0; z-index:100;
+    height:56px;
+    background:var(--topbar-bg);
+    border-bottom:1px solid var(--border);
+    display:flex; align-items:center;
+    padding:0 24px; gap:12px;
+    transition:background .25s;
+  ">
+    <!-- Logo -->
+    <div style="display:flex;align-items:center;gap:10px;flex-shrink:0;">
+      <div style="
+        width:32px;height:32px;
+        background:var(--accent);
+        border-radius:10px;
+        display:flex;align-items:center;justify-content:center;
+        font-size:15px;font-weight:700;color:#000;
+      ">C</div>
+      <span style="font-size:15px;font-weight:700;color:var(--text-1);">
+        <span style="color:var(--accent);">Chef</span> Control
+      </span>
+    </div>
 
     @if (authService.currentUser(); as user) {
-      <span class="hidden lg:block text-sm text-surface-500 truncate">{{ user.restaurantName }}</span>
+      <span style="font-size:12px;color:var(--text-3);truncate;display:none;" class="md:block">
+        {{ user.restaurantName }}
+      </span>
     }
 
-    <div class="ml-auto flex items-center gap-3 shrink-0">
-      <!-- Entrada rápida AI -->
-      <button (click)="aiInputOpen.set(true)"
-              class="flex items-center gap-1.5 text-sm text-surface-300 hover:text-white bg-white/5 hover:bg-white/10 border border-white/10 hover:border-brand-500/50 px-3 py-1.5 rounded-lg transition-all">
-        <svg class="w-4 h-4 text-brand-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904 9 18.75l-.813-2.846a4.5 4.5 0 0 0-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 0 0 3.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 0 0 3.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 0 0-3.09 3.09Z"/>
-        </svg>
-        <span class="hidden sm:block">Entrada rápida</span>
+    <div style="margin-left:auto;display:flex;align-items:center;gap:10px;flex-shrink:0;">
+      <!-- Entrada rápida -->
+      <button (click)="aiInputOpen.set(true)" style="
+        display:flex;align-items:center;gap:6px;
+        font-family:'Poppins',sans-serif;font-size:12px;font-weight:500;
+        color:var(--accent);
+        background:none;
+        border:1.5px solid var(--accent);
+        border-radius:10px;
+        padding:6px 14px;
+        cursor:pointer;
+        transition:opacity .15s;
+      ">
+        <i class="ti ti-bolt" style="font-size:14px;"></i>
+        <span class="hidden sm:inline">Entrada rápida</span>
+      </button>
+
+      <!-- Theme toggle -->
+      <button (click)="theme.toggle()" style="
+        width:34px;height:34px;
+        display:flex;align-items:center;justify-content:center;
+        background:var(--bg-input);
+        border:1.5px solid var(--border);
+        border-radius:10px;
+        cursor:pointer;
+        color:var(--text-2);
+        font-size:16px;
+        transition:border-color .15s;
+      ">
+        <i [class]="theme.isDark() ? 'ti ti-sun' : 'ti ti-moon'"></i>
       </button>
 
       @if (authService.currentUser(); as user) {
-        <span class="hidden md:block text-sm text-surface-400">{{ user.name }}</span>
+        <span style="font-size:12px;color:var(--text-2);" class="hidden md:block">{{ user.name }}</span>
       }
-      <button (click)="logout()"
-              class="text-sm text-surface-400 hover:text-white border border-white/10 hover:border-white/20 px-3 py-1.5 rounded-lg transition-all">
+
+      <!-- Salir -->
+      <button (click)="logout()" style="
+        font-family:'Poppins',sans-serif;font-size:12px;font-weight:500;
+        color:var(--text-2);
+        background:none;
+        border:1.5px solid var(--border);
+        border-radius:8px;
+        padding:6px 14px;
+        cursor:pointer;
+        transition:border-color .15s, color .15s;
+      ">
         Salir
       </button>
     </div>
-  </nav>
+  </header>
 
-  <!-- ── SIDENAV ────────────────────────────────────────────── -->
-  <aside class="fixed left-0 top-16 bottom-0 w-60 z-40 bg-surface-900 border-r border-white/5 flex flex-col">
-    <nav class="flex-1 p-3 space-y-0.5 overflow-y-auto">
+  <!-- ── SIDEBAR ──────────────────────────────────────────────── -->
+  <aside style="
+    position:fixed;
+    top:66px; left:10px; bottom:10px;
+    width:210px;
+    z-index:40;
+    background:var(--bg-sidebar);
+    border:1px solid var(--border);
+    border-radius:16px;
+    display:flex;flex-direction:column;
+    overflow:hidden;
+    transition:background .25s, border-color .25s;
+  ">
+    <nav style="flex:1;padding:10px 8px;overflow-y:auto;overflow-x:hidden;">
 
       <p class="side-section-label">General</p>
 
       <a routerLink="/dashboard" routerLinkActive="side-link-active" class="side-link">
-        <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
-        </svg>
-        Panel
+        <i class="ti ti-layout-dashboard"></i> Panel
       </a>
 
       <a routerLink="/alerts" routerLinkActive="side-link-active" class="side-link">
-        <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
-        </svg>
-        Alertas
+        <i class="ti ti-bell"></i> Alertas
         @if (alertNotification.unreadCount() > 0) {
-          <span class="ml-auto text-xs font-bold bg-warning-500 text-black px-1.5 py-0.5 rounded-full leading-none">
+          <span style="
+            margin-left:auto;
+            font-size:9px;font-weight:700;
+            background:var(--accent);color:#000;
+            padding:2px 7px;border-radius:20px;
+            line-height:1.4;
+          ">
             {{ alertNotification.unreadCount() > 99 ? '99+' : alertNotification.unreadCount() }}
           </span>
         }
       </a>
 
-      <p class="side-section-label mt-4">Menú y Ventas</p>
+      <p class="side-section-label" style="margin-top:16px;">Menú y Ventas</p>
 
       <a routerLink="/menu" routerLinkActive="side-link-active" class="side-link">
-        <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
-        </svg>
-        Platos del menú
+        <i class="ti ti-clipboard-list"></i> Platos del menú
       </a>
 
       <a routerLink="/sales" routerLinkActive="side-link-active" class="side-link">
-        <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"/>
-        </svg>
-        Ventas
+        <i class="ti ti-chart-bar"></i> Ventas
       </a>
 
-      <p class="side-section-label mt-4">Compras</p>
+      <p class="side-section-label" style="margin-top:16px;">Compras</p>
 
       <a routerLink="/suppliers" routerLinkActive="side-link-active" class="side-link">
-        <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
-        </svg>
-        Proveedores
+        <i class="ti ti-truck"></i> Proveedores
       </a>
 
       <a routerLink="/purchases" routerLinkActive="side-link-active" class="side-link">
-        <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"/>
-        </svg>
-        Compras
+        <i class="ti ti-shopping-cart"></i> Compras
       </a>
 
-      <p class="side-section-label mt-4">Inventario</p>
+      <p class="side-section-label" style="margin-top:16px;">Inventario</p>
 
       <a routerLink="/products" routerLinkActive="side-link-active" class="side-link">
-        <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
-        </svg>
-        Insumos
+        <i class="ti ti-package"></i> Insumos
       </a>
 
       <a routerLink="/categories" routerLinkActive="side-link-active" class="side-link">
-        <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"/>
-        </svg>
-        Categorías
+        <i class="ti ti-tag"></i> Categorías
       </a>
 
       <a routerLink="/stock" routerLinkActive="side-link-active" class="side-link">
-        <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
-        </svg>
-        Stock
+        <i class="ti ti-box"></i> Stock
       </a>
 
       <a routerLink="/waste" routerLinkActive="side-link-active" class="side-link">
-        <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
-        </svg>
-        Merma
+        <i class="ti ti-trash"></i> Merma
       </a>
 
       <a routerLink="/stock-counts" routerLinkActive="side-link-active" class="side-link">
-        <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/>
-        </svg>
-        Conteos
+        <i class="ti ti-clipboard-check"></i> Conteos
       </a>
 
-      <p class="side-section-label mt-4">Reportes</p>
+      <p class="side-section-label" style="margin-top:16px;">Reportes</p>
 
       <a routerLink="/food-cost" routerLinkActive="side-link-active" class="side-link">
-        <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                d="M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z"/>
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                d="M20.488 9H15V3.512A9.025 9.025 0 0120.488 9z"/>
-        </svg>
-        Food Cost
+        <i class="ti ti-coin"></i> Food Cost
       </a>
 
-      <p class="side-section-label mt-4">Configuración</p>
+      <p class="side-section-label" style="margin-top:16px;">Configuración</p>
 
       <a routerLink="/users" routerLinkActive="side-link-active" class="side-link">
-        <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/>
-        </svg>
-        Usuarios
+        <i class="ti ti-users"></i> Usuarios
       </a>
 
     </nav>
   </aside>
 
-  <!-- ── CONTENT ────────────────────────────────────────────── -->
-  <div class="ml-60 pt-16">
+  <!-- ── CONTENT ──────────────────────────────────────────────── -->
+  <div style="margin-left:230px; padding-top:56px; min-height:100vh;">
     <router-outlet />
   </div>
 
 </div>
 
-<!-- AI Input modal (fuera del layout principal para no heredar z-index) -->
+<!-- AI Input (fuera del layout para no heredar z-index) -->
 <app-ai-input [isOpen]="aiInputOpen()" (closed)="aiInputOpen.set(false)" />

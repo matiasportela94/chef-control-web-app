@@ -1,176 +1,123 @@
 @if (isOpen) {
-  <div class="fixed inset-0 bg-black/60 backdrop-blur-sm z-[200] flex items-center justify-center p-4"
+  <!-- Backdrop -->
+  <div style="position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:200;display:flex;align-items:center;justify-content:center;padding:16px;"
        (click)="close()">
-    <div class="bg-surface-900 border border-white/10 rounded-2xl w-full max-w-lg shadow-2xl"
+
+    <!-- Modal -->
+    <div style="background:var(--bg-card);border-radius:18px;width:100%;max-width:480px;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.2);"
          (click)="$event.stopPropagation()">
 
       <!-- Header -->
-      <div class="flex items-start justify-between px-6 pt-5 pb-4 border-b border-white/10">
+      <div style="background:var(--accent);padding:14px 20px;display:flex;align-items:flex-start;justify-content:space-between;">
         <div>
-          <h2 class="text-white font-semibold font-display text-base">Entrada rápida</h2>
-          <p class="text-surface-400 text-sm mt-0.5">Describí una operación en lenguaje natural</p>
+          <div style="font-size:14px;font-weight:700;color:#000;display:flex;align-items:center;gap:6px;">
+            <i class="ti ti-bolt"></i> Entrada rápida
+          </div>
+          <div style="font-size:10px;color:rgba(0,0,0,.5);margin-top:2px;">Describí una operación en lenguaje natural</div>
         </div>
-        <button (click)="close()"
-                class="text-surface-400 hover:text-white transition-colors p-1 rounded-lg hover:bg-white/5 -mt-0.5 -mr-1">
-          <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M18 6 6 18M6 6l12 12"/>
-          </svg>
+        <button (click)="close()" style="background:rgba(0,0,0,.15);border:none;border-radius:7px;padding:4px 8px;color:rgba(0,0,0,.6);cursor:pointer;font-size:14px;">
+          <i class="ti ti-x"></i>
         </button>
       </div>
 
       <!-- Body -->
-      <div class="p-6 space-y-4">
+      <div style="padding:20px;display:flex;flex-direction:column;gap:14px;">
 
         <!-- Textarea (oculto tras ejecución exitosa) -->
         @if (!executeResult()) {
-          <div class="space-y-1.5">
+          <div>
             <textarea
               [(ngModel)]="message"
               (keydown)="onKeydown($event)"
               placeholder="Ej: compramos 10kg de tomate a $5000 / se rompieron 3 botellas de aceite / vendimos 8 milanesas..."
               rows="3"
               [disabled]="loading() || confirming() || !!result()"
-              class="w-full bg-surface-800 border border-white/10 rounded-xl px-4 py-3 text-sm resize-none focus:outline-none focus:border-brand-500 transition-colors disabled:opacity-40
-                     {{ result() ? 'text-surface-400 cursor-default' : 'text-white' }}">
+              class="field-textarea"
+              style="min-height:72px;">
             </textarea>
             @if (!result()) {
-              <p class="text-surface-500 text-xs">Ctrl+Enter para interpretar</p>
+              <p style="font-size:10px;color:var(--text-3);margin-top:4px;">Ctrl+Enter para interpretar</p>
             }
           </div>
         }
 
         <!-- Error -->
         @if (error()) {
-          <p class="text-danger-400 text-sm flex items-center gap-2">
-            <svg class="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/>
-            </svg>
-            {{ error() }}
+          <p style="font-size:12px;color:var(--red);display:flex;align-items:center;gap:6px;">
+            <i class="ti ti-alert-circle"></i> {{ error() }}
           </p>
         }
 
         <!-- Interpretación -->
         @if (result(); as r) {
-          <div class="bg-surface-800/80 border border-white/5 rounded-xl p-4 space-y-3">
-            <div class="flex items-center gap-2 flex-wrap">
-              <span class="px-2.5 py-0.5 rounded-full text-xs font-semibold {{ intentBadgeClass(r.intent) }}">
-                {{ intentLabel(r.intent) }}
-              </span>
-              <div class="flex items-center gap-1.5">
-                <div class="bg-surface-700 rounded-full h-1.5 w-16">
-                  <div class="h-1.5 rounded-full {{ confidenceBarClass(r.confidence) }}"
-                       [style.width.%]="r.confidence ?? 0"></div>
+          <div style="background:var(--bg-input);border:1.5px solid var(--border);border-radius:12px;padding:14px;">
+            <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:8px;">
+              <span class="badge-accent badge" style="font-size:10px;">{{ intentLabel(r.intent) }}</span>
+              <div style="display:flex;align-items:center;gap:6px;">
+                <div style="background:var(--border);border-radius:4px;height:4px;width:60px;overflow:hidden;">
+                  <div style="height:100%;background:var(--accent);border-radius:4px;" [style.width.%]="r.confidence ?? 0"></div>
                 </div>
-                <span class="text-surface-400 text-xs">{{ r.confidence }}%</span>
+                <span style="font-size:10px;color:var(--text-3);">{{ r.confidence }}%</span>
               </div>
               @if (r.needsConfirmation) {
-                <span class="text-warning-400 text-xs flex items-center gap-1">
-                  <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z"/>
-                  </svg>
-                  Verificar antes de registrar
+                <span style="font-size:10px;color:#d97706;display:flex;align-items:center;gap:4px;">
+                  <i class="ti ti-alert-triangle" style="font-size:11px;"></i> Verificar antes de registrar
                 </span>
               }
             </div>
-            <p class="text-surface-200 text-sm leading-relaxed">{{ r.responseToUser }}</p>
+            <p style="font-size:12px;color:var(--text-2);line-height:1.6;">{{ r.responseToUser }}</p>
           </div>
         }
 
-        <!-- Input de aclaración cuando la IA tiene una pregunta -->
+        <!-- Input de aclaración -->
         @if (result()?.needsConfirmation && !executeResult()) {
-          <div class="space-y-1.5">
-            <input
-              type="text"
-              [(ngModel)]="clarification"
-              (keydown)="onClarificationKeydown($event)"
-              [disabled]="loading()"
-              placeholder="Respondé la pregunta de la IA... (Enter para enviar)"
-              class="w-full bg-surface-800 border border-brand-500/50 rounded-xl px-4 py-2.5 text-white placeholder-surface-500 text-sm focus:outline-none focus:border-brand-500 transition-colors disabled:opacity-50">
-          </div>
+          <input type="text" [(ngModel)]="clarification" (keydown)="onClarificationKeydown($event)"
+                 [disabled]="loading()" placeholder="Respondé la pregunta de la IA... (Enter para enviar)"
+                 class="field-input" style="border-color:var(--accent);">
         }
 
         <!-- Resultado de ejecución -->
         @if (executeResult(); as ex) {
-          @if (ex.success) {
-            <div class="rounded-xl p-4 flex items-start gap-3 bg-success-500/10 border border-success-500/30">
-              <svg class="w-5 h-5 text-success-400 shrink-0 mt-0.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/>
-              </svg>
-              <p class="text-success-200 text-sm">{{ ex.message }}</p>
-            </div>
-          } @else {
-            <div class="rounded-xl p-4 flex items-start gap-3 bg-danger-500/10 border border-danger-500/30">
-              <svg class="w-5 h-5 text-danger-400 shrink-0 mt-0.5" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/>
-              </svg>
-              <p class="text-danger-200 text-sm">{{ ex.message }}</p>
-            </div>
-          }
+          <div style="border-radius:12px;padding:14px;display:flex;align-items:flex-start;gap:10px;"
+               [style.background]="ex.success ? '#f0fdf4' : 'var(--red-bg)'"
+               [style.border]="ex.success ? '1.5px solid #22c55e' : '1.5px solid var(--red)'">
+            <i style="font-size:16px;flex-shrink:0;margin-top:1px;"
+               [class]="ex.success ? 'ti ti-circle-check' : 'ti ti-circle-x'"
+               [style.color]="ex.success ? '#16a34a' : 'var(--red)'"></i>
+            <p style="font-size:12px;line-height:1.5;"
+               [style.color]="ex.success ? '#166534' : 'var(--red)'">{{ ex.message }}</p>
+          </div>
         }
 
         <!-- Botones -->
-        <div class="flex gap-2">
-
+        <div style="display:flex;gap:8px;">
           @if (executeResult()) {
-            <!-- Post-ejecución: Nueva entrada o cerrar -->
-            <button (click)="resetForNew()"
-                    class="flex-1 bg-surface-700 hover:bg-surface-600 text-white font-medium py-2.5 px-4 rounded-xl transition-colors text-sm">
-              Nueva entrada
-            </button>
-            <button (click)="close()"
-                    class="flex-1 bg-brand-600 hover:bg-brand-500 text-white font-medium py-2.5 px-4 rounded-xl transition-colors text-sm">
-              Cerrar
-            </button>
+            <button (click)="resetForNew()" class="btn-secondary" style="flex:1;">Nueva entrada</button>
+            <button (click)="close()" class="btn-primary" style="flex:1;">Cerrar</button>
           } @else if (result()) {
-            <!-- Post-interpretación -->
-            <button (click)="retry()"
-                    [disabled]="confirming()"
-                    class="flex-1 bg-surface-700 hover:bg-surface-600 text-white font-medium py-2.5 px-4 rounded-xl transition-colors disabled:opacity-40 text-sm">
-              Cambiar
-            </button>
+            <button (click)="retry()" [disabled]="confirming()" class="btn-secondary" style="flex:1;">Cambiar</button>
             @if (result()?.needsConfirmation) {
-              <!-- Hay una pregunta: botón para enviar la aclaración -->
-              <button (click)="interpretWithClarification()"
-                      [disabled]="loading() || !clarification.trim()"
-                      class="flex-1 bg-brand-600 hover:bg-brand-500 text-white font-medium py-2.5 px-4 rounded-xl transition-colors disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2 text-sm">
-                @if (loading()) {
-                  <div class="w-4 h-4 rounded-full border-2 border-white/30 border-t-white animate-spin"></div>
-                  Interpretando...
-                } @else {
-                  Responder
-                }
+              <button (click)="interpretWithClarification()" [disabled]="loading() || !clarification.trim()"
+                      class="btn-primary" style="flex:1;justify-content:center;">
+                @if (loading()) { <i class="ti ti-loader-2 animate-spin"></i> Interpretando... }
+                @else { Responder }
               </button>
             } @else if (canExecute()) {
-              <!-- Sin duda: confirmar directo -->
-              <button (click)="confirm()"
-                      [disabled]="confirming()"
-                      class="flex-1 bg-brand-600 hover:bg-brand-500 text-white font-medium py-2.5 px-4 rounded-xl transition-colors disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2 text-sm">
-                @if (confirming()) {
-                  <div class="w-4 h-4 rounded-full border-2 border-white/30 border-t-white animate-spin"></div>
-                  Registrando...
-                } @else {
-                  Confirmar y registrar
-                }
+              <button (click)="confirm()" [disabled]="confirming()"
+                      class="btn-primary" style="flex:1;justify-content:center;">
+                @if (confirming()) { <i class="ti ti-loader-2 animate-spin"></i> Registrando... }
+                @else { Confirmar y registrar }
               </button>
             }
           } @else {
-            <!-- Inicial: solo botón interpretar -->
-            <button (click)="interpret()"
-                    [disabled]="loading() || !message.trim()"
-                    class="w-full bg-brand-600 hover:bg-brand-500 text-white font-medium py-2.5 px-4 rounded-xl transition-colors disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2 text-sm">
-              @if (loading()) {
-                <div class="w-4 h-4 rounded-full border-2 border-white/30 border-t-white animate-spin"></div>
-                Interpretando...
-              } @else {
-                <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904 9 18.75l-.813-2.846a4.5 4.5 0 0 0-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 0 0 3.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 0 0 3.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 0 0-3.09 3.09Z"/>
-                </svg>
-                Interpretar
-              }
+            <button (click)="interpret()" [disabled]="loading() || !message.trim()"
+                    class="btn-primary" style="width:100%;justify-content:center;">
+              @if (loading()) { <i class="ti ti-loader-2 animate-spin"></i> Interpretando... }
+              @else { <i class="ti ti-bolt"></i> Interpretar }
             </button>
           }
-
         </div>
+
       </div>
     </div>
   </div>

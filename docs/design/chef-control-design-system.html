@@ -1,0 +1,891 @@
+<!DOCTYPE html>
+<html lang="es" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Chef Control — Design System</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+html,body{font-family:'Poppins',sans-serif;min-height:100%;}
+
+html{
+  --bg:#F5F2EE;
+  --bg-card:#FFFFFF;
+  --bg-sidebar:#FFFFFF;
+  --bg-input:#F5F3F0;
+  --topbar-bg:#FFFFFF;
+  --border:#EDE8E2;
+  --border-strong:#C8C0BC;
+  --text-1:#1A1210;
+  --text-2:#3D3530;
+  --text-3:#9A9390;
+  --text-nav:#6B6560;
+  --nav-label:#F36525;
+  --accent:#F36525;
+  --accent-dark:#C04A0A;
+  --accent-text:#FFFFFF;
+  --pop-bg:#F36525;
+  --pop-text:#FFFFFF;
+  --red:#E74C3C;
+  --red-bg:#FFF0F0;
+  --spark:#EDE8E4;
+  --ds-section-bg:#F7F5F2;
+}
+
+html[data-theme="dark"]{
+  --bg:#111214;
+  --bg-card:#212226;
+  --bg-sidebar:#212226;
+  --bg-input:#16191E;
+  --topbar-bg:#111214;
+  --border:#2A2D34;
+  --border-strong:#3A3D44;
+  --text-1:#FFFFFF;
+  --text-2:rgba(255,255,255,0.75);
+  --text-3:rgba(255,255,255,0.75);
+  --text-nav:#FFFFFF;
+  --nav-label:#F36525;
+  --accent:#F36525;
+  --accent-dark:#F36525;
+  --accent-text:#FFFFFF;
+  --pop-bg:#F36525;
+  --pop-text:#000000;
+  --red:#E74C3C;
+  --red-bg:#2A0F0F;
+  --spark:#2A2D34;
+  --ds-section-bg:#1A1D22;
+}
+
+body{background:var(--bg);color:var(--text-1);transition:background .25s,color .25s;}
+
+/* ── TOP NAV ── */
+.ds-topbar{
+  position:sticky;top:0;z-index:100;
+  background:var(--topbar-bg);border-bottom:1px solid var(--border);
+  display:flex;align-items:center;justify-content:space-between;
+  padding:0 32px;height:56px;
+}
+.ds-logo{display:flex;align-items:center;gap:10px;}
+.ds-logo-icon{width:32px;height:32px;background:var(--accent);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:700;color:#000;}
+.ds-logo-text{font-size:15px;font-weight:700;color:var(--text-1);}
+.ds-logo-text em{color:var(--accent);font-style:normal;}
+.ds-badge{font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;background:var(--accent);color:#000;padding:3px 9px;border-radius:20px;}
+.ds-topbar-right{display:flex;align-items:center;gap:12px;}
+.ds-version{font-size:11px;color:var(--text-3);}
+.theme-toggle{display:flex;align-items:center;gap:6px;cursor:pointer;background:var(--bg-input);border:1px solid var(--border);border-radius:20px;padding:4px 10px;transition:border-color .15s;}
+.theme-toggle:hover{border-color:var(--accent);}
+.toggle-pill{width:30px;height:17px;background:var(--accent);border-radius:10px;position:relative;border:none;cursor:pointer;flex-shrink:0;}
+.toggle-pill::after{content:'';position:absolute;top:2.5px;left:2.5px;width:12px;height:12px;background:#000;border-radius:50%;transition:transform .2s;}
+html[data-theme="dark"] .toggle-pill::after{transform:translateX(13px);}
+.ti-tog{font-size:12px;color:var(--text-3);}
+
+/* ── LAYOUT ── */
+.ds-wrap{max-width:1100px;margin:0 auto;padding:40px 32px 80px;}
+
+/* ── SECTION ── */
+.ds-section{margin-bottom:56px;}
+.ds-section-label{
+  font-size:9px;font-weight:700;letter-spacing:1.8px;text-transform:uppercase;
+  color:var(--accent);margin-bottom:6px;
+}
+.ds-section-title{font-size:22px;font-weight:700;color:var(--text-1);margin-bottom:4px;}
+.ds-section-desc{font-size:13px;color:var(--text-2);margin-bottom:28px;line-height:1.6;}
+.ds-divider{height:1px;background:var(--border);margin:48px 0;}
+
+/* ── SUBSECTION ── */
+.ds-sub{margin-bottom:32px;}
+.ds-sub-title{font-size:13px;font-weight:700;color:var(--text-2);margin-bottom:14px;display:flex;align-items:center;gap:8px;}
+.ds-sub-title::after{content:'';flex:1;height:1px;background:var(--border);}
+
+/* ── COLOR GRID ── */
+.color-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px;}
+.color-swatch{border-radius:12px;overflow:hidden;border:1px solid var(--border);}
+.swatch-color{height:72px;}
+.swatch-info{padding:10px 12px;background:var(--bg-card);}
+.swatch-name{font-size:11px;font-weight:600;color:var(--text-1);margin-bottom:2px;}
+.swatch-hex{font-size:10px;color:var(--text-3);font-family:monospace;}
+.swatch-role{font-size:9px;color:var(--text-3);margin-top:3px;line-height:1.4;}
+
+/* MODE COLUMNS */
+.mode-cols{display:grid;grid-template-columns:1fr 1fr;gap:24px;}
+.mode-col-label{font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--text-3);margin-bottom:12px;display:flex;align-items:center;gap:8px;}
+.mode-col-label span{width:8px;height:8px;border-radius:50%;display:inline-block;}
+.light-dot{background:#1A1210;}
+.dark-dot{background:#F36525;}
+
+/* ── TYPOGRAPHY ── */
+.type-grid{display:flex;flex-direction:column;gap:16px;}
+.type-row{
+  display:grid;grid-template-columns:180px 1fr 120px 100px;
+  align-items:center;gap:16px;
+  padding:14px 16px;
+  background:var(--bg-card);border:1px solid var(--border);border-radius:12px;
+}
+.type-meta{font-size:10px;color:var(--text-3);}
+.type-name{font-size:11px;font-weight:700;color:var(--text-2);}
+.type-spec{font-size:10px;color:var(--text-3);font-family:monospace;margin-top:2px;}
+.type-preview{color:var(--text-1);}
+.type-usage{font-size:10px;color:var(--text-3);text-align:right;}
+
+/* ── SPACING ── */
+.spacing-grid{display:flex;gap:16px;flex-wrap:wrap;align-items:flex-end;}
+.space-item{display:flex;flex-direction:column;align-items:center;gap:6px;}
+.space-bar{background:var(--accent);opacity:.7;width:32px;border-radius:4px;}
+.space-label{font-size:10px;color:var(--text-3);text-align:center;}
+.space-val{font-size:11px;font-weight:700;color:var(--text-1);}
+
+/* ── RADIUS ── */
+.radius-grid{display:flex;gap:16px;flex-wrap:wrap;align-items:center;}
+.radius-item{display:flex;flex-direction:column;align-items:center;gap:8px;}
+.radius-box{width:60px;height:60px;background:var(--bg-card);border:2px solid var(--accent);}
+.radius-label{font-size:10px;color:var(--text-3);text-align:center;}
+.radius-val{font-size:11px;font-weight:700;color:var(--text-1);}
+
+/* ── COMPONENTS ── */
+/* Buttons */
+.btn-grid{display:flex;gap:12px;flex-wrap:wrap;align-items:center;}
+.btn-primary{display:inline-flex;align-items:center;gap:6px;background:var(--accent);color:#000;font-family:'Poppins',sans-serif;font-size:12px;font-weight:700;padding:9px 18px;border-radius:10px;border:none;cursor:pointer;}
+.btn-secondary{display:inline-flex;align-items:center;gap:6px;background:none;color:var(--text-2);font-family:'Poppins',sans-serif;font-size:12px;font-weight:500;padding:9px 18px;border-radius:10px;border:1.5px solid var(--border);cursor:pointer;}
+.btn-ghost{display:inline-flex;align-items:center;gap:6px;background:none;color:var(--accent);font-family:'Poppins',sans-serif;font-size:12px;font-weight:600;padding:9px 18px;border-radius:10px;border:1.5px solid var(--accent);cursor:pointer;}
+.btn-danger{display:inline-flex;align-items:center;gap:6px;background:none;color:var(--red);font-family:'Poppins',sans-serif;font-size:12px;font-weight:600;padding:9px 18px;border-radius:10px;border:1.5px solid var(--red);cursor:pointer;}
+.btn-sm{padding:6px 12px;font-size:11px;border-radius:8px;}
+.btn-icon{width:36px;height:36px;border-radius:10px;background:var(--bg-card);border:1.5px solid var(--border);display:inline-flex;align-items:center;justify-content:center;cursor:pointer;color:var(--text-2);font-size:16px;}
+
+/* Badges */
+.badge-grid{display:flex;gap:8px;flex-wrap:wrap;align-items:center;}
+.badge{display:inline-flex;align-items:center;gap:4px;font-size:10px;font-weight:700;padding:3px 10px;border-radius:20px;}
+.badge-green{background:var(--accent);color:#000;}
+.badge-green-soft{background:#FEF0E8;color:#8B3A0F;}
+html[data-theme="dark"] .badge-green-soft{background:#2A1200;color:#F36525;}
+.badge-red-soft{background:var(--red-bg);color:var(--red);}
+.badge-gray{background:var(--bg-input);color:var(--text-2);}
+.badge-active{background:#FEF0E8;color:#8B3A0F;}
+html[data-theme="dark"] .badge-active{background:#2A1200;color:#F36525;}
+.badge-inactive{background:var(--bg-input);color:var(--text-3);}
+
+/* Inputs */
+.input-grid{display:flex;flex-direction:column;gap:10px;max-width:480px;}
+.ds-input{width:100%;background:var(--bg-input);border:1.5px solid var(--border);border-radius:10px;padding:9px 12px;font-family:'Poppins',sans-serif;font-size:12px;color:var(--text-1);outline:none;}
+.ds-input:focus{border-color:var(--accent);}
+.ds-input-label{font-size:10px;font-weight:700;letter-spacing:.7px;text-transform:uppercase;color:var(--text-2);margin-bottom:4px;display:block;}
+.ds-select{width:100%;background:var(--bg-input);border:1.5px solid var(--border);border-radius:10px;padding:9px 12px;font-family:'Poppins',sans-serif;font-size:12px;color:var(--text-1);outline:none;appearance:none;}
+.ds-field{margin-bottom:4px;}
+
+/* Nav Items */
+.nav-demo{background:var(--bg-sidebar);border-radius:14px;border:1px solid var(--border);padding:10px;width:200px;}
+.nav-demo .nav-section{font-size:9px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;color:var(--nav-label);padding:8px 8px 3px;}
+.nav-demo .nav-item{display:flex;align-items:center;gap:9px;padding:8px 10px;font-size:12px;font-weight:500;color:var(--text-nav);border-radius:9px;margin-bottom:1px;position:relative;}
+.nav-demo .nav-item i{font-size:14px;}
+.nav-demo .nav-item.active{background:var(--accent);color:#000;font-weight:600;}
+.nav-demo .nav-item.active i{color:#000;}
+.nav-demo .nav-item.hover-state{background:var(--pop-bg);color:var(--pop-text);}
+html[data-theme="dark"] .nav-demo .nav-item.hover-state{background:#F3652522;color:#F36525;}
+.nav-demo .nav-item.hover-state::after{content:'';width:5px;height:5px;border-radius:50%;background:var(--accent);position:absolute;right:10px;top:50%;transform:translateY(-50%);}
+
+/* KPI Cards */
+.card-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;}
+.kpi-card{background:var(--bg-card);border:1.5px solid var(--border);border-radius:18px;padding:16px;position:relative;overflow:hidden;}
+.kpi-card.pop{background:var(--pop-bg);border-color:transparent;}
+.kpi-icon-badge{position:absolute;top:14px;right:14px;width:34px;height:34px;border-radius:11px;background:var(--bg-input);display:flex;align-items:center;justify-content:center;font-size:16px;color:var(--text-3);}
+.kpi-card.pop .kpi-icon-badge{background:rgba(255,255,255,.12);color:var(--accent);}
+html[data-theme="dark"] .kpi-card.pop .kpi-icon-badge{background:rgba(0,0,0,.18);color:#000;}
+.kpi-pct{display:inline-flex;align-items:center;gap:3px;font-size:10px;font-weight:700;background:#FEF0E8;color:#8B3A0F;padding:3px 8px;border-radius:20px;margin-bottom:5px;}
+html[data-theme="dark"] .kpi-pct{background:#2A1200;color:#F36525;}
+.kpi-card.pop .kpi-pct{background:rgba(255,255,255,.18);color:var(--pop-text);}
+html[data-theme="dark"] .kpi-card.pop .kpi-pct{background:rgba(0,0,0,.2);color:#000;}
+.kpi-pct.red{background:var(--red-bg);color:var(--red);}
+.kpi-label-text{font-size:11px;color:var(--text-2);margin-bottom:4px;}
+.kpi-card.pop .kpi-label-text{color:rgba(255,255,255,.55);}
+html[data-theme="dark"] .kpi-card.pop .kpi-label-text{color:rgba(0,0,0,.5);}
+.kpi-val{font-size:20px;font-weight:700;color:var(--text-1);letter-spacing:-.5px;line-height:1.1;}
+.kpi-card.pop .kpi-val{color:var(--pop-text);}
+.kpi-val-sub{display:flex;align-items:baseline;gap:5px;}
+.kpi-val-sub span{font-size:10px;color:var(--text-3);line-height:1.3;}
+.kpi-card.pop .kpi-val-sub span{color:rgba(255,255,255,.5);}
+html[data-theme="dark"] .kpi-card.pop .kpi-val-sub span{color:rgba(0,0,0,.45);}
+.sparkline{height:26px;display:flex;align-items:flex-end;gap:3px;margin:6px 0 4px;}
+.spark-bar{width:6px;border-radius:3px 3px 0 0;background:var(--spark);}
+.spark-bar.hi{background:rgba(243,101,37,.5);}
+.kpi-card.pop .spark-bar{background:rgba(255,255,255,.2);}
+.kpi-card.pop .spark-bar.hi{background:rgba(255,255,255,.7);}
+html[data-theme="dark"] .kpi-card.pop .spark-bar{background:rgba(0,0,0,.2);}
+html[data-theme="dark"] .kpi-card.pop .spark-bar.hi{background:rgba(0,0,0,.6);}
+
+/* Hover state card */
+.kpi-card.hover-state{border-color:var(--accent-dark);transform:translateY(-2px);}
+html[data-theme="dark"] .kpi-card.hover-state{border-color:var(--accent);background:#22262D;}
+.kpi-card.hover-state .kpi-icon-badge{background:var(--accent);color:#000;}
+
+/* Table */
+.ds-table{width:100%;border-collapse:collapse;font-size:12px;}
+.ds-table th{text-align:left;font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--text-3);padding:8px 12px;border-bottom:1px solid var(--border);}
+.ds-table td{padding:10px 12px;border-bottom:1px solid var(--border);color:var(--text-1);vertical-align:middle;}
+.ds-table tr:last-child td{border-bottom:none;}
+.ds-table-wrap{background:var(--bg-card);border:1px solid var(--border);border-radius:14px;overflow:hidden;}
+
+/* Drawer preview */
+.drawer-preview{background:var(--bg-card);border:1px solid var(--border);border-radius:14px;overflow:hidden;max-width:320px;}
+.drawer-head-demo{background:var(--pop-bg);padding:14px 16px;display:flex;justify-content:space-between;align-items:center;}
+html[data-theme="dark"] .drawer-head-demo{background:#2A1200;}
+.drawer-head-demo span{font-size:13px;font-weight:700;color:#fff;}
+.drawer-head-demo small{font-size:10px;color:rgba(255,255,255,.4);display:block;margin-top:2px;}
+.drawer-body-demo{padding:16px;}
+.ing-row-demo{display:flex;align-items:center;gap:8px;background:var(--bg-input);border:1.5px solid var(--border);border-radius:9px;padding:7px 10px;font-size:11px;color:var(--text-2);margin-bottom:6px;}
+.ing-row-demo i{color:var(--accent);font-size:13px;}
+.shortcut-demo{display:flex;align-items:center;gap:8px;padding:9px 11px;background:var(--bg-input);border:1.5px solid var(--border);border-radius:11px;font-size:11px;color:var(--text-2);margin-bottom:6px;}
+.shortcut-demo i{color:var(--accent);font-size:14px;}
+
+/* Shadow tokens */
+.shadow-grid{display:flex;gap:20px;flex-wrap:wrap;}
+.shadow-item{display:flex;flex-direction:column;align-items:center;gap:10px;}
+.shadow-box{width:80px;height:80px;background:var(--bg-card);border-radius:14px;border:1px solid var(--border);}
+.shadow-label{font-size:10px;color:var(--text-3);text-align:center;}
+
+/* Alert / notification */
+.alert-demo{background:var(--bg-card);border:1.5px solid var(--border);border-radius:14px;padding:14px 16px;}
+.alert-empty{text-align:center;padding:12px 0;font-size:12px;color:var(--text-3);}
+.alert-empty i{display:block;font-size:22px;color:var(--accent);margin-bottom:4px;opacity:.5;}
+
+/* Icon grid */
+.icon-grid{display:flex;gap:12px;flex-wrap:wrap;}
+.icon-item{display:flex;flex-direction:column;align-items:center;gap:6px;padding:14px;background:var(--bg-card);border:1px solid var(--border);border-radius:12px;min-width:72px;}
+.icon-item i{font-size:22px;color:var(--text-2);}
+.icon-label{font-size:9px;color:var(--text-3);text-align:center;}
+
+/* Live badge */
+.live-badge{display:inline-flex;align-items:center;gap:5px;font-size:11px;color:var(--accent);font-weight:600;}
+.live-dot{width:6px;height:6px;border-radius:50%;background:var(--accent);box-shadow:0 0 6px var(--accent);}
+
+/* Status toggle */
+.status-toggle{display:flex;gap:6px;width:200px;}
+.status-btn{flex:1;padding:8px;border-radius:10px;border:1.5px solid var(--border);background:none;font-family:'Poppins',sans-serif;font-size:12px;font-weight:600;cursor:pointer;color:var(--text-3);}
+.status-btn.on{background:var(--accent);color:#000;border-color:var(--accent);}
+
+/* Code chip */
+.chip{display:inline-block;background:var(--bg-input);border:1px solid var(--border);border-radius:6px;padding:2px 8px;font-size:10px;font-family:monospace;color:var(--text-2);}
+
+::-webkit-scrollbar{width:4px;}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px;}
+</style>
+</head>
+<body>
+
+<!-- TOPBAR -->
+<header class="ds-topbar">
+  <div class="ds-logo">
+    <div class="ds-logo-icon">C</div>
+    <span class="ds-logo-text"><em>Chef</em> Control</span>
+    <span class="ds-badge">Design System v1.0</span>
+  </div>
+  <div class="ds-topbar-right">
+    <span class="ds-version">Light &amp; Dark Mode</span>
+    <div class="theme-toggle" onclick="toggleTheme()">
+      <i class="ti ti-moon ti-tog"></i>
+      <button class="toggle-pill" aria-label="Toggle theme"></button>
+      <i class="ti ti-sun ti-tog"></i>
+    </div>
+  </div>
+</header>
+
+<div class="ds-wrap">
+
+  <!-- ── 1. INTRO ── -->
+  <div class="ds-section">
+    <div class="ds-section-label">Fundamentos</div>
+    <div class="ds-section-title">Chef Control Design System</div>
+    <div class="ds-section-desc">Sistema de diseño para la plataforma de gestión de restaurantes Chef Control. Define colores, tipografía, espaciado, radios, componentes y patrones de interacción para los modos claro y oscuro.</div>
+  </div>
+
+  <div class="ds-divider"></div>
+
+  <!-- ── 2. COLORS ── -->
+  <div class="ds-section">
+    <div class="ds-section-label">Colores</div>
+    <div class="ds-section-title">Paleta de colores</div>
+    <div class="ds-section-desc">Dos paletas paralelas — una por modo. El acento <strong>#F36525</strong> es el único color compartido entre ambos modos.</div>
+
+    <div class="mode-cols">
+      <!-- LIGHT -->
+      <div>
+        <div class="mode-col-label"><span class="light-dot"></span> Modo Claro</div>
+        <div class="color-grid">
+          <div class="color-swatch">
+            <div class="swatch-color" style="background:#F5F2EE;"></div>
+            <div class="swatch-info"><div class="swatch-name">Background</div><div class="swatch-hex">#F5F2EE</div><div class="swatch-role">Fondo de página</div></div>
+          </div>
+          <div class="color-swatch">
+            <div class="swatch-color" style="background:#FFFFFF;border-bottom:1px solid #eee;"></div>
+            <div class="swatch-info"><div class="swatch-name">Surface / Card</div><div class="swatch-hex">#FFFFFF</div><div class="swatch-role">Cards, sidebar, topbar</div></div>
+          </div>
+          <div class="color-swatch">
+            <div class="swatch-color" style="background:#F5F3F0;"></div>
+            <div class="swatch-info"><div class="swatch-name">Input BG</div><div class="swatch-hex">#F5F3F0</div><div class="swatch-role">Inputs, badges, chips</div></div>
+          </div>
+          <div class="color-swatch">
+            <div class="swatch-color" style="background:#EDE8E2;"></div>
+            <div class="swatch-info"><div class="swatch-name">Border</div><div class="swatch-hex">#EDE8E2</div><div class="swatch-role">Bordes por defecto</div></div>
+          </div>
+          <div class="color-swatch">
+            <div class="swatch-color" style="background:#F36525;"></div>
+            <div class="swatch-info"><div class="swatch-name">Accent</div><div class="swatch-hex">#F36525</div><div class="swatch-role">CTA, active, badges</div></div>
+          </div>
+          <div class="color-swatch">
+            <div class="swatch-color" style="background:#F36525;"></div>
+            <div class="swatch-info"><div class="swatch-name">Accent Dark</div><div class="swatch-hex">#7A2800</div><div class="swatch-role">Nav hover, pop card, drawer head</div></div>
+          </div>
+          <div class="color-swatch">
+            <div class="swatch-color" style="background:#1A1210;"></div>
+            <div class="swatch-info"><div class="swatch-name">Text Primary</div><div class="swatch-hex">#1A1210</div><div class="swatch-role">Títulos, valores</div></div>
+          </div>
+          <div class="color-swatch">
+            <div class="swatch-color" style="background:#3D3530;"></div>
+            <div class="swatch-info"><div class="swatch-name">Text Secondary</div><div class="swatch-hex">#3D3530</div><div class="swatch-role">Labels, subtítulos</div></div>
+          </div>
+          <div class="color-swatch">
+            <div class="swatch-color" style="background:#9A9390;"></div>
+            <div class="swatch-info"><div class="swatch-name">Text Muted</div><div class="swatch-hex">#9A9390</div><div class="swatch-role">Hints, placeholders</div></div>
+          </div>
+          <div class="color-swatch">
+            <div class="swatch-color" style="background:#E74C3C;"></div>
+            <div class="swatch-info"><div class="swatch-name">Red / Error</div><div class="swatch-hex">#E74C3C</div><div class="swatch-role">Merma badge, errores</div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- DARK -->
+      <div>
+        <div class="mode-col-label"><span class="dark-dot"></span> Modo Oscuro</div>
+        <div class="color-grid">
+          <div class="color-swatch">
+            <div class="swatch-color" style="background:#111214;"></div>
+            <div class="swatch-info"><div class="swatch-name">Background</div><div class="swatch-hex">#111214</div><div class="swatch-role">Fondo de página</div></div>
+          </div>
+          <div class="color-swatch">
+            <div class="swatch-color" style="background:#212226;border:1px solid #2a2d34;"></div>
+            <div class="swatch-info"><div class="swatch-name">Surface / Card</div><div class="swatch-hex">#212226</div><div class="swatch-role">Cards, sidebar, topbar</div></div>
+          </div>
+          <div class="color-swatch">
+            <div class="swatch-color" style="background:#16191E;"></div>
+            <div class="swatch-info"><div class="swatch-name">Input BG</div><div class="swatch-hex">#16191E</div><div class="swatch-role">Inputs, badges, chips</div></div>
+          </div>
+          <div class="color-swatch">
+            <div class="swatch-color" style="background:#2A2D34;"></div>
+            <div class="swatch-info"><div class="swatch-name">Border</div><div class="swatch-hex">#2A2D34</div><div class="swatch-role">Bordes por defecto</div></div>
+          </div>
+          <div class="color-swatch">
+            <div class="swatch-color" style="background:#F36525;"></div>
+            <div class="swatch-info"><div class="swatch-name">Accent</div><div class="swatch-hex">#F36525</div><div class="swatch-role">CTA, hovers, active, detalles</div></div>
+          </div>
+          <div class="color-swatch">
+            <div class="swatch-color" style="background:#F36525;"></div>
+            <div class="swatch-info"><div class="swatch-name">Pop Card BG</div><div class="swatch-hex">#F36525</div><div class="swatch-role">Card destacada en dark</div></div>
+          </div>
+          <div class="color-swatch">
+            <div class="swatch-color" style="background:#FFFFFF;"></div>
+            <div class="swatch-info"><div class="swatch-name">Text Primary</div><div class="swatch-hex">#FFFFFF</div><div class="swatch-role">Títulos, valores KPI</div></div>
+          </div>
+          <div class="color-swatch">
+            <div class="swatch-color" style="background:rgba(255,255,255,0.75);"></div>
+            <div class="swatch-info"><div class="swatch-name">Text Secondary</div><div class="swatch-hex">#FFF 75%</div><div class="swatch-role">Labels, subtítulos</div></div>
+          </div>
+          <div class="color-swatch">
+            <div class="swatch-color" style="background:rgba(255,255,255,0.35);"></div>
+            <div class="swatch-info"><div class="swatch-name">Text Muted</div><div class="swatch-hex">#FFF 35%</div><div class="swatch-role">Hints, placeholders</div></div>
+          </div>
+          <div class="color-swatch">
+            <div class="swatch-color" style="background:#E74C3C;"></div>
+            <div class="swatch-info"><div class="swatch-name">Red / Error</div><div class="swatch-hex">#E74C3C</div><div class="swatch-role">Solo badge de merma</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="ds-divider"></div>
+
+  <!-- ── 3. TYPOGRAPHY ── -->
+  <div class="ds-section">
+    <div class="ds-section-label">Tipografía</div>
+    <div class="ds-section-title">Poppins — única familia</div>
+    <div class="ds-section-desc">Una sola familia tipográfica, diferenciada por peso y tamaño. Sin serif, sin monospace excepto para hex/código en el sistema de diseño.</div>
+
+    <div class="type-grid">
+      <div class="type-row">
+        <div><div class="type-name">Page Title</div><div class="type-spec">22px / 700</div></div>
+        <div class="type-preview" style="font-size:22px;font-weight:700;">Panel operativo</div>
+        <div class="type-usage">Títulos de página</div>
+        <div><span class="chip">700</span></div>
+      </div>
+      <div class="type-row">
+        <div><div class="type-name">Section Title</div><div class="type-spec">16px / 600</div></div>
+        <div class="type-preview" style="font-size:16px;font-weight:600;">Platos del menú</div>
+        <div class="type-usage">Subtítulos de sección</div>
+        <div><span class="chip">600</span></div>
+      </div>
+      <div class="type-row">
+        <div><div class="type-name">KPI Value</div><div class="type-spec">22px / 700</div></div>
+        <div class="type-preview" style="font-size:22px;font-weight:700;">$ 0,00</div>
+        <div class="type-usage">Números KPI</div>
+        <div><span class="chip">700</span></div>
+      </div>
+      <div class="type-row">
+        <div><div class="type-name">KPI Value LG</div><div class="type-spec">28px / 700</div></div>
+        <div class="type-preview" style="font-size:28px;font-weight:700;">0.0%</div>
+        <div class="type-usage">Food Cost, Stock</div>
+        <div><span class="chip">700</span></div>
+      </div>
+      <div class="type-row">
+        <div><div class="type-name">Body / Nav</div><div class="type-spec">12px / 500</div></div>
+        <div class="type-preview" style="font-size:12px;font-weight:500;">Platos del menú</div>
+        <div class="type-usage">Nav items, body text</div>
+        <div><span class="chip">500</span></div>
+      </div>
+      <div class="type-row">
+        <div><div class="type-name">Label</div><div class="type-spec">11px / 500</div></div>
+        <div class="type-preview" style="font-size:11px;font-weight:500;">Ventas del mes</div>
+        <div class="type-usage">KPI labels, sublabels</div>
+        <div><span class="chip">500</span></div>
+      </div>
+      <div class="type-row">
+        <div><div class="type-name">Caption / Sub</div><div class="type-spec">10px / 400</div></div>
+        <div class="type-preview" style="font-size:10px;">0 ventas registradas este mes</div>
+        <div class="type-usage">Subtexto, hints</div>
+        <div><span class="chip">400</span></div>
+      </div>
+      <div class="type-row">
+        <div><div class="type-name">Badge / Label</div><div class="type-spec">9px / 700</div></div>
+        <div class="type-preview" style="font-size:9px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;">GENERAL</div>
+        <div class="type-usage">Nav sections, badges</div>
+        <div><span class="chip">700 CAPS</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="ds-divider"></div>
+
+  <!-- ── 4. SPACING ── -->
+  <div class="ds-section">
+    <div class="ds-section-label">Espaciado</div>
+    <div class="ds-section-title">Escala de espaciado</div>
+    <div class="ds-section-desc">Sistema basado en múltiplos de 4px. Los valores más usados son 8, 10, 12, 16, 20 y 24.</div>
+    <div class="spacing-grid">
+      <div class="space-item"><div class="space-bar" style="height:4px;"></div><div class="space-val">4px</div><div class="space-label">xs<br>icon gap</div></div>
+      <div class="space-item"><div class="space-bar" style="height:8px;"></div><div class="space-val">8px</div><div class="space-label">sm<br>sidebar gap</div></div>
+      <div class="space-item"><div class="space-bar" style="height:10px;"></div><div class="space-val">10px</div><div class="space-label">nav item<br>padding v</div></div>
+      <div class="space-item"><div class="space-bar" style="height:12px;"></div><div class="space-val">12px</div><div class="space-label">grid gap<br>card gap</div></div>
+      <div class="space-item"><div class="space-bar" style="height:16px;"></div><div class="space-val">16px</div><div class="space-label">card<br>padding</div></div>
+      <div class="space-item"><div class="space-bar" style="height:20px;"></div><div class="space-val">20px</div><div class="space-label">main<br>padding</div></div>
+      <div class="space-item"><div class="space-bar" style="height:24px;"></div><div class="space-val">24px</div><div class="space-label">section<br>margin</div></div>
+      <div class="space-item"><div class="space-bar" style="height:32px;"></div><div class="space-val">32px</div><div class="space-label">page<br>padding h</div></div>
+      <div class="space-item"><div class="space-bar" style="height:56px;"></div><div class="space-val">56px</div><div class="space-label">topbar<br>height</div></div>
+    </div>
+  </div>
+
+  <div class="ds-divider"></div>
+
+  <!-- ── 5. BORDER RADIUS ── -->
+  <div class="ds-section">
+    <div class="ds-section-label">Bordes</div>
+    <div class="ds-section-title">Border Radius</div>
+    <div class="ds-section-desc">Esquinas redondeadas que definen la personalidad visual — de píldoras para badges hasta 20px para cards principales.</div>
+    <div class="radius-grid">
+      <div class="radius-item"><div class="radius-box" style="border-radius:6px;"></div><div class="radius-val">6px</div><div class="radius-label">Btn small<br>chip</div></div>
+      <div class="radius-item"><div class="radius-box" style="border-radius:8px;"></div><div class="radius-val">8px</div><div class="radius-label">Btn salir<br>close btn</div></div>
+      <div class="radius-item"><div class="radius-box" style="border-radius:10px;"></div><div class="radius-val">10px</div><div class="radius-val" style="font-size:9px;font-weight:400;"></div><div class="radius-label">Btn primary<br>nav item, input</div></div>
+      <div class="radius-item"><div class="radius-box" style="border-radius:11px;"></div><div class="radius-val">11px</div><div class="radius-label">Icon badge<br>ing-row</div></div>
+      <div class="radius-item"><div class="radius-box" style="border-radius:14px;"></div><div class="radius-val">14px</div><div class="radius-label">Sidebar<br>drawer</div></div>
+      <div class="radius-item"><div class="radius-box" style="border-radius:18px;"></div><div class="radius-val">18px</div><div class="radius-label">KPI Cards<br>alerts panel</div></div>
+      <div class="radius-item"><div class="radius-box" style="border-radius:20px;"></div><div class="radius-val">20px</div><div class="radius-label">Badges<br>pills</div></div>
+    </div>
+  </div>
+
+  <div class="ds-divider"></div>
+
+  <!-- ── 6. BUTTONS ── -->
+  <div class="ds-section">
+    <div class="ds-section-label">Componentes</div>
+    <div class="ds-section-title">Botones</div>
+    <div class="ds-section-desc">Cuatro variantes de botón. Primary es siempre el acento verde. Secondary y Ghost para acciones secundarias.</div>
+
+    <div class="ds-sub">
+      <div class="ds-sub-title">Variantes</div>
+      <div class="btn-grid">
+        <button class="btn-primary"><i class="ti ti-plus"></i> Nuevo plato</button>
+        <button class="btn-secondary"><i class="ti ti-refresh"></i> Actualizar</button>
+        <button class="btn-ghost"><i class="ti ti-bolt"></i> Entrada rápida</button>
+        <button class="btn-danger"><i class="ti ti-trash"></i> Eliminar</button>
+        <div class="btn-icon"><i class="ti ti-x"></i></div>
+      </div>
+    </div>
+
+    <div class="ds-sub">
+      <div class="ds-sub-title">Tamaños</div>
+      <div class="btn-grid">
+        <button class="btn-primary" style="padding:10px 20px;font-size:13px;">Large</button>
+        <button class="btn-primary">Default</button>
+        <button class="btn-primary btn-sm">Small</button>
+      </div>
+    </div>
+
+    <div class="ds-sub">
+      <div class="ds-sub-title">Especificaciones</div>
+      <div class="ds-table-wrap">
+        <table class="ds-table">
+          <thead><tr><th>Variante</th><th>BG</th><th>Text</th><th>Border</th><th>Padding</th><th>Radius</th></tr></thead>
+          <tbody>
+            <tr><td><strong>Primary</strong></td><td><span class="chip">#F36525</span></td><td><span class="chip">#000</span></td><td>none</td><td>9px 18px</td><td>10px</td></tr>
+            <tr><td><strong>Secondary</strong></td><td>none</td><td><span class="chip">text-2</span></td><td><span class="chip">border</span></td><td>9px 18px</td><td>10px</td></tr>
+            <tr><td><strong>Ghost</strong></td><td>none</td><td><span class="chip">#F36525</span></td><td><span class="chip">#F36525</span></td><td>9px 18px</td><td>10px</td></tr>
+            <tr><td><strong>Danger</strong></td><td>none</td><td><span class="chip">#E74C3C</span></td><td><span class="chip">#E74C3C</span></td><td>9px 18px</td><td>10px</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <div class="ds-divider"></div>
+
+  <!-- ── 7. BADGES ── -->
+  <div class="ds-section">
+    <div class="ds-section-title">Badges y Pills</div>
+    <div class="ds-section-desc">Usados para estados, porcentajes y categorías. Siempre 20px de radio, 10px de fuente, peso 700.</div>
+    <div class="badge-grid">
+      <span class="badge badge-green"><i class="ti ti-check" style="font-size:10px"></i> Activo</span>
+      <span class="badge badge-green-soft"><i class="ti ti-arrow-up-right" style="font-size:10px"></i> +20.9%</span>
+      <span class="badge badge-red-soft"><i class="ti ti-arrow-down-right" style="font-size:10px"></i> -0%</span>
+      <span class="badge badge-gray">Inactivo</span>
+      <span class="badge badge-gray">Todas las categorías</span>
+      <span class="badge" style="background:var(--accent);color:#000;">En vivo</span>
+      <span class="live-badge"><span class="live-dot"></span> En vivo</span>
+    </div>
+  </div>
+
+  <div class="ds-divider"></div>
+
+  <!-- ── 8. INPUTS ── -->
+  <div class="ds-section">
+    <div class="ds-section-title">Inputs y Formularios</div>
+    <div class="ds-section-desc">Inputs con fondo sutil, borde suave y focus en acento verde. Radio 10px, padding 9px 12px.</div>
+    <div class="mode-cols">
+      <div>
+        <div class="input-grid">
+          <div class="ds-field"><label class="ds-input-label">Nombre del plato <span style="font-weight:400;color:var(--text-3);">*</span></label><input class="ds-input" type="text" placeholder="Ej: Caesar Tradicional"></div>
+          <div class="ds-field"><label class="ds-input-label">Categoría</label><select class="ds-select"><option>Entradas</option><option>Sopas</option><option>Ensaladas</option></select></div>
+          <div class="ds-field"><label class="ds-input-label">Precio</label><input class="ds-input" type="number" placeholder="0,00"></div>
+        </div>
+      </div>
+      <div>
+        <div class="ds-sub-title">Status Toggle</div>
+        <div class="status-toggle" style="margin-bottom:20px;">
+          <button class="status-btn on">Activo</button>
+          <button class="status-btn">Inactivo</button>
+        </div>
+        <div class="ds-sub-title">Especificaciones Input</div>
+        <div class="ds-table-wrap">
+          <table class="ds-table">
+            <thead><tr><th>Estado</th><th>Border</th><th>BG</th></tr></thead>
+            <tbody>
+              <tr><td>Default</td><td><span class="chip">border (1.5px)</span></td><td><span class="chip">input-bg</span></td></tr>
+              <tr><td>Focus</td><td><span class="chip">#F36525 (1.5px)</span></td><td><span class="chip">input-bg</span></td></tr>
+              <tr><td>Hover row</td><td><span class="chip">#F36525</span></td><td><span class="chip">input-bg</span></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="ds-divider"></div>
+
+  <!-- ── 9. NAV ── -->
+  <div class="ds-section">
+    <div class="ds-section-title">Navegación lateral</div>
+    <div class="ds-section-desc">Sidebar flotante con gap de 8px desde los bordes. Radio 14px. Nav items con radio 9px. Tres estados: default, hover y active.</div>
+    <div style="display:flex;gap:24px;flex-wrap:wrap;">
+      <div>
+        <div class="mode-col-label" style="margin-bottom:10px;"><span class="light-dot"></span> Light</div>
+        <div class="nav-demo">
+          <div class="nav-section">General</div>
+          <div class="nav-item active"><i class="ti ti-layout-dashboard"></i> Panel</div>
+          <div class="nav-item hover-state"><i class="ti ti-bell"></i> Alertas</div>
+          <div class="nav-item"><i class="ti ti-clipboard-list"></i> Platos del menú</div>
+          <div class="nav-section">Inventario</div>
+          <div class="nav-item"><i class="ti ti-package"></i> Insumos</div>
+          <div class="nav-item"><i class="ti ti-box"></i> Stock</div>
+        </div>
+      </div>
+      <div>
+        <div class="mode-col-label" style="margin-bottom:10px;"><span class="dark-dot"></span> Dark</div>
+        <div class="nav-demo" style="background:#212226;border-color:#2A2D34;">
+          <div class="nav-section" style="color:#F36525;">General</div>
+          <div class="nav-item active" style="background:#F36525;color:#000;"><i class="ti ti-layout-dashboard" style="color:#000;"></i> Panel</div>
+          <div class="nav-item" style="color:#fff;background:#F3652522;position:relative;"><i class="ti ti-bell" style="color:#F36525;"></i> Alertas<span style="width:5px;height:5px;border-radius:50%;background:#F36525;position:absolute;right:10px;top:50%;transform:translateY(-50%);display:inline-block;"></span></div>
+          <div class="nav-item" style="color:#555;"><i class="ti ti-clipboard-list" style="color:#555;"></i> Platos del menú</div>
+          <div class="nav-section" style="color:#F36525;">Inventario</div>
+          <div class="nav-item" style="color:#555;"><i class="ti ti-package" style="color:#555;"></i> Insumos</div>
+          <div class="nav-item" style="color:#555;"><i class="ti ti-box" style="color:#555;"></i> Stock</div>
+        </div>
+      </div>
+      <div>
+        <div class="ds-sub-title" style="margin-bottom:10px;">Estados nav</div>
+        <div class="ds-table-wrap">
+          <table class="ds-table" style="min-width:320px;">
+            <thead><tr><th>Estado</th><th>BG</th><th>Color</th><th>Dot</th></tr></thead>
+            <tbody>
+              <tr><td>Default</td><td>none</td><td>text-nav</td><td>—</td></tr>
+              <tr><td>Hover (light)</td><td><span class="chip">#7A2800</span></td><td>white</td><td><span style="color:#F36525;">●</span> verde</td></tr>
+              <tr><td>Hover (dark)</td><td><span class="chip">#F3652522</span></td><td><span class="chip">#F36525</span></td><td><span style="color:#F36525;">●</span> verde</td></tr>
+              <tr><td>Active</td><td><span class="chip">#F36525</span></td><td><span class="chip">#000</span></td><td>—</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="ds-divider"></div>
+
+  <!-- ── 10. KPI CARDS ── -->
+  <div class="ds-section">
+    <div class="ds-section-title">KPI Cards</div>
+    <div class="ds-section-desc">Tres variantes: Normal, Pop (destacada) y Hover. Las cards muestran ícono badge, badge de porcentaje, valor principal, sparkline y subtexto.</div>
+
+    <div class="ds-sub">
+      <div class="ds-sub-title">Variantes</div>
+      <div class="card-grid">
+        <!-- Normal -->
+        <div class="kpi-card">
+          <div class="kpi-icon-badge"><i class="ti ti-shopping-cart"></i></div>
+          <div class="kpi-pct"><i class="ti ti-arrow-up-right" style="font-size:9px"></i> +10.9%</div>
+          <div class="kpi-label-text">Compras del mes</div>
+          <div class="kpi-val-sub"><div class="kpi-val">$ 0,00</div><span>vs<br>mes anterior</span></div>
+          <div class="sparkline">
+            <div class="spark-bar" style="height:40%"></div><div class="spark-bar hi" style="height:65%"></div>
+            <div class="spark-bar" style="height:35%"></div><div class="spark-bar hi" style="height:80%"></div>
+            <div class="spark-bar" style="height:50%"></div><div class="spark-bar" style="height:45%"></div><div class="spark-bar hi" style="height:72%"></div>
+          </div>
+        </div>
+        <!-- Pop -->
+        <div class="kpi-card pop">
+          <div class="kpi-icon-badge"><i class="ti ti-chart-line"></i></div>
+          <div class="kpi-pct"><i class="ti ti-arrow-up-right" style="font-size:9px"></i> +20.9%</div>
+          <div class="kpi-label-text">Ventas del mes</div>
+          <div class="kpi-val-sub"><div class="kpi-val">$ 0,00</div><span>vs<br>mes anterior</span></div>
+          <div class="sparkline">
+            <div class="spark-bar" style="height:35%"></div><div class="spark-bar hi" style="height:60%"></div>
+            <div class="spark-bar" style="height:40%"></div><div class="spark-bar hi" style="height:78%"></div>
+            <div class="spark-bar" style="height:50%"></div><div class="spark-bar" style="height:44%"></div><div class="spark-bar hi" style="height:88%"></div>
+          </div>
+        </div>
+        <!-- Hover -->
+        <div class="kpi-card hover-state">
+          <div class="kpi-icon-badge"><i class="ti ti-coin"></i></div>
+          <div class="kpi-label-text">Food Cost</div>
+          <div class="kpi-val" style="font-size:26px;margin-top:4px;">0.0%</div>
+          <div style="height:4px;background:var(--spark);border-radius:3px;margin:8px 0 4px;overflow:hidden;"><div style="height:100%;width:0;background:var(--accent);border-radius:3px;"></div></div>
+          <div style="font-size:10px;color:var(--text-3);">Sin ventas registradas</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="ds-sub">
+      <div class="ds-sub-title">Especificaciones card</div>
+      <div class="ds-table-wrap">
+        <table class="ds-table">
+          <thead><tr><th>Propiedad</th><th>Normal</th><th>Pop (light)</th><th>Pop (dark)</th><th>Hover</th></tr></thead>
+          <tbody>
+            <tr><td>BG</td><td><span class="chip">bg-card</span></td><td><span class="chip">#7A2800</span></td><td><span class="chip">#F36525</span></td><td><span class="chip">bg-card</span></td></tr>
+            <tr><td>Border</td><td><span class="chip">1.5px border</span></td><td>none</td><td>none</td><td><span class="chip">accent-dark / accent</span></td></tr>
+            <tr><td>Radius</td><td colspan="4" style="text-align:center;"><span class="chip">18px</span></td></tr>
+            <tr><td>Padding</td><td colspan="4" style="text-align:center;"><span class="chip">16px</span></td></tr>
+            <tr><td>Transform hover</td><td colspan="4" style="text-align:center;"><span class="chip">translateY(-2px)</span></td></tr>
+            <tr><td>Shadow hover</td><td colspan="2"><span class="chip">0 8px 28px rgba(122,40,0,.12)</span></td><td colspan="2"><span class="chip">0 6px 24px rgba(243,101,37,.08)</span></td></tr>
+            <tr><td>Icon badge hover</td><td colspan="4" style="text-align:center;"><span class="chip">bg #F36525, color #000</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <div class="ds-divider"></div>
+
+  <!-- ── 11. DRAWER ── -->
+  <div class="ds-section">
+    <div class="ds-section-title">Panel lateral (Drawer)</div>
+    <div class="ds-section-desc">Slide-in desde la derecha. 330px de ancho. Header con fondo oscuro (#7A2800 light / #2A1200 dark), body con fondo card. Se cierra con ESC o click en overlay.</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;align-items:flex-start;">
+      <!-- LIGHT: Nuevo plato -->
+      <div>
+        <div class="mode-col-label" style="margin-bottom:8px;"><span class="light-dot"></span> Light — Nuevo plato</div>
+        <div class="drawer-preview">
+          <div class="drawer-head-demo" style="background:#F36525;">
+            <div><span>Nuevo plato</span><small>Agregá un plato al menú</small></div>
+            <div style="border:1px solid rgba(255,255,255,.2);border-radius:7px;padding:4px 8px;color:rgba(255,255,255,.5);font-size:14px;"><i class="ti ti-x"></i></div>
+          </div>
+          <div class="drawer-body-demo" style="background:#ffffff;">
+            <label style="display:block;font-size:9px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:#3D3530;margin-bottom:4px;">Nombre *</label>
+            <input style="width:100%;background:#F5F3F0;border:1.5px solid #EDE8E2;border-radius:10px;padding:8px 11px;font-family:Poppins,sans-serif;font-size:12px;color:#1A1210;outline:none;margin-bottom:10px;" placeholder="Ej: Caesar Tradicional">
+            <div style="display:flex;align-items:center;gap:8px;background:#F5F3F0;border:1.5px solid #EDE8E2;border-radius:9px;padding:7px 10px;font-size:11px;color:#3D3530;margin-bottom:6px;"><i class="ti ti-leaf" style="color:#F36525;font-size:13px;"></i> Lechuga romana <span style="margin-left:auto;font-size:10px;color:#9A9390;">80 g</span></div>
+            <div style="display:flex;align-items:center;gap:8px;background:#F5F3F0;border:1.5px solid #EDE8E2;border-radius:9px;padding:7px 10px;font-size:11px;color:#3D3530;margin-bottom:6px;"><i class="ti ti-droplet" style="color:#F36525;font-size:13px;"></i> Aderezo caesar <span style="margin-left:auto;font-size:10px;color:#9A9390;">30 ml</span></div>
+            <div style="display:flex;justify-content:space-between;align-items:center;background:#F5F3F0;border-radius:10px;padding:10px 12px;border:1.5px solid #EDE8E2;margin-top:6px;">
+              <span style="font-size:11px;color:#9A9390;">Costo teórico</span>
+              <span style="font-size:14px;font-weight:700;color:#F36525;">$ 1.240,00</span>
+            </div>
+            <div style="display:flex;gap:8px;margin-top:12px;">
+              <button style="background:none;border:1.5px solid #EDE8E2;color:#9A9390;font-family:Poppins,sans-serif;font-size:12px;padding:8px 14px;border-radius:10px;cursor:pointer;">Cancelar</button>
+              <button style="flex:1;background:#F36525;color:#000;font-family:Poppins,sans-serif;font-size:12px;font-weight:700;padding:8px;border-radius:10px;border:none;cursor:pointer;"><i class="ti ti-device-floppy" style="margin-right:4px;"></i>Guardar plato</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- DARK: Nuevo plato -->
+      <div>
+        <div class="mode-col-label" style="margin-bottom:8px;"><span class="dark-dot"></span> Dark — Nuevo plato</div>
+        <div class="drawer-preview" style="background:#212226;border-color:#2A2D34;">
+          <div class="drawer-head-demo" style="background:#2A1200;">
+            <div><span>Nuevo plato</span><small>Agregá un plato al menú</small></div>
+            <div style="border:1px solid rgba(255,255,255,.15);border-radius:7px;padding:4px 8px;color:rgba(255,255,255,.4);font-size:14px;"><i class="ti ti-x"></i></div>
+          </div>
+          <div class="drawer-body-demo" style="background:#212226;">
+            <label style="display:block;font-size:9px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:rgba(255,255,255,0.75);margin-bottom:4px;">Nombre *</label>
+            <input style="width:100%;background:#16191E;border:1.5px solid #2A2D34;border-radius:10px;padding:8px 11px;font-family:Poppins,sans-serif;font-size:12px;color:#fff;outline:none;margin-bottom:10px;" placeholder="Ej: Caesar Tradicional">
+            <div style="display:flex;align-items:center;gap:8px;background:#16191E;border:1.5px solid #2A2D34;border-radius:9px;padding:7px 10px;font-size:11px;color:rgba(255,255,255,0.75);margin-bottom:6px;"><i class="ti ti-leaf" style="color:#F36525;font-size:13px;"></i> Lechuga romana <span style="margin-left:auto;font-size:10px;color:rgba(255,255,255,0.75);">80 g</span></div>
+            <div style="display:flex;align-items:center;gap:8px;background:#16191E;border:1.5px solid #2A2D34;border-radius:9px;padding:7px 10px;font-size:11px;color:rgba(255,255,255,0.75);margin-bottom:6px;"><i class="ti ti-droplet" style="color:#F36525;font-size:13px;"></i> Aderezo caesar <span style="margin-left:auto;font-size:10px;color:rgba(255,255,255,0.75);">30 ml</span></div>
+            <div style="display:flex;justify-content:space-between;align-items:center;background:#16191E;border-radius:10px;padding:10px 12px;border:1.5px solid #2A2D34;margin-top:6px;">
+              <span style="font-size:11px;color:rgba(255,255,255,0.75);">Costo teórico</span>
+              <span style="font-size:14px;font-weight:700;color:#F36525;">$ 1.240,00</span>
+            </div>
+            <div style="display:flex;gap:8px;margin-top:12px;">
+              <button style="background:none;border:1.5px solid #2A2D34;color:rgba(255,255,255,0.75);font-family:Poppins,sans-serif;font-size:12px;padding:8px 14px;border-radius:10px;cursor:pointer;">Cancelar</button>
+              <button style="flex:1;background:#F36525;color:#000;font-family:Poppins,sans-serif;font-size:12px;font-weight:700;padding:8px;border-radius:10px;border:none;cursor:pointer;"><i class="ti ti-device-floppy" style="margin-right:4px;"></i>Guardar plato</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- LIGHT: Entrada rápida -->
+      <div>
+        <div class="mode-col-label" style="margin-bottom:8px;"><span class="light-dot"></span> Light — Entrada rápida</div>
+        <div class="drawer-preview">
+          <div class="drawer-head-demo" style="background:#F36525;">
+            <div><span><i class="ti ti-bolt" style="color:#F36525;margin-right:5px;"></i>Entrada rápida</span><small>Describí una operación</small></div>
+            <div style="border:1px solid rgba(255,255,255,.2);border-radius:7px;padding:4px 8px;color:rgba(255,255,255,.5);font-size:14px;"><i class="ti ti-x"></i></div>
+          </div>
+          <div class="drawer-body-demo" style="background:#ffffff;">
+            <textarea style="width:100%;background:#F5F3F0;border:1.5px solid #EDE8E2;border-radius:10px;padding:9px 12px;font-family:Poppins,sans-serif;font-size:12px;color:#1A1210;outline:none;min-height:64px;resize:none;margin-bottom:10px;" placeholder="Ej: compramos 10kg de tomate..."></textarea>
+            <div style="display:flex;align-items:center;gap:9px;padding:9px 11px;background:#F5F3F0;border:1.5px solid #EDE8E2;border-radius:11px;font-size:11px;color:#3D3530;margin-bottom:6px;"><i class="ti ti-shopping-cart" style="color:#F36525;font-size:14px;"></i> Registrar compra de insumo</div>
+            <div style="display:flex;align-items:center;gap:9px;padding:9px 11px;background:#F5F3F0;border:1.5px solid #EDE8E2;border-radius:11px;font-size:11px;color:#3D3530;margin-bottom:6px;"><i class="ti ti-chart-bar" style="color:#F36525;font-size:14px;"></i> Registrar ventas del día</div>
+            <div style="display:flex;align-items:center;gap:9px;padding:9px 11px;background:#F5F3F0;border:1.5px solid #EDE8E2;border-radius:11px;font-size:11px;color:#3D3530;margin-bottom:6px;"><i class="ti ti-trash" style="color:#F36525;font-size:14px;"></i> Cargar merma o pérdida</div>
+            <div style="display:flex;gap:8px;margin-top:4px;">
+              <button style="background:none;border:1.5px solid #EDE8E2;color:#9A9390;font-family:Poppins,sans-serif;font-size:12px;padding:8px 14px;border-radius:10px;cursor:pointer;">Cancelar</button>
+              <button style="flex:1;background:#F36525;color:#000;font-family:Poppins,sans-serif;font-size:12px;font-weight:700;padding:8px;border-radius:10px;border:none;cursor:pointer;"><i class="ti ti-bolt" style="margin-right:4px;"></i>Interpretar</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- DARK: Entrada rápida -->
+      <div>
+        <div class="mode-col-label" style="margin-bottom:8px;"><span class="dark-dot"></span> Dark — Entrada rápida</div>
+        <div class="drawer-preview" style="background:#212226;border-color:#2A2D34;">
+          <div class="drawer-head-demo" style="background:#2A1200;">
+            <div><span><i class="ti ti-bolt" style="color:#F36525;margin-right:5px;"></i>Entrada rápida</span><small>Describí una operación</small></div>
+            <div style="border:1px solid rgba(255,255,255,.15);border-radius:7px;padding:4px 8px;color:rgba(255,255,255,.4);font-size:14px;"><i class="ti ti-x"></i></div>
+          </div>
+          <div class="drawer-body-demo" style="background:#212226;">
+            <textarea style="width:100%;background:#16191E;border:1.5px solid #2A2D34;border-radius:10px;padding:9px 12px;font-family:Poppins,sans-serif;font-size:12px;color:#fff;outline:none;min-height:64px;resize:none;margin-bottom:10px;" placeholder="Ej: compramos 10kg de tomate..."></textarea>
+            <div style="display:flex;align-items:center;gap:9px;padding:9px 11px;background:#16191E;border:1.5px solid #2A2D34;border-radius:11px;font-size:11px;color:rgba(255,255,255,0.75);margin-bottom:6px;"><i class="ti ti-shopping-cart" style="color:#F36525;font-size:14px;"></i> Registrar compra de insumo</div>
+            <div style="display:flex;align-items:center;gap:9px;padding:9px 11px;background:#16191E;border:1.5px solid #2A2D34;border-radius:11px;font-size:11px;color:rgba(255,255,255,0.75);margin-bottom:6px;"><i class="ti ti-chart-bar" style="color:#F36525;font-size:14px;"></i> Registrar ventas del día</div>
+            <div style="display:flex;align-items:center;gap:9px;padding:9px 11px;background:#16191E;border:1.5px solid #2A2D34;border-radius:11px;font-size:11px;color:rgba(255,255,255,0.75);margin-bottom:6px;"><i class="ti ti-trash" style="color:#F36525;font-size:14px;"></i> Cargar merma o pérdida</div>
+            <div style="display:flex;gap:8px;margin-top:4px;">
+              <button style="background:none;border:1.5px solid #2A2D34;color:rgba(255,255,255,0.75);font-family:Poppins,sans-serif;font-size:12px;padding:8px 14px;border-radius:10px;cursor:pointer;">Cancelar</button>
+              <button style="flex:1;background:#F36525;color:#000;font-family:Poppins,sans-serif;font-size:12px;font-weight:700;padding:8px;border-radius:10px;border:none;cursor:pointer;"><i class="ti ti-bolt" style="margin-right:4px;"></i>Interpretar</button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div>
+        <div class="ds-sub-title" style="margin-bottom:10px;">Especificaciones</div>
+        <div class="ds-table-wrap">
+          <table class="ds-table" style="min-width:260px;">
+            <thead><tr><th>Propiedad</th><th>Valor</th></tr></thead>
+            <tbody>
+              <tr><td>Ancho</td><td><span class="chip">330px</span></td></tr>
+              <tr><td>Header BG (light)</td><td><span class="chip">#7A2800</span></td></tr>
+              <tr><td>Header BG (dark)</td><td><span class="chip">#2A1200</span></td></tr>
+              <tr><td>Header text</td><td><span class="chip">#FFFFFF</span></td></tr>
+              <tr><td>Body BG</td><td><span class="chip">bg-card</span></td></tr>
+              <tr><td>Overlay</td><td><span class="chip">rgba(0,0,0,.6)</span></td></tr>
+              <tr><td>Transition</td><td><span class="chip">.28s cubic-bezier</span></td></tr>
+              <tr><td>Close</td><td>ESC / overlay click</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="ds-divider"></div>
+
+  <!-- ── 12. ICONS ── -->
+  <div class="ds-section">
+    <div class="ds-section-title">Iconografía</div>
+    <div class="ds-section-desc">Librería: <strong>Tabler Icons</strong> (outline, webfont). Tamaño estándar 14–16px en nav, 16–17px en badges de cards. Color hereda del contexto.</div>
+    <div class="icon-grid">
+      <div class="icon-item"><i class="ti ti-layout-dashboard"></i><div class="icon-label">Panel</div></div>
+      <div class="icon-item"><i class="ti ti-bell"></i><div class="icon-label">Alertas</div></div>
+      <div class="icon-item"><i class="ti ti-clipboard-list"></i><div class="icon-label">Platos</div></div>
+      <div class="icon-item"><i class="ti ti-chart-bar"></i><div class="icon-label">Ventas</div></div>
+      <div class="icon-item"><i class="ti ti-truck"></i><div class="icon-label">Proveedores</div></div>
+      <div class="icon-item"><i class="ti ti-shopping-cart"></i><div class="icon-label">Compras</div></div>
+      <div class="icon-item"><i class="ti ti-package"></i><div class="icon-label">Insumos</div></div>
+      <div class="icon-item"><i class="ti ti-tag"></i><div class="icon-label">Categorías</div></div>
+      <div class="icon-item"><i class="ti ti-box"></i><div class="icon-label">Stock</div></div>
+      <div class="icon-item"><i class="ti ti-trash"></i><div class="icon-label">Merma</div></div>
+      <div class="icon-item"><i class="ti ti-clipboard-check"></i><div class="icon-label">Conteos</div></div>
+      <div class="icon-item"><i class="ti ti-coin"></i><div class="icon-label">Food Cost</div></div>
+      <div class="icon-item"><i class="ti ti-chart-line"></i><div class="icon-label">Tendencia</div></div>
+      <div class="icon-item"><i class="ti ti-alert-triangle"></i><div class="icon-label">Bajo stock</div></div>
+      <div class="icon-item"><i class="ti ti-bolt"></i><div class="icon-label">Entrada rápida</div></div>
+      <div class="icon-item"><i class="ti ti-refresh"></i><div class="icon-label">Actualizar</div></div>
+      <div class="icon-item"><i class="ti ti-device-floppy"></i><div class="icon-label">Guardar</div></div>
+      <div class="icon-item"><i class="ti ti-circle-check"></i><div class="icon-label">Sin alertas</div></div>
+      <div class="icon-item"><i class="ti ti-leaf"></i><div class="icon-label">Vegetal</div></div>
+      <div class="icon-item"><i class="ti ti-droplet"></i><div class="icon-label">Líquido</div></div>
+    </div>
+  </div>
+
+  <div class="ds-divider"></div>
+
+  <!-- ── 13. LAYOUT ── -->
+  <div class="ds-section">
+    <div class="ds-section-title">Estructura de layout</div>
+    <div class="ds-section-desc">El shell ocupa el 100vh. Topbar sticky en top. Sidebar flotante con margin de 8px. Main con scroll independiente.</div>
+    <div class="ds-table-wrap">
+      <table class="ds-table">
+        <thead><tr><th>Zona</th><th>Alto / Ancho</th><th>BG (light)</th><th>BG (dark)</th><th>Posición</th></tr></thead>
+        <tbody>
+          <tr><td><strong>Topbar</strong></td><td>52–56px h</td><td><span class="chip">#FFFFFF</span></td><td><span class="chip">#111214</span></td><td>sticky top, z-100</td></tr>
+          <tr><td><strong>Sidebar</strong></td><td>210–220px w</td><td><span class="chip">#FFFFFF</span></td><td><span class="chip">#212226</span></td><td>floating, margin 8px, radius 14px</td></tr>
+          <tr><td><strong>Main</strong></td><td>flex 1</td><td><span class="chip">#F5F2EE</span></td><td><span class="chip">#111214</span></td><td>overflow-y scroll, padding 16–20px</td></tr>
+          <tr><td><strong>KPI Grid</strong></td><td>3 cols</td><td colspan="2" style="text-align:center;">gap 10–12px</td><td>margin-bottom 10–12px</td></tr>
+          <tr><td><strong>Drawer</strong></td><td>330px w, 100vh h</td><td><span class="chip">bg-card</span></td><td><span class="chip">bg-card</span></td><td>fixed right, z-300</td></tr>
+          <tr><td><strong>Overlay</strong></td><td>100vw × 100vh</td><td colspan="2" style="text-align:center;"><span class="chip">rgba(0,0,0,.6)</span></td><td>fixed, z-200</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</div><!-- ds-wrap -->
+
+<script>
+function toggleTheme(){
+  const h=document.documentElement;
+  h.setAttribute('data-theme',h.getAttribute('data-theme')==='dark'?'light':'dark');
+}
+</script>
+</body>
+</html>
