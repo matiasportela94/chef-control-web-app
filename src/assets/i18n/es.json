@@ -1,0 +1,44 @@
+{
+  "common": {
+    "save":     "Guardar",
+    "cancel":   "Cancelar",
+    "confirm":  "Confirmar",
+    "delete":   "Eliminar",
+    "edit":     "Editar",
+    "view":     "Ver",
+    "loading":  "Cargando...",
+    "error":    "Ocurrió un error",
+    "retry":    "Reintentar",
+    "search":   "Buscar",
+    "filter":   "Filtrar",
+    "noResults":"Sin resultados"
+  },
+  "nav": {
+    "dashboard":   "Panel",
+    "alerts":      "Alertas",
+    "menu":        "Platos del menú",
+    "sales":       "Ventas",
+    "suppliers":   "Proveedores",
+    "purchases":   "Compras",
+    "products":    "Insumos",
+    "categories":  "Categorías",
+    "stock":       "Stock",
+    "waste":       "Merma",
+    "stockCounts": "Conteos",
+    "foodCost":    "Food Cost",
+    "users":       "Usuarios"
+  },
+  "ai": {
+    "title":       "Entrada rápida",
+    "subtitle":    "Describí una operación en lenguaje natural",
+    "placeholder": "Ej: compramos 10kg de tomate a $5000 / se rompieron 3 botellas de aceite...",
+    "interpret":   "Interpretar",
+    "confirm":     "Confirmar y registrar",
+    "shortcuts": {
+      "purchase":   "Registrar compra de insumo",
+      "sales":      "Registrar ventas del día",
+      "waste":      "Cargar merma o pérdida",
+      "stockCount": "Actualizar stock / conteo"
+    }
+  }
+}
