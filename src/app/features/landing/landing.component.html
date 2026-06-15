@@ -290,16 +290,16 @@
             <div class="w-2.5 h-2.5 rounded-full bg-white/10"></div>
             <div class="w-2.5 h-2.5 rounded-full bg-white/10"></div>
           </div>
-          <div class="flex-1 flex items-center justify-center">
-          </div>
-          <span class="text-xs text-success-400 font-medium">● En vivo</span>
         </div>
 
         <!-- App header -->
         <div class="bg-surface-800/40 border-b border-white/5 px-6 py-4 flex items-center justify-between">
           <div>
             <span class="text-white font-semibold text-sm">Panel operativo</span>
-            <span class="ml-3 text-xs text-success-400 font-medium">En vivo · miércoles 28 de mayo</span>
+            <span class="ml-3 text-xs text-brand-400 font-medium inline-flex items-center gap-1.5">
+              <span class="w-1.5 h-1.5 rounded-full bg-brand-400 animate-pulse"></span>
+              En vivo · {{ today }}
+            </span>
           </div>
           <span class="text-xs text-surface-500">Último informe hace 2 min</span>
         </div>
@@ -367,16 +367,16 @@
             </tbody>
           </table>
 
-          <div class="flex flex-wrap gap-6 mt-6 pt-6 border-t border-white/5 text-xs text-surface-300">
-            <span>Compras hoy: <strong class="text-white">$847.000</strong></span>
-            <span>Ventas registradas: <strong class="text-white">112 platos</strong></span>
+          <div class="flex flex-wrap gap-6 mt-6 pt-6 border-t border-white/5 text-xs text-white font-medium">
+            <span>Compras hoy: <strong>$847.000</strong></span>
+            <span>Ventas registradas: <strong>112 platos</strong></span>
             <span>Merma acumulada: <strong class="text-danger-400">$24.300</strong></span>
             <span>Costo en riesgo: <strong class="text-danger-400">$33.600</strong></span>
           </div>
         </div>
 
         <!-- Fade out bottom -->
-        <div class="absolute bottom-0 inset-x-0 h-28 pointer-events-none"
+        <div class="absolute bottom-0 inset-x-0 h-10 pointer-events-none"
              style="background: linear-gradient(to bottom, transparent, #111214);">
         </div>
       </div>
