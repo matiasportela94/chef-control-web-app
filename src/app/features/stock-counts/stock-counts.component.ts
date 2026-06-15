@@ -12,6 +12,7 @@ import { DecimalPipe } from '@angular/common';
 import { parseBlob } from '../../core/utils/parse-blob';
 import { formatDatetime } from '../../core/utils/format';
 import { extractApiError } from '../../core/utils/api-error';
+import { AlertNotificationService } from '../../core/services/alert-notification.service';
 import { PaginatorComponent } from '../../shared/components/paginator/paginator.component';
 import { DrawerComponent } from '../../shared/components/drawer/drawer.component';
 import { SpinnerComponent } from '../../shared/components/spinner/spinner.component';
@@ -47,7 +48,7 @@ export class StockCountsComponent implements OnInit {
   productMeta: ProductMeta[] = [];
   form: FormGroup;
 
-  constructor(private api: Api, private fb: FormBuilder) {
+  constructor(private api: Api, private fb: FormBuilder, private alertNotification: AlertNotificationService) {
     this.form = this.fb.group({
       items: this.fb.array([]),
       notes: [''],
@@ -145,6 +146,7 @@ export class StockCountsComponent implements OnInit {
       await this.api.invoke(createStockCount, { body });
       this.drawerOpen.set(false);
       await this.loadCounts();
+      void this.alertNotification.refresh();
     } catch (e: any) {
       this.saveError.set(extractApiError(e, 'Error al guardar el conteo'));
     } finally {

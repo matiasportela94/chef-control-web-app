@@ -17,7 +17,6 @@ import { parseBlob } from '../../core/utils/parse-blob';
 import { formatARS, formatDate } from '../../core/utils/format';
 import { todayISO, dateToInstant } from '../../core/utils/date';
 import { extractApiError } from '../../core/utils/api-error';
-import { NgClass } from '@angular/common';
 import { PaginatorComponent } from '../../shared/components/paginator/paginator.component';
 import { DrawerComponent } from '../../shared/components/drawer/drawer.component';
 import { SpinnerComponent } from '../../shared/components/spinner/spinner.component';
@@ -25,7 +24,7 @@ import { SpinnerComponent } from '../../shared/components/spinner/spinner.compon
 @Component({
   selector: 'app-sales',
   standalone: true,
-  imports: [ReactiveFormsModule, NgClass, PaginatorComponent, DrawerComponent, SpinnerComponent],
+  imports: [ReactiveFormsModule, PaginatorComponent, DrawerComponent, SpinnerComponent],
   templateUrl: './sales.component.html',
   styleUrl: './sales.component.scss'
 })

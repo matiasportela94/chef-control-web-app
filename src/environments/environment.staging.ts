@@ -1,5 +1,5 @@
 export const environment = {
   production: false,
   staging: true,
-  apiUrl: 'https://api-staging.chefcontrol.app'
+  apiUrl: 'https://chef-control-api-production-6c74.up.railway.app',
 };

@@ -3,6 +3,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormArray, FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Api } from '../../api/api';
 import { AiRefreshService } from '../../core/services/ai-refresh.service';
+import { AlertNotificationService } from '../../core/services/alert-notification.service';
 import { listPurchases }  from '../../api/fn/purchase-controller/list-purchases';
 import { createPurchase } from '../../api/fn/purchase-controller/create-purchase';
 import { updatePurchase }  from '../../api/fn/purchase-controller/update-purchase';
@@ -67,7 +68,7 @@ export class PurchasesComponent implements OnInit {
 
   form: FormGroup;
 
-  constructor(private api: Api, private fb: FormBuilder, private aiRefresh: AiRefreshService) {
+  constructor(private api: Api, private fb: FormBuilder, private aiRefresh: AiRefreshService, private alertNotification: AlertNotificationService) {
     this.form = this.fb.group({
       purchasedAt: [todayISO()],
       supplierId:  [''],
@@ -246,6 +247,7 @@ export class PurchasesComponent implements OnInit {
       await this.api.invoke(createPurchase, { body });
       this.createOpen.set(false);
       await this.loadPurchases();
+      void this.alertNotification.refresh();
     } catch (e: any) {
       this.saveError.set(extractApiError(e, 'Error al registrar la compra'));
     } finally {
@@ -318,6 +320,7 @@ export class PurchasesComponent implements OnInit {
       await this.api.invoke(reversePurchase, { id });
       this.closeReverseModal();
       await this.loadPurchases();
+      void this.alertNotification.refresh();
       // Pre-fill the create form with the original data for correction
       const target = this.reverseTarget();
       if (target) this.openCreatePrefilled(target);

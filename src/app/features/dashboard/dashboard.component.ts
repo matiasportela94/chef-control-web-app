@@ -1,6 +1,6 @@
 import { Component, OnInit, DestroyRef, inject, signal, computed } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { DecimalPipe, DatePipe, PercentPipe } from '@angular/common';
+import { DatePipe, PercentPipe } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { Api } from '../../api/api';
 import { AiRefreshService } from '../../core/services/ai-refresh.service';
@@ -16,7 +16,7 @@ import { SpinnerComponent } from '../../shared/components/spinner/spinner.compon
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [DecimalPipe, DatePipe, PercentPipe, RouterLink, SpinnerComponent],
+  imports: [DatePipe, PercentPipe, RouterLink, SpinnerComponent],
   templateUrl: './dashboard.component.html',
   styleUrl: './dashboard.component.scss'
 })

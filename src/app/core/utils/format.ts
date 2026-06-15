@@ -18,7 +18,7 @@ export function formatDatetime(s?: string | null): string {
 
 export function formatNum(n?: number | null): string {
   if (n == null) return '—';
-  return n.toLocaleString('es-AR', { minimumFractionDigits: 0, maximumFractionDigits: 3 });
+  return n.toLocaleString('es-AR', { minimumFractionDigits: 0, maximumFractionDigits: 2 });
 }
 
 export function formatPct(n?: number | null): string {

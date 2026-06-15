@@ -3,6 +3,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Api } from '../../api/api';
 import { AiRefreshService } from '../../core/services/ai-refresh.service';
+import { AlertNotificationService } from '../../core/services/alert-notification.service';
 import { listWasteEvents } from '../../api/fn/waste-event-controller/list-waste-events';
 import { createWasteEvent } from '../../api/fn/waste-event-controller/create-waste-event';
 import { listProducts } from '../../api/fn/product-controller/list-products';
@@ -55,7 +56,7 @@ export class WasteComponent implements OnInit {
     { value: 'OTHER',          label: 'Otro'              },
   ];
 
-  constructor(private api: Api, private fb: FormBuilder, private aiRefresh: AiRefreshService) {
+  constructor(private api: Api, private fb: FormBuilder, private aiRefresh: AiRefreshService, private alertNotification: AlertNotificationService) {
     this.form = this.fb.group({
       productId: ['', Validators.required],
       unitId:    ['', Validators.required],
@@ -147,6 +148,7 @@ export class WasteComponent implements OnInit {
       await this.api.invoke(createWasteEvent, { body });
       this.drawerOpen.set(false);
       await this.loadEvents();
+      void this.alertNotification.refresh();
     } catch (e: any) {
       this.saveError.set(extractApiError(e, 'Error al registrar la merma'));
     } finally {

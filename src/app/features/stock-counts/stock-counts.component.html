@@ -84,11 +84,11 @@
                           <span class="text-xs px-2 py-0.5 rounded font-medium"
                                 [class.badge-in]="m.direction === 'IN'"
                                 [class.badge-out]="m.direction === 'OUT'">
-                            {{ m.direction === 'IN' ? '+' : '−' }}{{ m.quantity | number:'1.0-3' }}
+                            {{ m.direction === 'IN' ? '+' : '−' }}{{ m.quantity | number:'1.0-2' }}
                           </span>
                           <span class="text-surface-400">{{ m.type }}</span>
                           <span class="ml-auto text-surface-600 text-xs">
-                            {{ m.stockBefore | number:'1.0-3' }} → {{ m.stockAfter | number:'1.0-3' }}
+                            {{ m.stockBefore | number:'1.0-2' }} → {{ m.stockAfter | number:'1.0-2' }}
                           </span>
                         </div>
                       }

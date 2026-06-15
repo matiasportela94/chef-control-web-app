@@ -205,7 +205,7 @@
 
                 <!-- Quantity (edit mode: read-only) -->
                 <div class="flex items-center px-3 py-2 bg-surface-800 rounded-lg text-surface-500 text-sm tabular-nums">
-                  {{ item.get('quantity')?.value | number:'1.0-3' }}
+                  {{ item.get('quantity')?.value | number:'1.0-2' }}
                 </div>
               }
 
@@ -358,7 +358,7 @@
                     {{ item.unitAbbreviation }}
                   </td>
                   <td class="px-4 py-3 text-right text-surface-300 tabular-nums">
-                    {{ item.quantity | number:'1.0-3' }}
+                    {{ item.quantity | number:'1.0-2' }}
                   </td>
                   <td class="px-4 py-3 text-right hidden sm:table-cell text-surface-400 tabular-nums">
                     {{ formatARS(item.pricePerUnit) }}
@@ -414,39 +414,41 @@
               </div>
             }
           </div>
-        } @else if (reverseTarget(); as d) {
-          <div class="space-y-2 mb-5">
-            <div class="grid grid-cols-3 gap-2 text-xs text-surface-500 uppercase tracking-wider px-4 mb-1">
-              <span>Producto</span>
-              <span class="text-right">Comprado</span>
-              <span class="text-right">Disponible</span>
-            </div>
-            @for (item of d.items; track item.id) {
-              @let consumed = (item.quantity ?? 0) - (item.quantityRemaining ?? item.quantity ?? 0);
-              <div class="flex items-center bg-surface-800/60 rounded-xl px-4 py-3 gap-2"
-                   [ngClass]="consumed > 0 ? 'border border-warning-500/20' : ''">
-                <div class="flex-1 text-sm text-white font-medium">{{ item.productName }}</div>
-                <div class="text-sm text-surface-400 tabular-nums w-24 text-right">
-                  {{ item.quantity | number:'1.0-3' }} {{ item.unitAbbreviation }}
-                </div>
-                <div class="text-sm tabular-nums w-24 text-right"
-                     [class.text-warning-400]="consumed > 0"
-                     [class.text-surface-400]="consumed === 0">
-                  {{ (item.quantityRemaining ?? item.quantity) | number:'1.0-3' }} {{ item.unitAbbreviation }}
-                </div>
+        } @else {
+          @if (reverseTarget(); as d) {
+            <div class="space-y-2 mb-5">
+              <div class="grid grid-cols-3 gap-2 text-xs text-surface-500 uppercase tracking-wider px-4 mb-1">
+                <span>Producto</span>
+                <span class="text-right">Comprado</span>
+                <span class="text-right">Disponible</span>
               </div>
-              @if (consumed > 0) {
-                <p class="text-xs text-warning-500 px-4">
-                  {{ consumed | number:'1.0-3' }} {{ item.unitAbbreviation }} ya consumidos en ventas o mermas.
-                </p>
+              @for (item of d.items; track item.id) {
+                @let consumed = (item.quantity ?? 0) - (item.quantityRemaining ?? item.quantity ?? 0);
+                <div class="flex items-center bg-surface-800/60 rounded-xl px-4 py-3 gap-2"
+                     [ngClass]="consumed > 0 ? 'border border-warning-500/20' : ''">
+                  <div class="flex-1 text-sm text-white font-medium">{{ item.productName }}</div>
+                  <div class="text-sm text-surface-400 tabular-nums w-24 text-right">
+                    {{ item.quantity | number:'1.0-2' }} {{ item.unitAbbreviation }}
+                  </div>
+                  <div class="text-sm tabular-nums w-24 text-right"
+                       [class.text-warning-400]="consumed > 0"
+                       [class.text-surface-400]="consumed === 0">
+                    {{ (item.quantityRemaining ?? item.quantity) | number:'1.0-2' }} {{ item.unitAbbreviation }}
+                  </div>
+                </div>
+                @if (consumed > 0) {
+                  <p class="text-xs text-warning-500 px-4">
+                    {{ consumed | number:'1.0-2' }} {{ item.unitAbbreviation }} ya consumidos en ventas o mermas.
+                  </p>
+                }
               }
-            }
-          </div>
+            </div>
 
-          <div class="bg-surface-800/40 border border-white/5 rounded-xl px-4 py-3 text-xs text-surface-500 mb-4">
-            Los movimientos de stock existentes no se modifican — se crearán nuevos movimientos de reversión en el ledger.
-            Después se abrirá el formulario de carga pre-llenado para que puedas ingresar los datos correctos.
-          </div>
+            <div class="bg-surface-800/40 border border-white/5 rounded-xl px-4 py-3 text-xs text-surface-500 mb-4">
+              Los movimientos de stock existentes no se modifican — se crearán nuevos movimientos de reversión en el ledger.
+              Después se abrirá el formulario de carga pre-llenado para que puedas ingresar los datos correctos.
+            </div>
+          }
         }
 
         @if (reverseError()) {
