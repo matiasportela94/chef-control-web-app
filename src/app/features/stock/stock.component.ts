@@ -201,7 +201,7 @@ export class StockComponent implements OnInit {
       PURCHASE:    'Compra',
       SALE:        'Venta',
       WASTE:       'Merma',
-      STOCK_COUNT: 'Conteo',
+      COUNT:       'Conteo',
       ADJUSTMENT:  'Ajuste',
       REVERSAL:    'Reversión',
     };
