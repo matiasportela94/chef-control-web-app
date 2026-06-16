@@ -73,7 +73,7 @@ export class LoginComponent implements OnInit {
         this.router.navigate(['/dashboard']);
       }
     } catch (e: any) {
-      const msg = e?.error?.message ?? 'Email o contraseña incorrectos';
+      const msg = this.translate(e?.error?.message, 'Email o contraseña incorrectos');
       const ctrl = this.loginForm.get('password')!;
       ctrl.setErrors({ serverError: msg });
       ctrl.valueChanges.pipe(take(1)).subscribe(() => {
@@ -94,7 +94,7 @@ export class LoginComponent implements OnInit {
       await this.authService.register(this.registerForm.getRawValue());
       this.router.navigate(['/dashboard']);
     } catch (e: any) {
-      this.errorMsg.set(e?.error?.message ?? 'Error al crear la cuenta');
+      this.errorMsg.set(this.translate(e?.error?.message, 'Error al crear la cuenta'));
     } finally {
       this.loading.set(false);
     }
@@ -108,7 +108,7 @@ export class LoginComponent implements OnInit {
       await this.authService.forgotPassword(this.forgotForm.getRawValue());
       this.forgotSent.set(true);
     } catch (e: any) {
-      this.errorMsg.set(e?.error?.message ?? 'Error al enviar el correo');
+      this.errorMsg.set(this.translate(e?.error?.message, 'Error al enviar el correo'));
     } finally {
       this.loading.set(false);
     }
@@ -122,10 +122,24 @@ export class LoginComponent implements OnInit {
       await this.authService.switchToRestaurant(r.id);
       this.router.navigate(['/dashboard']);
     } catch (e: any) {
-      this.errorMsg.set(e?.error?.message ?? 'Error al conectar con el restaurante');
+      this.errorMsg.set(this.translate(e?.error?.message, 'Error al conectar con el restaurante'));
     } finally {
       this.loading.set(false);
     }
+  }
+
+  private translate(msg: string | undefined, fallback: string): string {
+    const map: Record<string, string> = {
+      'Email already in use':       'El correo ya está registrado',
+      'Invalid credentials':        'Email o contraseña incorrectos',
+      'Bad credentials':            'Email o contraseña incorrectos',
+      'User not found':             'Usuario no encontrado',
+      'Restaurant not found':       'Restaurante no encontrado',
+      'Token expired':              'El enlace expiró, solicitá uno nuevo',
+      'Invalid token':              'El enlace no es válido',
+      'Password reset token not found': 'El enlace no es válido o ya fue usado',
+    };
+    return (msg && map[msg]) ? map[msg] : (msg || fallback);
   }
 
   isInvalid(form: 'login' | 'register' | 'forgot', field: string): boolean {
