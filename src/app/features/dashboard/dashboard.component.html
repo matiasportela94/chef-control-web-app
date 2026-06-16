@@ -161,6 +161,10 @@
                 [style.color]="wastePct()! <= 0 ? '#16a34a' : 'var(--red)'">
             {{ wastePct()! >= 0 ? '+' : '' }}{{ wastePct()! | percent:'1.1-1' }} vs mes ant.
           </span>
+        } @else if ((kpis?.wasteTotalArsThisMonth ?? 0) > 0) {
+          <span style="display:inline-flex;font-size:10px;font-weight:700;padding:3px 8px;border-radius:20px;margin-bottom:6px;background:rgba(220,38,38,.08);color:var(--red)">
+            1er mes registrado
+          </span>
         } @else {
           <div style="height:22px;margin-bottom:6px;"></div>
         }
@@ -182,6 +186,7 @@
         <div style="position:absolute;top:14px;right:14px;width:34px;height:34px;border-radius:11px;background:var(--bg-input);display:flex;align-items:center;justify-content:center;font-size:16px;color:var(--text-3);" class="kpi-icon">
           <i class="ti ti-alert-triangle"></i>
         </div>
+        <div style="height:22px;margin-bottom:6px;"></div>
         <p style="font-size:11px;color:var(--text-3);margin-bottom:4px;">Bajo stock</p>
         <p style="font-size:26px;font-weight:700;letter-spacing:-.5px;line-height:1.1;"
            [style.color]="(kpis?.lowStockProducts ?? 0) > 0 ? '#d97706' : 'var(--text-1)'">
@@ -199,6 +204,7 @@
         <div style="position:absolute;top:14px;right:14px;width:34px;height:34px;border-radius:11px;background:var(--bg-input);display:flex;align-items:center;justify-content:center;font-size:16px;color:var(--text-3);">
           <i class="ti ti-box"></i>
         </div>
+        <div style="height:22px;margin-bottom:6px;"></div>
         <p style="font-size:11px;color:var(--text-3);margin-bottom:4px;">Sobrestock</p>
         <p style="font-size:26px;font-weight:700;color:var(--text-1);letter-spacing:-.5px;line-height:1.1;">
           {{ kpis?.overstockProducts ?? 0 }}
