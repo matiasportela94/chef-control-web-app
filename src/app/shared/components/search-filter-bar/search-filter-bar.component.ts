@@ -10,28 +10,32 @@ export interface FilterBarState {
   selector: 'app-search-filter-bar',
   standalone: true,
   styles: [`
-    .dropdown-scroll { scrollbar-width: thin; scrollbar-color: #334155 transparent; }
+    .dropdown-scroll { scrollbar-width: thin; scrollbar-color: var(--border) transparent; }
     .dropdown-scroll::-webkit-scrollbar       { width: 6px; }
     .dropdown-scroll::-webkit-scrollbar-track { background: transparent; }
-    .dropdown-scroll::-webkit-scrollbar-thumb { background: #334155; border-radius: 9999px; }
-    .dropdown-scroll::-webkit-scrollbar-thumb:hover { background: #475569; }
+    .dropdown-scroll::-webkit-scrollbar-thumb { background: var(--border); border-radius: 9999px; }
+    .sfb-item { transition: background .12s, color .12s; }
+    .sfb-item:hover { background: var(--bg-input) !important; color: var(--text-1) !important; }
   `],
   template: `
     <div class="flex flex-wrap items-center gap-3">
 
       <!-- Search input -->
       <div class="relative flex-1 min-w-52">
-        <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-surface-500 pointer-events-none"
+        <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 pointer-events-none"
+             style="color:var(--text-3)"
              fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
           <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
         </svg>
         <input #searchInput type="text"
                (input)="onSearchInput(searchInput.value)"
                [placeholder]="placeholder"
-               class="w-full bg-surface-800 border border-white/10 rounded-xl pl-9 pr-9 py-2.5 text-sm text-white placeholder-surface-500 focus:outline-none focus:border-brand-500/50 focus:ring-1 focus:ring-brand-500/30 transition-all" />
+               class="field-input"
+               style="padding-left:36px;padding-right:36px;background:var(--bg-card);" />
         @if (search) {
           <button (click)="clearSearch(searchInput)"
-                  class="absolute right-3 top-1/2 -translate-y-1/2 text-surface-500 hover:text-white text-lg leading-none transition-colors">
+                  class="absolute right-3 top-1/2 -translate-y-1/2 text-lg leading-none transition-colors"
+                  style="color:var(--text-3)">
             ×
           </button>
         }
@@ -44,14 +48,14 @@ export interface FilterBarState {
           <!-- Trigger -->
           <button type="button"
                   (click)="toggleDropdown($event)"
-                  [class]="'flex items-center gap-2.5 border rounded-xl px-3.5 py-2.5 text-sm font-medium transition-all min-w-44 justify-between ' +
-                           (dropdownOpen
-                             ? 'bg-surface-800 border-brand-500/50 ring-1 ring-brand-500/20 text-white'
-                             : categoryId
-                               ? 'bg-brand-600/10 border-brand-500/30 text-brand-400 hover:bg-brand-600/15'
-                               : 'bg-surface-800 border-white/10 text-surface-400 hover:border-white/20 hover:text-white')">
+                  class="flex items-center gap-2.5 border rounded-xl px-3.5 py-2.5 text-sm font-medium transition-all min-w-44 justify-between"
+                  [style]="dropdownOpen
+                    ? 'background:var(--bg-card);border-color:var(--accent);color:var(--text-1)'
+                    : categoryId
+                      ? 'background:rgba(243,101,37,0.08);border-color:rgba(243,101,37,0.3);color:var(--accent)'
+                      : 'background:var(--bg-card);border-color:var(--border);color:var(--text-3)'">
             <span class="truncate max-w-36">{{ selectedCategoryLabel }}</span>
-            <svg class="w-3.5 h-3.5 flex-shrink-0 text-current transition-transform duration-200"
+            <svg class="w-3.5 h-3.5 flex-shrink-0 transition-transform duration-200"
                  [style.transform]="dropdownOpen ? 'rotate(180deg)' : 'rotate(0deg)'"
                  fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
               <polyline points="6 9 12 15 18 9"/>
@@ -60,11 +64,12 @@ export interface FilterBarState {
 
           <!-- Panel -->
           @if (dropdownOpen) {
-            <div class="dropdown-scroll absolute top-full left-0 mt-1.5 min-w-full w-max max-w-72 bg-surface-800 border border-white/10 rounded-xl shadow-2xl shadow-black/40 z-50 overflow-hidden py-1">
+            <div class="dropdown-scroll absolute top-full left-0 mt-1.5 min-w-full w-max max-w-72 rounded-xl shadow-2xl z-50 overflow-hidden py-1"
+                 style="background:var(--bg-card);border:1.5px solid var(--border)">
 
               <button type="button" (click)="selectCategory('')"
-                      [class]="'w-full flex items-center gap-3 px-3.5 py-2.5 text-sm text-left transition-colors ' +
-                               (categoryId === '' ? 'text-brand-400 bg-brand-600/10' : 'text-surface-300 hover:bg-surface-700/50 hover:text-white')">
+                      class="sfb-item w-full flex items-center gap-3 px-3.5 py-2.5 text-sm text-left"
+                      [style]="categoryId === '' ? 'color:var(--accent);background:rgba(243,101,37,0.08)' : 'color:var(--text-2)'">
                 <span class="w-3.5 h-3.5 flex-shrink-0 flex items-center justify-center">
                   @if (categoryId === '') {
                     <svg fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24" class="w-3.5 h-3.5">
@@ -75,12 +80,12 @@ export interface FilterBarState {
                 Todas las categorías
               </button>
 
-              <div class="h-px bg-white/5 mx-2 my-1"></div>
+              <div class="h-px mx-2 my-1" style="background:var(--border)"></div>
 
               @for (cat of categories; track cat.id) {
                 <button type="button" (click)="selectCategory(cat.id)"
-                        [class]="'w-full flex items-center gap-3 px-3.5 py-2.5 text-sm text-left transition-colors ' +
-                                 (categoryId === cat.id ? 'text-brand-400 bg-brand-600/10' : 'text-surface-300 hover:bg-surface-700/50 hover:text-white')">
+                        class="sfb-item w-full flex items-center gap-3 px-3.5 py-2.5 text-sm text-left"
+                        [style]="categoryId === cat.id ? 'color:var(--accent);background:rgba(243,101,37,0.08)' : 'color:var(--text-2)'">
                   <span class="w-3.5 h-3.5 flex-shrink-0 flex items-center justify-center">
                     @if (categoryId === cat.id) {
                       <svg fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24" class="w-3.5 h-3.5">
@@ -101,11 +106,12 @@ export interface FilterBarState {
       <!-- Active toggle -->
       @if (showActiveToggle) {
         <button type="button" (click)="toggleActiveFilter()"
-                [class]="'flex items-center gap-2 border rounded-xl px-3.5 py-2.5 text-sm font-medium transition-all ' +
-                         (onlyActive ? 'bg-brand-600/10 border-brand-500/30 text-brand-400' :
-                                       'bg-surface-800 border-white/10 text-surface-400 hover:text-white')">
+                class="flex items-center gap-2 border rounded-xl px-3.5 py-2.5 text-sm font-medium transition-all"
+                [style]="onlyActive
+                  ? 'background:rgba(243,101,37,0.08);border-color:rgba(243,101,37,0.3);color:var(--accent)'
+                  : 'background:var(--bg-card);border-color:var(--border);color:var(--text-3)'">
           <span class="w-1.5 h-1.5 rounded-full inline-block flex-shrink-0"
-                [class]="onlyActive ? 'bg-success-500' : 'bg-surface-600'"></span>
+                [style]="onlyActive ? 'background:var(--accent)' : 'background:var(--text-3)'"></span>
           {{ onlyActive ? 'Solo activos' : 'Todos' }}
         </button>
       }
