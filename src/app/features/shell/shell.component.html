@@ -189,6 +189,12 @@
         <i class="ti ti-users"></i> Usuarios
       </a>
 
+      @if (authService.isOwnerOrManager) {
+        <a routerLink="/audit" routerLinkActive="side-link-active" class="side-link">
+          <i class="ti ti-history"></i> Auditoría
+        </a>
+      }
+
     </nav>
   </aside>
 

@@ -17,6 +17,7 @@ const USER_KEY = 'cc_user';
 export interface CurrentUser {
   name: string;
   email: string;
+  role: string;
   restaurantId: string;
   restaurantName: string;
   restaurants: RestaurantSummary[];
@@ -75,6 +76,7 @@ export class AuthService {
     const user: CurrentUser = {
       name:           r.name                ?? '',
       email:          r.email               ?? '',
+      role:           r.role                ?? '',
       restaurantId:   r.activeRestaurantId  ?? '',
       restaurantName: r.activeRestaurantName ?? '',
       restaurants:    r.restaurants          ?? [],
@@ -82,6 +84,12 @@ export class AuthService {
     };
     sessionStorage.setItem(USER_KEY, JSON.stringify(user));
     this.currentUser.set(user);
+  }
+
+  /** OWNER y MANAGER son los únicos roles con acceso a pantallas administrativas (p.ej. /audit). */
+  get isOwnerOrManager(): boolean {
+    const role = this.currentUser()?.role;
+    return role === 'OWNER' || role === 'MANAGER';
   }
 
   private loadUser(): CurrentUser | null {

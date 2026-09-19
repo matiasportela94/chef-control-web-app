@@ -55,3 +55,4 @@ src/environments/environment.local.ts
 docs/
 .firebase/
 scrollcraft/
+api-spec.yaml

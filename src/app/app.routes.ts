@@ -1,6 +1,7 @@
 import { Routes } from '@angular/router';
 import { LandingComponent } from './features/landing/landing.component';
 import { authGuard } from './core/guards/auth.guard';
+import { ownerOrManagerGuard } from './core/guards/role.guard';
 
 export const routes: Routes = [
   { path: '', component: LandingComponent },
@@ -64,6 +65,11 @@ export const routes: Routes = [
       {
         path: 'stock-counts',
         loadComponent: () => import('./features/stock-counts/stock-counts.component').then(m => m.StockCountsComponent)
+      },
+      {
+        path: 'audit',
+        canActivate: [ownerOrManagerGuard],
+        loadComponent: () => import('./features/audit/audit.component').then(m => m.AuditComponent)
       },
     ]
   },
