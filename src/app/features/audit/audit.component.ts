@@ -29,6 +29,7 @@ const ACTION_LABELS: Record<string, string> = {
   PRODUCT_UPDATED:               'Insumo editado',
   PRODUCT_DEACTIVATED:           'Insumo desactivado',
   PURCHASE_CREATED:              'Compra registrada',
+  PURCHASE_UPDATED:              'Compra corregida',
   PURCHASE_REVERSED:             'Compra revertida',
   WASTE_EVENT_CREATED:           'Merma registrada',
   STOCK_MOVEMENT_CREATED:        'Movimiento de stock creado',
