@@ -108,17 +108,17 @@ export class DashboardComponent implements OnInit {
   alertSeverityClass(s?: string): string {
     if (!s) return 'alert-low';
     const u = s.toUpperCase();
-    if (u === 'CRITICAL' || u === 'HIGH') return 'alert-high';
-    if (u === 'MEDIUM')                   return 'alert-medium';
+    if (u === 'CRITICAL') return 'alert-high';
+    if (u === 'WARNING')  return 'alert-medium';
     return 'alert-low';
   }
 
   alertTypeLabel(t?: string): string {
     const map: Record<string, string> = {
-      LOW_STOCK:   'Bajo stock',
-      OVERSTOCK:   'Sobrestock',
-      EXPIRY:      'Vencimiento',
-      WASTE_SPIKE: 'Pico de merma',
+      LOW_STOCK:      'Bajo stock',
+      OVERSTOCK:      'Sobrestock',
+      EXPIRATION:     'Vencimiento',
+      PRICE_INCREASE: 'Aumento de precio',
     };
     return t ? (map[t] ?? t.replace(/_/g, ' ')) : '—';
   }
