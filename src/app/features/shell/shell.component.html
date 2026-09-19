@@ -185,11 +185,13 @@
 
       <p class="side-section-label" style="margin-top:16px;">Configuración</p>
 
-      <a routerLink="/users" routerLinkActive="side-link-active" class="side-link">
-        <i class="ti ti-users"></i> Usuarios
-      </a>
+      @if (authService.hasPermission('USERS_VIEW')) {
+        <a routerLink="/users" routerLinkActive="side-link-active" class="side-link">
+          <i class="ti ti-users"></i> Usuarios
+        </a>
+      }
 
-      @if (authService.isOwnerOrManager) {
+      @if (authService.hasPermission('AUDIT_VIEW')) {
         <a routerLink="/audit" routerLinkActive="side-link-active" class="side-link">
           <i class="ti ti-history"></i> Auditoría
         </a>

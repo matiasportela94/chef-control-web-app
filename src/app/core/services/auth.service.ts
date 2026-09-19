@@ -18,6 +18,7 @@ export interface CurrentUser {
   name: string;
   email: string;
   role: string;
+  permissions: string[];
   restaurantId: string;
   restaurantName: string;
   restaurants: RestaurantSummary[];
@@ -77,6 +78,7 @@ export class AuthService {
       name:           r.name                ?? '',
       email:          r.email               ?? '',
       role:           r.role                ?? '',
+      permissions:    r.permissions          ?? [],
       restaurantId:   r.activeRestaurantId  ?? '',
       restaurantName: r.activeRestaurantName ?? '',
       restaurants:    r.restaurants          ?? [],
@@ -86,10 +88,13 @@ export class AuthService {
     this.currentUser.set(user);
   }
 
-  /** OWNER y MANAGER son los únicos roles con acceso a pantallas administrativas (p.ej. /audit). */
-  get isOwnerOrManager(): boolean {
-    const role = this.currentUser()?.role;
-    return role === 'OWNER' || role === 'MANAGER';
+  get isOwner(): boolean {
+    return this.currentUser()?.role === 'OWNER';
+  }
+
+  /** Permiso efectivo (rol + overrides), ya resuelto por el backend y guardado en el login. */
+  hasPermission(permission: string): boolean {
+    return this.currentUser()?.permissions.includes(permission) ?? false;
   }
 
   private loadUser(): CurrentUser | null {

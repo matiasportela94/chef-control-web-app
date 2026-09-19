@@ -178,6 +178,55 @@
 
     </form>
 
+    @if (editing() && authService.isOwner) {
+      <div class="sec-div">Permisos</div>
+      <p style="font-size:11px;color:var(--text-3);margin-top:-8px;margin-bottom:12px;">
+        Ya vienen marcados los del rol <strong>{{ roleLabel(editing()?.role) }}</strong>. Tildá o destildá
+        para dar una excepción puntual a esta persona — no afecta a nadie más con el mismo rol.
+      </p>
+
+      @if (permissionsLoading()) {
+        <app-spinner />
+      } @else {
+        @if (permissionsError()) {
+          <div style="background:var(--red-bg);border:1.5px solid var(--red);border-radius:10px;padding:10px 14px;font-size:12px;color:var(--red);margin-bottom:10px;">
+            {{ permissionsError() }}
+          </div>
+        }
+
+        <div style="display:flex;flex-direction:column;gap:2px;margin-bottom:14px;">
+          @for (m of permissionModules; track m.label) {
+            <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;padding:7px 4px;border-bottom:1px solid var(--border);">
+              <span style="font-size:12px;color:var(--text-2);">{{ m.label }}</span>
+              <div style="display:flex;align-items:center;gap:14px;">
+                @if (m.view) {
+                  <label style="display:flex;align-items:center;gap:5px;font-size:11px;cursor:pointer;"
+                         [style.color]="isOverridden(m.view) ? 'var(--accent)' : 'var(--text-3)'">
+                    <input type="checkbox" [checked]="hasEffectivePermission(m.view)" (change)="togglePermission(m.view)"
+                           style="width:14px;height:14px;" />
+                    Ver
+                  </label>
+                }
+                @if (m.manage) {
+                  <label style="display:flex;align-items:center;gap:5px;font-size:11px;cursor:pointer;"
+                         [style.color]="isOverridden(m.manage) ? 'var(--accent)' : 'var(--text-3)'">
+                    <input type="checkbox" [checked]="hasEffectivePermission(m.manage)" (change)="togglePermission(m.manage)"
+                           style="width:14px;height:14px;" />
+                    Gestionar
+                  </label>
+                }
+              </div>
+            </div>
+          }
+        </div>
+
+        <button type="button" (click)="savePermissions()" [disabled]="permissionsSaving()" class="btn-secondary btn-sm">
+          @if (permissionsSaving()) { <span class="loader"></span> }
+          Guardar permisos
+        </button>
+      }
+    }
+
   <div drawer-footer style="padding:14px 20px;border-top:1px solid var(--border);display:flex;gap:8px;background:var(--bg-card);">
     <button type="button" (click)="closeDrawer()" class="btn-secondary btn-sm">Cancelar</button>
     <button type="submit" form="user-form" [disabled]="saving()" class="btn-primary btn-sm" style="flex:1;justify-content:center;">
