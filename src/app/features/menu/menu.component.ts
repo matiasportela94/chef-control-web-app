@@ -6,6 +6,8 @@ import { list2 as listMenuItems }      from '../../api/fn/menu-item-controller/l
 import { create2 as createMenuItem }   from '../../api/fn/menu-item-controller/create-2';
 import { update as updateMenuItem }    from '../../api/fn/menu-item-controller/update';
 import { deactivate as deactivateMenuItem } from '../../api/fn/menu-item-controller/deactivate';
+import { bulkDeactivate as bulkDeactivateMenuItems } from '../../api/fn/menu-item-controller/bulk-deactivate';
+import { activate as activateMenuItem } from '../../api/fn/menu-item-controller/activate';
 import { getRecipe }                   from '../../api/fn/menu-item-controller/get-recipe';
 import { setRecipe }                   from '../../api/fn/menu-item-controller/set-recipe';
 import { deleteRecipe }                from '../../api/fn/menu-item-controller/delete-recipe';
@@ -46,14 +48,14 @@ export class MenuComponent implements OnInit {
 
   filterSearch     = signal('');
   filterCategoryId = signal('');
-  filterOnlyActive = signal(true);
+
+  /** Carta actual (activa, default) vs cartas pasadas (desactivadas) — vistas separadas, no mezcladas. */
+  viewMode = signal<'active' | 'inactive'>('active');
 
   filteredItems = computed(() => {
-    const term       = this.filterSearch().toLowerCase().trim();
-    const cat        = this.filterCategoryId();
-    const onlyActive = this.filterOnlyActive();
+    const term = this.filterSearch().toLowerCase().trim();
+    const cat  = this.filterCategoryId();
     return this.menuItems().filter(item => {
-      if (onlyActive && !item.active) return false;
       if (cat && item.category !== cat) return false;
       if (term) return item.name?.toLowerCase().includes(term) ?? false;
       return true;
@@ -65,9 +67,20 @@ export class MenuComponent implements OnInit {
     return this.filteredItems().slice(start, start + this.pageSize);
   });
 
-  isFiltered = computed(() =>
-    this.filterSearch() !== '' || this.filterCategoryId() !== '' || !this.filterOnlyActive()
-  );
+  isFiltered = computed(() => this.filterSearch() !== '' || this.filterCategoryId() !== '');
+
+  // ── Selección múltiple (solo en la carta activa) ────────────────
+  selectedIds = signal<Set<string>>(new Set());
+  selectedCount = computed(() => this.selectedIds().size);
+  allVisibleSelected = computed(() => {
+    const visible = this.pagedItems();
+    return visible.length > 0 && visible.every(i => i.id && this.selectedIds().has(i.id));
+  });
+
+  bulkDeactivating      = signal(false);
+  bulkDeactivateLoading = signal(false);
+
+  activatingId = signal<string | null>(null);
 
   menuCategories = computed(() => {
     const cats = [...new Set(
@@ -127,7 +140,8 @@ export class MenuComponent implements OnInit {
     this.loading.set(true);
     this.error.set(null);
     try {
-      const raw = await this.api.invoke(listMenuItems, { page: 0, size: 999 }) as unknown;
+      const raw = await this.api.invoke(listMenuItems,
+        { page: 0, size: 999, active: this.viewMode() === 'active' }) as unknown;
       const res = await parseBlob<PagedResponseMenuItemResponse>(raw);
       this.menuItems.set(res.content ?? []);
       void this.loadAllCosts(res.content ?? []);
@@ -136,6 +150,80 @@ export class MenuComponent implements OnInit {
     } finally {
       this.loading.set(false);
     }
+  }
+
+  // ── Vista: carta actual / cartas pasadas ────────────────────────
+
+  async switchView(mode: 'active' | 'inactive'): Promise<void> {
+    if (this.viewMode() === mode) return;
+    this.viewMode.set(mode);
+    this.clearSelection();
+    this.page.set(1);
+    await this.loadMenuItems();
+  }
+
+  // ── Selección múltiple + baja masiva ────────────────────────────
+
+  isSelected(id?: string): boolean {
+    return !!id && this.selectedIds().has(id);
+  }
+
+  toggleSelect(id?: string): void {
+    if (!id) return;
+    const next = new Set(this.selectedIds());
+    next.has(id) ? next.delete(id) : next.add(id);
+    this.selectedIds.set(next);
+  }
+
+  toggleSelectAllVisible(): void {
+    const visible = this.pagedItems().map(i => i.id).filter((id): id is string => !!id);
+    if (this.allVisibleSelected()) {
+      const next = new Set(this.selectedIds());
+      visible.forEach(id => next.delete(id));
+      this.selectedIds.set(next);
+    } else {
+      this.selectedIds.set(new Set([...this.selectedIds(), ...visible]));
+    }
+  }
+
+  get selectedItems(): MenuItemResponse[] {
+    const ids = this.selectedIds();
+    return this.menuItems().filter(i => i.id && ids.has(i.id));
+  }
+
+  clearSelection(): void {
+    this.selectedIds.set(new Set());
+  }
+
+  get selectedNamesPreview(): string {
+    const items = this.selectedItems;
+    const names = items.slice(0, 5).map(i => i.name).join(', ');
+    return items.length > 5 ? `${names}, +${items.length - 5} más` : names;
+  }
+
+  async confirmBulkDeactivate(): Promise<void> {
+    const ids = [...this.selectedIds()];
+    if (ids.length === 0) return;
+    this.bulkDeactivateLoading.set(true);
+    try {
+      await this.api.invoke(bulkDeactivateMenuItems, { body: { ids } });
+      this.bulkDeactivating.set(false);
+      this.clearSelection();
+      await this.loadMenuItems();
+    } catch { /* stays in dialog */ }
+    finally { this.bulkDeactivateLoading.set(false); }
+  }
+
+  // ── Reactivar (vista de cartas pasadas) ─────────────────────────
+
+  async reactivateItem(item: MenuItemResponse): Promise<void> {
+    if (!item.id) return;
+    this.activatingId.set(item.id);
+    try {
+      await this.api.invoke(activateMenuItem, { id: item.id });
+      await this.loadMenuItems();
+    } catch { /* toast de error lo maneja el interceptor global si aplica */ }
+    finally { this.activatingId.set(null); }
   }
 
   private async loadAllCosts(items: MenuItemResponse[]): Promise<void> {
@@ -255,8 +343,6 @@ export class MenuComponent implements OnInit {
   }
 
   toggleActive(active: boolean): void {
-    const ed = this.editing();
-    if (ed && !ed.active) return; // ya inactivo, no hay endpoint para reactivar
     this.isActiveLocal.set(active);
   }
 
@@ -302,9 +388,11 @@ export class MenuComponent implements OnInit {
         });
       }
 
-      // Deactivate if toggled off (only for existing active items)
+      // Estado tocado desde el drawer: desactivar o reactivar según hacia dónde se movió el toggle
       if (ed?.id && ed.active && !this.isActiveLocal()) {
         await this.api.invoke(deactivateMenuItem, { id: ed.id });
+      } else if (ed?.id && !ed.active && this.isActiveLocal()) {
+        await this.api.invoke(activateMenuItem, { id: ed.id });
       }
 
       this.drawerOpen.set(false);
@@ -379,7 +467,6 @@ export class MenuComponent implements OnInit {
   onFiltersChange(state: FilterBarState): void {
     this.filterSearch.set(state.search);
     this.filterCategoryId.set(state.categoryId);
-    this.filterOnlyActive.set(state.onlyActive);
     this.page.set(1);
   }
 

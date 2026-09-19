@@ -7,15 +7,28 @@
       <p class="page-subtitle">
         @if (!loading()) {
           @if (isFiltered()) {
-            {{ filteredItems().length | number }} de {{ menuItems().length | number }} platos
+            {{ filteredItems().length | number }} de {{ menuItems().length | number }}
+            {{ viewMode() === 'active' ? 'platos en la carta actual' : 'platos de cartas pasadas' }}
+          } @else if (viewMode() === 'active') {
+            {{ menuItems().length | number }} platos en la carta actual
           } @else {
-            {{ menuItems().length | number }} platos registrados
+            {{ menuItems().length | number }} platos de cartas pasadas
           }
         }
       </p>
     </div>
     <button (click)="openCreate()" class="btn-primary btn-sm">
       <i class="ti ti-plus"></i> Nuevo plato
+    </button>
+  </div>
+
+  <!-- Carta actual / cartas pasadas -->
+  <div class="status-toggle" style="margin-bottom:16px;max-width:340px;">
+    <button class="status-btn" [class.on]="viewMode() === 'active'" (click)="switchView('active')">
+      <i class="ti ti-clipboard-list" style="font-size:13px;margin-right:4px;"></i> Carta actual
+    </button>
+    <button class="status-btn" [class.on]="viewMode() === 'inactive'" (click)="switchView('inactive')">
+      <i class="ti ti-history" style="font-size:13px;margin-right:4px;"></i> Cartas pasadas
     </button>
   </div>
 
@@ -32,11 +45,16 @@
     @if (menuItems().length === 0) {
       <div class="empty-state">
         <i class="ti ti-receipt"></i>
-        <p>Sin platos en el menú</p>
-        <span style="font-size:12px;color:var(--text-3);margin-bottom:16px;display:block;">Creá los platos de tu menú y asignales una receta con sus insumos.</span>
-        <button (click)="openCreate()" class="btn-primary btn-sm">
-          <i class="ti ti-plus"></i> Nuevo plato
-        </button>
+        @if (viewMode() === 'active') {
+          <p>Sin platos en la carta actual</p>
+          <span style="font-size:12px;color:var(--text-3);margin-bottom:16px;display:block;">Creá los platos de tu menú y asignales una receta con sus insumos.</span>
+          <button (click)="openCreate()" class="btn-primary btn-sm">
+            <i class="ti ti-plus"></i> Nuevo plato
+          </button>
+        } @else {
+          <p>No hay platos de cartas pasadas</p>
+          <span style="font-size:12px;color:var(--text-3);">Los platos que desactivés van a aparecer acá para reactivarlos cuando vuelvan al menú.</span>
+        }
       </div>
     } @else {
 
@@ -44,9 +62,22 @@
         <app-search-filter-bar
           placeholder="Buscar por nombre..."
           [categories]="menuCategories()"
+          [showActiveToggle]="false"
           (filtersChange)="onFiltersChange($event)">
         </app-search-filter-bar>
       </div>
+
+      @if (viewMode() === 'active' && selectedCount() > 0) {
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;background:var(--bg-input);border:1.5px solid var(--accent);border-radius:12px;padding:10px 14px;margin-bottom:12px;">
+          <span style="font-size:12px;color:var(--text-1);font-weight:600;">{{ selectedCount() }} seleccionado{{ selectedCount() > 1 ? 's' : '' }}</span>
+          <div style="display:flex;gap:8px;">
+            <button (click)="clearSelection()" class="btn-secondary btn-sm">Cancelar</button>
+            <button (click)="bulkDeactivating.set(true)" class="btn-danger btn-sm">
+              <i class="ti ti-trash"></i> Desactivar seleccionados
+            </button>
+          </div>
+        </div>
+      }
 
       @if (pagedItems().length === 0) {
         <div class="empty-state">
@@ -60,11 +91,17 @@
           @for (item of pagedItems(); track item.id) {
             <div class="data-card" style="padding:12px 14px;">
               <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:8px;">
-                <div style="min-width:0;">
-                  <p style="color:var(--text-1);font-weight:600;font-size:13px;">{{ item.name }}</p>
-                  @if (item.category) {
-                    <p style="font-size:11px;color:var(--text-3);">{{ item.category }}</p>
+                <div style="display:flex;align-items:flex-start;gap:8px;min-width:0;">
+                  @if (viewMode() === 'active') {
+                    <input type="checkbox" [checked]="isSelected(item.id)" (change)="toggleSelect(item.id)"
+                           style="margin-top:3px;width:16px;height:16px;flex-shrink:0;" />
                   }
+                  <div style="min-width:0;">
+                    <p style="color:var(--text-1);font-weight:600;font-size:13px;">{{ item.name }}</p>
+                    @if (item.category) {
+                      <p style="font-size:11px;color:var(--text-3);">{{ item.category }}</p>
+                    }
+                  </div>
                 </div>
                 <div style="text-align:right;flex-shrink:0;">
                   <p style="font-weight:700;color:var(--accent);font-size:13px;">{{ formatARS(item.price) }}</p>
@@ -82,9 +119,14 @@
                 <button (click)="openEdit(item)" class="btn-secondary btn-sm" style="flex:1;justify-content:center;">
                   <i class="ti ti-edit"></i> Editar
                 </button>
-                @if (item.active) {
+                @if (viewMode() === 'active') {
                   <button (click)="deactivating.set(item)" class="btn-danger btn-sm" style="flex:1;justify-content:center;">
                     Desactivar
+                  </button>
+                } @else {
+                  <button (click)="reactivateItem(item)" [disabled]="activatingId() === item.id"
+                          class="btn-primary btn-sm" style="flex:1;justify-content:center;">
+                    @if (activatingId() === item.id) { <span class="loader"></span> } @else { Reactivar }
                   </button>
                 }
               </div>
@@ -98,6 +140,12 @@
             <table class="data-table">
               <thead>
                 <tr>
+                  @if (viewMode() === 'active') {
+                    <th style="width:32px;">
+                      <input type="checkbox" [checked]="allVisibleSelected()" (change)="toggleSelectAllVisible()"
+                             style="width:16px;height:16px;" />
+                    </th>
+                  }
                   <th>Plato</th>
                   <th class="hidden md:table-cell">Categoría</th>
                   <th class="hidden sm:table-cell" style="text-align:right;">Precio</th>
@@ -110,6 +158,12 @@
               <tbody>
                 @for (item of pagedItems(); track item.id) {
                   <tr>
+                    @if (viewMode() === 'active') {
+                      <td>
+                        <input type="checkbox" [checked]="isSelected(item.id)" (change)="toggleSelect(item.id)"
+                               style="width:16px;height:16px;" />
+                      </td>
+                    }
                     <td>
                       <p style="color:var(--text-1);font-weight:600;">{{ item.name }}</p>
                       @if (item.description) {
@@ -153,9 +207,13 @@
                         <button (click)="openEdit(item)" class="btn-secondary btn-sm" title="Editar">
                           <i class="ti ti-edit"></i>
                         </button>
-                        @if (item.active) {
+                        @if (viewMode() === 'active') {
                           <button (click)="deactivating.set(item)" class="btn-danger btn-sm">
                             Desactivar
+                          </button>
+                        } @else {
+                          <button (click)="reactivateItem(item)" [disabled]="activatingId() === item.id" class="btn-primary btn-sm">
+                            @if (activatingId() === item.id) { <span class="loader"></span> } @else { Reactivar }
                           </button>
                         }
                       </div>
@@ -454,4 +512,20 @@
   [confirmDisabled]="deactivateLoading()"
   (confirm)="confirmDeactivate()"
   (cancel)="deactivating.set(null)">
+</app-action-dialog>
+
+<!-- BULK DEACTIVATE DIALOG -->
+<app-action-dialog
+  [visible]="bulkDeactivating()"
+  title="Desactivar platos seleccionados"
+  icon="⚠️"
+  tone="danger"
+  [message]="'Esta acción va a sacar ' + selectedCount() + ' plato' + (selectedCount() > 1 ? 's' : '') + ' de la carta actual. Vas a poder reactivarlos después desde \'Cartas pasadas\'.'"
+  [itemTitle]="selectedCount() + ' plato' + (selectedCount() > 1 ? 's' : '') + ' seleccionado' + (selectedCount() > 1 ? 's' : '')"
+  [itemSubtitle]="selectedNamesPreview"
+  confirmLabel="Desactivar"
+  cancelLabel="Cancelar"
+  [confirmDisabled]="bulkDeactivateLoading()"
+  (confirm)="confirmBulkDeactivate()"
+  (cancel)="bulkDeactivating.set(false)">
 </app-action-dialog>
