@@ -60,7 +60,7 @@ export class UsersComponent implements OnInit {
   }
 
   async load(): Promise<void> {
-    this.loading.set(true);
+    if (this.users().length === 0) this.loading.set(true); // evita el flash de spinner (y el salto de scroll) en recargas tras crear/editar/borrar
     this.error.set(null);
     try {
       const raw = await this.api.invoke(listUsers) as unknown;

@@ -81,7 +81,7 @@ export class WasteComponent implements OnInit {
   }
 
   async loadEvents(): Promise<void> {
-    this.loading.set(true);
+    if (this.events().length === 0) this.loading.set(true); // evita el flash de spinner (y el salto de scroll) en recargas tras crear/editar/borrar
     this.error.set(null);
     try {
       const raw = await this.api.invoke(listWasteEvents, { page: this.page() - 1, size: this.pageSize }) as unknown;

@@ -137,7 +137,7 @@ export class MenuComponent implements OnInit {
   }
 
   async loadMenuItems(): Promise<void> {
-    this.loading.set(true);
+    if (this.menuItems().length === 0) this.loading.set(true); // evita el flash de spinner (y el salto de scroll) en recargas tras crear/editar/desactivar
     this.error.set(null);
     try {
       const raw = await this.api.invoke(listMenuItems,
@@ -159,6 +159,7 @@ export class MenuComponent implements OnInit {
     this.viewMode.set(mode);
     this.clearSelection();
     this.page.set(1);
+    this.menuItems.set([]); // fuerza el spinner acá (cambio real de dataset), no en las recargas por edición
     await this.loadMenuItems();
   }
 
