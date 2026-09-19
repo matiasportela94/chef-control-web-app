@@ -58,6 +58,24 @@
 .fc-high   { @apply bg-warning-500/10 border-warning-500/30 text-warning-400; }
 .fc-danger { @apply bg-danger-500/10  border-danger-500/30  text-danger-400;  }
 
+// Dish mode: two side-by-side cards (receta teórica / realizado) — stack on mobile
+.fc-dish-grid {
+  @media (max-width: 767px) {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+// KPI mini-row (precio venta / costo receta / costo por porción) — 2 cols on mobile, 3rd spans full width
+.fc-kpi-row {
+  @media (max-width: 767px) {
+    grid-template-columns: repeat(2, 1fr) !important;
+
+    > *:last-child {
+      grid-column: span 2;
+    }
+  }
+}
+
 // Gauge fill variants
 .gauge-great  { @apply bg-success-500; }
 .gauge-ok     { @apply bg-brand-500;   }

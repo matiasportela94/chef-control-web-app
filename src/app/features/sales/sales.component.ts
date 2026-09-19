@@ -1,4 +1,4 @@
-import { Component, HostListener, OnInit, DestroyRef, inject, signal } from '@angular/core';
+import { Component, HostListener, OnInit, DestroyRef, computed, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormArray, FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Api } from '../../api/api';
@@ -20,11 +20,12 @@ import { extractApiError } from '../../core/utils/api-error';
 import { PaginatorComponent } from '../../shared/components/paginator/paginator.component';
 import { DrawerComponent } from '../../shared/components/drawer/drawer.component';
 import { SpinnerComponent } from '../../shared/components/spinner/spinner.component';
+import { SelectComponent, SelectOption } from '../../shared/components/select/select.component';
 
 @Component({
   selector: 'app-sales',
   standalone: true,
-  imports: [ReactiveFormsModule, PaginatorComponent, DrawerComponent, SpinnerComponent],
+  imports: [ReactiveFormsModule, PaginatorComponent, DrawerComponent, SpinnerComponent, SelectComponent],
   templateUrl: './sales.component.html',
   styleUrl: './sales.component.scss'
 })
@@ -39,6 +40,10 @@ export class SalesComponent implements OnInit {
   total    = signal(0);
 
   menuItems = signal<MenuItemResponse[]>([]);
+
+  menuItemOptions = computed<SelectOption[]>(() =>
+    this.menuItems().map(m => ({ value: m.id ?? '', label: m.price ? `${m.name} · ${formatARS(m.price)}` : (m.name ?? '') }))
+  );
 
   createOpen = signal(false);
   saving     = signal(false);

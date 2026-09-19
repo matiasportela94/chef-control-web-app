@@ -1,0 +1,366 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Chef Control · La cocina que se revela</title>
+<meta name="description" content="Tu cocina ya sabe lo que te está pasando. Chef Control te lo muestra antes de que sea tarde.">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='8' fill='%23F36525'/><text x='16' y='22' font-family='sans-serif' font-weight='700' font-size='18' fill='%23140B06' text-anchor='middle'>C</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&family=Syne:wght@600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2/dist/tabler-icons.min.css">
+<link rel="stylesheet" href="scrollcraft.css">
+<style>
+  :root {
+    --sc-canvas:     #0d1526;
+    --sc-surface:    #111826;
+    --sc-ink:        #f5efe6;
+    --sc-ink-soft:   #a9a49a;
+    --sc-accent:     #f36525;
+    --sc-accent-ink: #140b06;
+    --sc-font-display: "Syne", system-ui, sans-serif;
+    --sc-font-text:    "Poppins", system-ui, sans-serif;
+
+    --cc-warn: #eab308;
+    --cc-bad:  #ef4444;
+    --cc-ok:   #22c55e;
+  }
+
+  .cc-eyebrow {
+    font: 600 var(--sc-t-xs)/1 var(--sc-font-text);
+    letter-spacing: var(--sc-track-wide);
+    text-transform: uppercase;
+    color: color-mix(in oklab, var(--sc-ink-soft) 70%, var(--sc-accent) 30%);
+  }
+
+  /* === fixed nav (filmic one-shot chrome) ================================= */
+
+  .cc-nav {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 50;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: var(--sc-5) var(--sc-gutter);
+    background: color-mix(in oklab, var(--sc-canvas) 55%, transparent);
+    backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+    border-bottom: 1px solid color-mix(in oklab, var(--sc-ink) 8%, transparent);
+  }
+  .cc-nav__mark { font: 700 var(--sc-t-base)/1 var(--sc-font-display); color: var(--sc-ink); text-decoration: none; }
+  .cc-nav__mark b { color: var(--sc-accent); font-weight: 700; }
+  .cc-nav__cta {
+    font: 500 var(--sc-t-xs)/1 var(--sc-font-text); color: var(--sc-ink-soft); text-decoration: none;
+    border: 1px solid color-mix(in oklab, var(--sc-ink) 18%, transparent);
+    padding: 0.6em 1.1em; border-radius: 999px; transition: color 160ms var(--sc-ease-out), border-color 160ms var(--sc-ease-out);
+  }
+  .cc-nav__cta:hover { color: var(--sc-ink); border-color: color-mix(in oklab, var(--sc-ink) 35%, transparent); }
+  .cc-nav__cta:focus-visible { outline: 2px solid var(--sc-accent); outline-offset: 3px; }
+
+  /* === ACT 1 — the kitchen that reveals itself ============================ */
+
+  #scene { background: #0a0f1c; }
+  .cc-scene-inner {
+    position: relative; width: 100%; height: 100%; overflow: hidden;
+    display: flex; align-items: center; justify-content: center;
+    --build:  min(1, calc(var(--sc-p, 0) / 0.6));
+    --ignite: max(0, min(1, calc((var(--sc-p, 0) - 0.62) / 0.24)));
+    --sat:    min(1, calc(0.12 + (var(--build) * 0.28) + (var(--ignite) * 0.6)));
+    --glow:   min(1, calc(var(--build) * 0.5 + var(--ignite) * 1));
+  }
+
+  .cc-scene__frame {
+    position: relative; width: min(78vw, 1180px); aspect-ratio: 1260 / 620;
+    max-height: 82vh;
+  }
+  .cc-scene__glow {
+    position: absolute; inset: -12%; pointer-events: none; z-index: 0;
+    background: radial-gradient(60% 60% at 78% 55%, color-mix(in oklab, var(--sc-accent) 55%, transparent) 0%, transparent 70%);
+    opacity: var(--glow);
+  }
+  .cc-scene__art {
+    position: relative; z-index: 1; width: 100%; height: 100%; display: block;
+    filter: saturate(var(--sat)) brightness(calc(0.82 + var(--sat) * 0.22));
+  }
+  .cc-scene__art [data-obj] { stroke: var(--sc-accent); stroke-width: 3; fill: none; stroke-linecap: round; stroke-linejoin: round; }
+  .cc-scene__art [data-fill] { fill: var(--sc-accent); opacity: 0.14; stroke: none; }
+  .cc-scene__art [data-floor] { stroke: var(--sc-ink-soft); stroke-width: 2; opacity: 0.35; }
+
+  .cc-scene__head {
+    position: absolute; left: 0; bottom: 14%; z-index: 3; max-width: 17rem;
+    padding: 0 0 0 var(--sc-gutter);
+  }
+  .cc-scene__head h1 {
+    font-family: var(--sc-font-display); font-weight: 700; font-size: var(--sc-t-xl);
+    line-height: 1.14; letter-spacing: var(--sc-track-snug); color: var(--sc-ink);
+  }
+  .cc-scene__head span.accent { color: var(--sc-accent); }
+
+  .cc-tag {
+    position: absolute; z-index: 4; max-width: 13rem;
+    font: 500 var(--sc-t-xs)/1.35 var(--sc-font-text);
+    background: color-mix(in oklab, var(--sc-canvas) 78%, transparent);
+    border: 1px solid color-mix(in oklab, var(--sc-accent) 40%, transparent);
+    color: var(--sc-ink); border-radius: 0.7rem; padding: 0.55rem 0.75rem;
+    box-shadow: 0 12px 28px -14px rgba(0,0,0,0.6);
+  }
+  .cc-tag::before {
+    content: ""; position: absolute; width: 6px; height: 6px; border-radius: 50%;
+    background: var(--sc-accent); top: 50%; transform: translateY(-50%);
+  }
+  .cc-tag--cooler   { top: 8%;  left: 23%;  }
+  .cc-tag--cooler::before   { left: -14px; }
+  .cc-tag--shelf    { top: 4%;  left: 44%; }
+  .cc-tag--shelf::before    { left: -14px; }
+  .cc-tag--counter  { bottom: 10%; left: 45%; }
+  .cc-tag--counter::before  { left: -14px; }
+  .cc-tag--pass     { bottom: 4%; right: 4%; text-align: right; }
+  .cc-tag--pass::before     { right: -14px; }
+
+  .cc-panel-figure {
+    position: absolute; z-index: 5; right: 4%; top: 16%; width: 40%; max-width: 30rem;
+    border-radius: 1rem; overflow: hidden; border: 1px solid color-mix(in oklab, var(--sc-ink) 14%, transparent);
+    box-shadow: 0 34px 70px -22px rgba(0,0,0,0.7);
+  }
+  .cc-panel { background: #0f1420; font-family: var(--sc-font-text); }
+  .cc-panel__top { background: rgba(255,255,255,0.03); border-bottom: 1px solid rgba(255,255,255,0.06); padding: 0.6rem 0.9rem; display: flex; align-items: center; gap: 0.55rem; }
+  .cc-panel__logo { width: 1.3rem; height: 1.3rem; border-radius: 0.35rem; background: var(--sc-accent); color: var(--sc-accent-ink); display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.65rem; }
+  .cc-panel__top span { font-size: 0.7rem; color: var(--sc-ink); font-weight: 600; }
+  .cc-panel__live { margin-left: auto; font-size: 0.6rem; color: var(--sc-accent); display: flex; align-items: center; gap: 0.3rem; }
+  .cc-panel__dot { width: 0.38rem; height: 0.38rem; border-radius: 50%; background: var(--sc-accent); }
+  .cc-panel table { width: 100%; border-collapse: collapse; font-size: 0.6rem; }
+  .cc-panel th { text-align: left; padding: 0.4rem 0.6rem; color: var(--sc-ink-soft); font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; font-size: 0.5rem; border-bottom: 1px solid rgba(255,255,255,0.06); }
+  .cc-panel td { padding: 0.38rem 0.6rem; color: var(--sc-ink); border-bottom: 1px solid rgba(255,255,255,0.04); }
+  .cc-panel .status { padding: 0.08rem 0.4rem; border-radius: 999px; font-weight: 600; font-size: 0.55rem; }
+  .cc-panel .status--ok   { color: var(--cc-ok);   background: color-mix(in oklab, var(--cc-ok) 16%, transparent); }
+  .cc-panel .status--warn { color: var(--cc-warn); background: color-mix(in oklab, var(--cc-warn) 16%, transparent); }
+  .cc-panel .status--bad  { color: var(--cc-bad);  background: color-mix(in oklab, var(--cc-bad) 16%, transparent); }
+
+  /* === ACT 2 — substance (flow) ============================================ */
+
+  .cc-substance { padding-block: var(--sc-section); }
+  .cc-substance-grid { display: grid; grid-template-columns: 1.4fr 1fr; gap: var(--sc-6); align-items: start; }
+  @media (max-width: 860px) { .cc-substance-grid { grid-template-columns: 1fr; } }
+  .cc-lead-panel {
+    background: color-mix(in oklab, var(--sc-surface) 90%, transparent); border: 1px solid color-mix(in oklab, var(--sc-ink) 10%, transparent);
+    border-radius: 1.25rem; padding: var(--sc-8);
+  }
+  .cc-side-panel {
+    background: color-mix(in oklab, var(--sc-surface) 70%, transparent); border: 1px solid color-mix(in oklab, var(--sc-ink) 8%, transparent);
+    border-radius: 1rem; padding: var(--sc-6);
+  }
+  .cc-check { display: flex; align-items: center; gap: 0.7rem; padding: 0.6rem 0; border-bottom: 1px solid color-mix(in oklab, var(--sc-ink) 6%, transparent); font-size: var(--sc-t-sm); color: var(--sc-ink-soft); }
+  .cc-check:last-child { border-bottom: none; }
+  .cc-check i { color: var(--sc-accent); font-size: 1rem; }
+  .cc-chat { background: var(--sc-canvas); border-radius: 0.9rem; padding: 0.9rem; margin-top: var(--sc-4); }
+  .cc-bubble { font-size: var(--sc-t-xs); border-radius: 0.7rem; padding: 0.5rem 0.75rem; max-width: 90%; margin-bottom: 0.5rem; }
+  .cc-bubble--in  { background: color-mix(in oklab, var(--sc-ink) 8%, transparent); color: var(--sc-ink-soft); border-bottom-left-radius: 0.2rem; }
+  .cc-bubble--out { background: color-mix(in oklab, var(--sc-accent) 16%, transparent); color: color-mix(in oklab, var(--sc-accent) 60%, var(--sc-ink)); border-bottom-right-radius: 0.2rem; margin-left: auto; }
+  .cc-alert { display: flex; gap: 0.6rem; padding: 0.6rem 0.75rem; border-radius: 0.6rem; font-size: var(--sc-t-xs); margin-top: 0.5rem; }
+  .cc-alert--warn { background: color-mix(in oklab, var(--cc-warn) 12%, transparent); color: var(--cc-warn); }
+  .cc-alert--bad  { background: color-mix(in oklab, var(--cc-bad) 12%, transparent); color: var(--cc-bad); }
+
+  /* === ACT 3 — proof (flow + reveal) ======================================= */
+
+  .cc-proof { padding-block: var(--sc-section); background: color-mix(in oklab, var(--sc-accent) 7%, var(--sc-canvas)); }
+  .cc-proof__inner { border-radius: 1.4rem; padding: var(--sc-9) var(--sc-8); background: color-mix(in oklab, var(--sc-surface) 80%, transparent); border: 1px solid color-mix(in oklab, var(--sc-accent) 20%, transparent); max-width: 42rem; }
+  .cc-proof h2 { font-family: var(--sc-font-display); font-weight: 700; font-size: var(--sc-t-3xl); line-height: 1.05; letter-spacing: var(--sc-track-tight); color: var(--sc-ink); max-width: 20ch; text-align: left; }
+  .cc-proof p { margin-top: var(--sc-4); text-align: left; }
+
+  /* === ACT 4 — close (pin, spotlight + magnet) ============================= */
+
+  #close {
+    background:
+      radial-gradient(60% 70% at calc(50% + var(--sc-mx, 0) * 6%) calc(50% + var(--sc-my, 0) * 6%),
+        color-mix(in oklab, var(--sc-accent) 30%, transparent) 0%, transparent 60%),
+      radial-gradient(120% 90% at 50% 100%, #241108 0%, #0a0f1c 60%);
+  }
+  .cc-close { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; text-align: center; gap: var(--sc-6); padding: 0 var(--sc-gutter); }
+  .cc-close h2 { font-family: var(--sc-font-display); font-weight: 800; font-size: var(--sc-t-3xl); line-height: 1.05; letter-spacing: var(--sc-track-tight); color: var(--sc-ink); max-width: 18ch; }
+  .cc-cta {
+    display: inline-flex; align-items: center; gap: 0.5rem; background: var(--sc-accent); color: var(--sc-accent-ink);
+    font: 700 var(--sc-t-base)/1 var(--sc-font-text); padding: 0.95em 1.8em; border-radius: 999px; text-decoration: none;
+    transition: box-shadow 160ms var(--sc-ease-out);
+  }
+  .cc-cta:hover { box-shadow: 0 16px 30px -12px color-mix(in oklab, var(--sc-accent) 60%, transparent); }
+  .cc-cta:focus-visible { outline: 2px solid var(--sc-ink); outline-offset: 3px; }
+  .cc-close small { color: var(--sc-ink-soft); font-size: var(--sc-t-xs); }
+  .cc-foot { position: absolute; bottom: var(--sc-6); left: 0; right: 0; text-align: center; font-size: var(--sc-t-xs); color: color-mix(in oklab, var(--sc-ink-soft) 70%, transparent); }
+
+  @media (max-width: 780px) {
+    .cc-scene__frame { width: 92vw; aspect-ratio: 9 / 14; }
+    .cc-scene__head { bottom: auto; top: 4%; max-width: 88%; padding: 0 var(--sc-gutter); }
+    .cc-tag { max-width: 9.5rem; font-size: 0.68rem; padding: 0.45rem 0.6rem; }
+    .cc-panel-figure { position: static; width: 100%; max-width: none; margin-top: 6rem; }
+    .cc-tag--pass { top: auto; bottom: 2%; right: 6%; }
+  }
+</style>
+</head>
+<body>
+
+<span data-sc-progress></span>
+<div class="sc-grain" aria-hidden="true"></div>
+
+<nav class="cc-nav">
+  <a class="cc-nav__mark" href="#top">Chef<b>Control</b></a>
+  <a class="cc-nav__cta" href="/login">Iniciar sesión</a>
+</nav>
+
+<main id="top">
+
+  <!-- ACT 1 · La cocina que se revela (pin, signature move) -->
+  <section data-sc-act="pin" data-sc-span="7.4" id="scene">
+    <div data-sc-stage>
+    <div class="cc-scene-inner">
+
+      <div class="cc-scene__frame">
+        <div class="cc-scene__glow" aria-hidden="true"></div>
+
+        <svg class="cc-scene__art" viewBox="0 0 1260 620" preserveAspectRatio="xMidYMid meet" aria-hidden="true">
+          <g transform="translate(260,0)">
+          <!-- floor / back wall -->
+          <line data-floor x1="20" y1="560" x2="980" y2="560"></line>
+          <line data-floor x1="640" y1="60" x2="640" y2="560"></line>
+
+          <!-- cámara de frío -->
+          <rect data-obj x="60" y="180" width="150" height="330" rx="6"></rect>
+          <line data-obj x1="135" y1="180" x2="135" y2="510"></line>
+          <circle data-obj cx="150" cy="345" r="6"></circle>
+          <rect data-fill x="60" y="180" width="150" height="330" rx="6"></rect>
+
+          <!-- estantería seca -->
+          <g data-obj>
+            <line x1="260" y1="200" x2="470" y2="200"></line>
+            <line x1="260" y1="270" x2="470" y2="270"></line>
+            <line x1="260" y1="340" x2="470" y2="340"></line>
+            <line x1="260" y1="200" x2="260" y2="340"></line>
+            <line x1="470" y1="200" x2="470" y2="340"></line>
+          </g>
+          <rect data-fill x="278" y="212" width="26" height="46"></rect>
+          <rect data-fill x="316" y="212" width="26" height="46"></rect>
+          <rect data-fill x="354" y="284" width="34" height="44"></rect>
+          <rect data-fill x="404" y="284" width="34" height="44"></rect>
+
+          <!-- mesada de trabajo -->
+          <g data-obj>
+            <rect x="300" y="440" width="220" height="24" rx="4"></rect>
+            <line x1="312" y1="464" x2="312" y2="510"></line>
+            <line x1="508" y1="464" x2="508" y2="510"></line>
+          </g>
+          <rect data-fill x="330" y="410" width="90" height="28" rx="3"></rect>
+          <line data-obj x1="420" y1="418" x2="470" y2="404"></line>
+
+          <!-- pass-through -->
+          <g data-obj>
+            <rect x="700" y="150" width="220" height="150" rx="8"></rect>
+            <line x1="700" y1="300" x2="920" y2="300"></line>
+            <line x1="700" y1="330" x2="920" y2="330"></line>
+          </g>
+
+          <!-- ollas colgadas -->
+          <line data-floor x1="560" y1="80" x2="620" y2="80"></line>
+          <circle data-obj cx="565" cy="118" r="22"></circle>
+          <circle data-obj cx="615" cy="122" r="18"></circle>
+          </g>
+        </svg>
+
+        <div class="cc-scene__head">
+          <h1 data-sc-cue="0 0.62 0" data-sc-kinetic="lines">
+            Tu cocina ya sabe algo que vos todavía <span class="accent">no</span>.
+          </h1>
+        </div>
+
+        <p class="cc-tag cc-tag--cooler" data-sc-cue="0.00 0.30 0.15 0.15">¿Qué venció ahí adentro sin que nadie avisara?</p>
+        <p class="cc-tag cc-tag--shelf" data-sc-cue="0.20 0.50 0.15 0.15">¿Cuánto de esto se compró de más, o de menos?</p>
+        <p class="cc-tag cc-tag--counter" data-sc-cue="0.40 0.68 0.15 0.15">¿Ese plato cubre lo que cuesta hacerlo?</p>
+        <p class="cc-tag cc-tag--pass" data-sc-cue="0.58 0.90 0.12 0.12">¿Te enterás antes de perderla, o después?</p>
+
+        <figure class="cc-panel-figure" data-sc-reveal="left" data-sc-reveal-at="0.66 0.9">
+          <div class="cc-panel">
+            <div class="cc-panel__top">
+              <span class="cc-panel__logo">C</span>
+              <span>Chef Control</span>
+              <span class="cc-panel__live"><span class="cc-panel__dot"></span>En vivo</span>
+            </div>
+            <table>
+              <thead><tr><th>Producto</th><th>Stock</th><th>Estado</th></tr></thead>
+              <tbody>
+                <tr><td>Crema de leche</td><td>3 L</td><td><span class="status status--bad">Crítico</span></td></tr>
+                <tr><td>Ojo de bife</td><td>12 kg</td><td><span class="status status--warn">Bajo</span></td></tr>
+                <tr><td>Pollo entero</td><td>28 kg</td><td><span class="status status--ok">Normal</span></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </figure>
+      </div>
+
+    </div>
+    </div>
+  </section>
+
+  <!-- ACT 2 · Competencia (flow + in) -->
+  <section class="sc-section cc-substance" data-sc-act="flow">
+    <div class="sc-wrap">
+      <p class="cc-eyebrow" data-sc-in>Cómo funciona</p>
+      <div class="cc-substance-grid" data-sc-in data-sc-stagger="70">
+        <div class="cc-lead-panel">
+          <h2 class="sc-display sc-display--md">Ya la ves encendida. Así se mantiene.</h2>
+          <p class="sc-body" style="margin-top:var(--sc-4)">Cada mensaje que llega se convierte en un movimiento operativo real: identifica el tipo de evento, actualiza el stock, calcula el costo y dispara la alerta si hace falta.</p>
+          <div style="margin-top:var(--sc-6)">
+            <div class="cc-check"><i class="ti ti-scan"></i> Identifica el tipo de evento</div>
+            <div class="cc-check"><i class="ti ti-refresh"></i> Actualiza stock en tiempo real</div>
+            <div class="cc-check"><i class="ti ti-calculator"></i> Calcula el costo automáticamente</div>
+            <div class="cc-check"><i class="ti ti-bell"></i> Dispara alertas si hay riesgo</div>
+          </div>
+        </div>
+        <div>
+          <div class="cc-side-panel">
+            <h3 class="sc-t-sm" style="font-weight:600;color:var(--sc-ink)">Carga rápida</h3>
+            <p class="sc-body" style="font-size:var(--sc-t-sm);margin-top:0.4rem">Tu equipo registra por WhatsApp, audio o formulario. Sin planillas.</p>
+            <div class="cc-chat">
+              <div class="cc-bubble cc-bubble--in">Ingresaron 40kg de ojo de bife a $15.000</div>
+              <div class="cc-bubble cc-bubble--out">Compra registrada. Stock +40 kg.</div>
+            </div>
+          </div>
+          <div class="cc-side-panel" style="margin-top:var(--sc-4)">
+            <h3 class="sc-t-sm" style="font-weight:600;color:var(--sc-ink)">Alertas antes de perder</h3>
+            <div class="cc-alert cc-alert--warn"><i class="ti ti-alert-triangle"></i> Queda poco ojo de bife, un día más de stock</div>
+            <div class="cc-alert cc-alert--bad"><i class="ti ti-clock-exclamation"></i> 6L de crema vencen en 48h</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ACT 3 · Confianza (flow + reveal) -->
+  <section class="cc-proof" data-sc-act="flow">
+    <div class="sc-wrap">
+      <figure data-sc-reveal="up" data-sc-reveal-at="0.1 0.55">
+        <div class="cc-proof__inner">
+          <h2>Cada movimiento queda registrado. Nada se pierde en el camino.</h2>
+          <p class="sc-body">Compras, ventas, merma y conteos: todo lo que pasa por tu cocina queda en un historial que podés auditar, corregir y revertir cuando haga falta.</p>
+        </div>
+      </figure>
+    </div>
+  </section>
+
+  <!-- ACT 4 · Resolución (pin, spotlight + magnet) -->
+  <section data-sc-act="pin" data-sc-span="1.3" id="close" data-sc-spotlight>
+    <div data-sc-stage class="cc-close">
+      <h2 data-sc-cue="0 1 0 0" data-sc-kinetic="lines">¿La seguís mirando apagada, o la encendés vos?</h2>
+      <a class="cc-cta" href="/login?view=register" data-sc-cue="0 1 0 0" data-sc-magnet="0.24" data-sc-rise="0">
+        Empezar gratis <i class="ti ti-arrow-right"></i>
+      </a>
+      <small>Piloto abierto. Sin contratos, sin configuración compleja.</small>
+      <div class="cc-foot">© 2026 Chef Control. Agente operativo para restaurantes.</div>
+    </div>
+  </section>
+
+</main>
+
+<script src="scrollcraft.js"></script>
+<script>
+  ScrollCraft.mount(document.body);
+  function relayout() { dispatchEvent(new Event('resize')); }
+  addEventListener('load', relayout);
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(relayout);
+</script>
+</body>
+</html>

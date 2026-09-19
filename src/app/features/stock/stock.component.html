@@ -81,7 +81,7 @@
       @if (stockLoading()) { <app-spinner /> }
 
       @if (!stockLoading() && stockInfo(); as info) {
-        <div class="stock-card data-card" style="width:280px;padding:20px;"
+        <div class="stock-card data-card" style="width:100%;max-width:280px;padding:20px;"
              [class.stock-ok]="stockStatus() === 'ok'"
              [class.stock-low]="stockStatus() === 'low'"
              [class.stock-over]="stockStatus() === 'over'"
@@ -149,7 +149,41 @@
             <p>Sin movimientos registrados para este producto.</p>
           </div>
         } @else {
-          <div class="table-wrap">
+          <!-- Mobile: cards -->
+          <div class="md:hidden" style="display:flex;flex-direction:column;gap:8px;">
+            @for (m of movements(); track m.id) {
+              <div class="data-card" style="padding:12px 14px;" [style.opacity]="m.reversedBy ? '0.4' : '1'">
+                <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:8px;">
+                  <div style="min-width:0;">
+                    <p style="color:var(--text-2);font-size:11px;">{{ formatDate(m.createdAt) }}</p>
+                    <p style="color:var(--text-2);font-size:12px;">
+                      {{ typeLabel(m.type) }}
+                      @if (m.reversedBy) {
+                        <span style="margin-left:4px;font-size:11px;color:var(--text-3);">(revertido)</span>
+                      }
+                    </p>
+                  </div>
+                  @if (m.direction === 'IN') {
+                    <span class="badge badge-accent" style="font-size:11px;">↑ Entrada</span>
+                  } @else {
+                    <span class="badge badge-red" style="font-size:11px;">↓ Salida</span>
+                  }
+                </div>
+                <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;">
+                  <span style="font-size:11px;color:var(--text-3);">
+                    {{ formatNum(m.stockBefore) }} → {{ formatNum(m.stockAfter) }} {{ unitAbbr(m.unitId) }}
+                  </span>
+                  <span style="color:var(--text-1);font-weight:600;font-size:13px;">
+                    {{ formatNum(m.quantity) }}
+                    <span style="color:var(--text-3);font-size:11px;font-weight:400;margin-left:2px;">{{ unitAbbr(m.unitId) }}</span>
+                  </span>
+                </div>
+              </div>
+            }
+          </div>
+
+          <!-- Desktop: table -->
+          <div class="table-wrap hidden md:block">
             <div style="overflow-x:auto;">
               <table class="data-table">
                 <thead>
@@ -196,18 +230,18 @@
                 </tbody>
               </table>
             </div>
-
-            @if (total() > pageSize) {
-              <div style="border-top:1px solid var(--border);padding:14px 20px;">
-                <app-paginator
-                  [currentPage]="page()"
-                  [totalItems]="total()"
-                  [itemsPerPage]="pageSize"
-                  (pageChange)="goToPage($event)">
-                </app-paginator>
-              </div>
-            }
           </div>
+
+          @if (total() > pageSize) {
+            <div style="padding-top:14px;">
+              <app-paginator
+                [currentPage]="page()"
+                [totalItems]="total()"
+                [itemsPerPage]="pageSize"
+                (pageChange)="goToPage($event)">
+              </app-paginator>
+            </div>
+          }
         }
       }
     </div>

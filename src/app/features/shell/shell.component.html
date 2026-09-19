@@ -7,9 +7,18 @@
     background:var(--topbar-bg);
     border-bottom:1px solid var(--border);
     display:flex; align-items:center;
-    padding:0 24px; gap:12px;
+    padding:0 12px; gap:12px;
     transition:background .25s;
-  ">
+  " class="lg:px-6">
+    <!-- Hamburger (mobile only) -->
+    <button (click)="sidebarOpen.set(true)" class="lg:hidden" style="
+      width:34px;height:34px;flex-shrink:0;
+      display:flex;align-items:center;justify-content:center;
+      background:none;border:none;color:var(--text-1);font-size:20px;cursor:pointer;
+    ">
+      <i class="ti ti-menu-2"></i>
+    </button>
+
     <!-- Logo -->
     <div style="display:flex;align-items:center;gap:10px;flex-shrink:0;">
       <div style="
@@ -82,8 +91,16 @@
     </div>
   </header>
 
+  <!-- ── SIDEBAR BACKDROP (mobile only) ──────────────────────── -->
+  @if (sidebarOpen()) {
+    <div (click)="sidebarOpen.set(false)" class="lg:hidden" style="
+      position:fixed; inset:0; z-index:39;
+      background:rgba(0,0,0,.5);
+    "></div>
+  }
+
   <!-- ── SIDEBAR ──────────────────────────────────────────────── -->
-  <aside style="
+  <aside class="sidebar" [class.sidebar-open]="sidebarOpen()" style="
     position:fixed;
     top:66px; left:10px; bottom:10px;
     width:210px;
@@ -93,9 +110,9 @@
     border-radius:16px;
     display:flex;flex-direction:column;
     overflow:hidden;
-    transition:background .25s, border-color .25s;
+    transition:background .25s, border-color .25s, transform .25s;
   ">
-    <nav style="flex:1;padding:10px 8px;overflow-y:auto;overflow-x:hidden;">
+    <nav (click)="sidebarOpen.set(false)" style="flex:1;padding:10px 8px;overflow-y:auto;overflow-x:hidden;">
 
       <p class="side-section-label">General</p>
 
@@ -176,7 +193,7 @@
   </aside>
 
   <!-- ── CONTENT ──────────────────────────────────────────────── -->
-  <div style="margin-left:230px; padding-top:56px; min-height:100vh;">
+  <div class="shell-content" style="padding-top:56px; min-height:100vh;">
     <router-outlet />
   </div>
 

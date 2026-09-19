@@ -17,6 +17,7 @@ import { ActionDialogComponent } from '../../shared/components/action-dialog/act
 import { DrawerComponent } from '../../shared/components/drawer/drawer.component';
 import { SpinnerComponent } from '../../shared/components/spinner/spinner.component';
 import { SearchFilterBarComponent, FilterBarState } from '../../shared/components/search-filter-bar/search-filter-bar.component';
+import { SelectComponent, SelectOption } from '../../shared/components/select/select.component';
 import { parseBlob } from '../../core/utils/parse-blob';
 import { extractApiError } from '../../core/utils/api-error';
 import { isFormFieldInvalid } from '../../core/utils/form';
@@ -24,7 +25,7 @@ import { isFormFieldInvalid } from '../../core/utils/form';
 @Component({
   selector: 'app-products',
   standalone: true,
-  imports: [ReactiveFormsModule, DecimalPipe, PaginatorComponent, ActionDialogComponent, DrawerComponent, SpinnerComponent, SearchFilterBarComponent],
+  imports: [ReactiveFormsModule, DecimalPipe, PaginatorComponent, ActionDialogComponent, DrawerComponent, SpinnerComponent, SearchFilterBarComponent, SelectComponent],
   templateUrl: './products.component.html',
   styleUrl: './products.component.scss'
 })
@@ -67,6 +68,12 @@ export class ProductsComponent implements OnInit {
   categories   = signal<CategoryResponse[]>([]);
   filterCategories = computed(() =>
     this.categories().map(c => ({ id: c.id ?? '', name: c.name ?? '' }))
+  );
+  unitOptions = computed<SelectOption[]>(() =>
+    this.units().map(u => ({ value: u.id ?? '', label: `${u.name} (${u.abbreviation})` }))
+  );
+  categoryOptions = computed<SelectOption[]>(() =>
+    this.categories().map(c => ({ value: c.id ?? '', label: c.name ?? '' }))
   );
 
   drawerOpen     = signal(false);

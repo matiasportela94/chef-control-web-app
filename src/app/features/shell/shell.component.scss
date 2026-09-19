@@ -10,3 +10,26 @@
 .side-section-label {
   @apply text-xs font-semibold uppercase tracking-wider text-surface-600 px-3 py-2;
 }
+
+// Mobile: sidebar is an off-canvas drawer. Desktop (lg+): always visible, no margin needed on content.
+.sidebar {
+  transform: translateX(-120%);
+}
+
+.sidebar-open {
+  transform: translateX(0);
+}
+
+.shell-content {
+  margin-left: 0;
+}
+
+@media (min-width: 1024px) {
+  .sidebar {
+    transform: translateX(0);
+  }
+
+  .shell-content {
+    margin-left: 230px;
+  }
+}

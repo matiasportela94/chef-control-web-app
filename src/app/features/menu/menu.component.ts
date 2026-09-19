@@ -28,11 +28,12 @@ import { DrawerComponent } from '../../shared/components/drawer/drawer.component
 import { SpinnerComponent } from '../../shared/components/spinner/spinner.component';
 import { SearchFilterBarComponent, FilterBarState } from '../../shared/components/search-filter-bar/search-filter-bar.component';
 import { isFormFieldInvalid } from '../../core/utils/form';
+import { SelectComponent, SelectOption } from '../../shared/components/select/select.component';
 
 @Component({
   selector: 'app-menu',
   standalone: true,
-  imports: [ReactiveFormsModule, DecimalPipe, PaginatorComponent, ActionDialogComponent, DrawerComponent, SpinnerComponent, SearchFilterBarComponent],
+  imports: [ReactiveFormsModule, DecimalPipe, PaginatorComponent, ActionDialogComponent, DrawerComponent, SpinnerComponent, SearchFilterBarComponent, SelectComponent],
   templateUrl: './menu.component.html',
   styleUrl: './menu.component.scss'
 })
@@ -77,6 +78,13 @@ export class MenuComponent implements OnInit {
 
   products   = signal<ProductResponse[]>([]);
   units      = signal<UnitResponse[]>([]);
+
+  productOptions = computed<SelectOption[]>(() =>
+    this.products().map(p => ({ value: p.id ?? '', label: p.name ?? '' }))
+  );
+  unitOptions = computed<SelectOption[]>(() =>
+    this.units().map(u => ({ value: u.id ?? '', label: u.abbreviation ?? '' }))
+  );
   itemCosts  = signal<Map<string, RecipeCostResponse>>(new Map());
 
   // Drawer unificado

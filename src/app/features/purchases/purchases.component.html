@@ -35,7 +35,34 @@
         </button>
       </div>
     } @else {
-      <div class="table-wrap">
+      <!-- Mobile: cards -->
+      <div class="md:hidden" style="display:flex;flex-direction:column;gap:8px;margin-bottom:16px;">
+        @for (p of purchases(); track p.id) {
+          <div class="data-card" style="padding:12px 14px;">
+            <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:8px;">
+              <div style="min-width:0;">
+                <p style="font-weight:600;color:var(--text-1);font-size:13px;">{{ formatDate(p.purchasedAt) }}</p>
+                <p style="font-size:11px;color:var(--text-3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{ p.supplierName ?? '—' }}</p>
+              </div>
+              <p style="font-weight:600;color:var(--text-1);font-size:13px;white-space:nowrap;">{{ formatARS(p.total) }}</p>
+            </div>
+            <div style="display:flex;align-items:center;gap:6px;">
+              <button (click)="openEdit(p)" class="btn-secondary btn-sm" style="flex:1;justify-content:center;">
+                Editar precio
+              </button>
+              <button (click)="openReverseModal(p)" class="btn-ghost btn-sm" style="flex:1;justify-content:center;">
+                Corregir
+              </button>
+              <button (click)="openDetail(p)" class="btn-secondary btn-sm">
+                <i class="ti ti-eye"></i>
+              </button>
+            </div>
+          </div>
+        }
+      </div>
+
+      <!-- Desktop: table -->
+      <div class="table-wrap hidden md:block">
         <div style="overflow-x:auto;">
           <table class="data-table">
             <thead>
@@ -78,18 +105,18 @@
             </tbody>
           </table>
         </div>
-
-        @if (total() > pageSize) {
-          <div style="border-top:1px solid var(--border);padding:14px 20px;">
-            <app-paginator
-              [currentPage]="page()"
-              [totalItems]="total()"
-              [itemsPerPage]="pageSize"
-              (pageChange)="goToPage($event)">
-            </app-paginator>
-          </div>
-        }
       </div>
+
+      @if (total() > pageSize) {
+        <div style="padding-top:14px;">
+          <app-paginator
+            [currentPage]="page()"
+            [totalItems]="total()"
+            [itemsPerPage]="pageSize"
+            (pageChange)="goToPage($event)">
+          </app-paginator>
+        </div>
+      }
     }
   }
 
@@ -103,7 +130,7 @@
   <form id="purchase-form" [formGroup]="form" (ngSubmit)="save()" style="display:flex;flex-direction:column;gap:20px;">
 
       <!-- Meta fields -->
-      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;">
+      <div class="pc-form-row" style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;">
 
         <div style="margin-bottom:0;">
           <label class="field-label">Fecha</label>
@@ -112,12 +139,7 @@
 
         <div style="margin-bottom:0;">
           <label class="field-label">Proveedor <span style="color:var(--text-3);font-weight:400;">(opcional)</span></label>
-          <select formControlName="supplierId" class="field-select">
-            <option value="">Sin proveedor</option>
-            @for (s of suppliers(); track s.id) {
-              <option [value]="s.id">{{ s.name }}</option>
-            }
-          </select>
+          <app-select formControlName="supplierId" [options]="supplierOptions()" placeholder="Sin proveedor"></app-select>
         </div>
 
         <div style="margin-bottom:0;">
@@ -162,21 +184,13 @@
                  [class.opacity-80]="editMode()">
 
               @if (!editMode()) {
-                <select formControlName="productId" (change)="onProductChange(i)"
-                        class="field-select" [class.input-error]="isItemInvalid(i, 'productId')" style="font-size:12px;padding:6px 10px;">
-                  <option value="">Seleccioná un producto</option>
-                  @for (p of products(); track p.id) {
-                    <option [value]="p.id">{{ p.name }}@if (p.sku) { · {{ p.sku }} }</option>
-                  }
-                </select>
+                <app-select formControlName="productId" (change)="onProductChange(i)"
+                            [options]="productOptions()" placeholder="Seleccioná un producto"
+                            [invalid]="isItemInvalid(i, 'productId')" compact></app-select>
 
-                <select formControlName="unitId"
-                        class="field-select" [class.input-error]="isItemInvalid(i, 'unitId')" style="font-size:12px;padding:6px 10px;">
-                  <option value="">Unidad</option>
-                  @for (u of units(); track u.id) {
-                    <option [value]="u.id">{{ u.abbreviation }}</option>
-                  }
-                </select>
+                <app-select formControlName="unitId"
+                            [options]="unitOptions()" placeholder="Unidad"
+                            [invalid]="isItemInvalid(i, 'unitId')" compact></app-select>
 
                 <input formControlName="quantity" type="number" min="0.001" step="any" placeholder="0"
                        class="field-input" [class.input-error]="isItemInvalid(i, 'quantity')" style="font-size:12px;padding:6px 10px;">
@@ -264,7 +278,7 @@
 
   @if (detailLoading()) {
     <div style="display:flex;flex-direction:column;gap:12px;">
-      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;">
+      <div class="pc-meta-row" style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;">
         @for (_ of [1,2,3]; track $index) {
           <div class="data-card" style="padding:14px;height:64px;"></div>
         }
@@ -275,7 +289,7 @@
   @if (!detailLoading() && detail(); as d) {
 
     <!-- Meta -->
-    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:20px;">
+    <div class="pc-meta-row" style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:20px;">
       <div class="data-card" style="padding:14px;">
         <p class="section-title" style="margin-bottom:4px;">Fecha</p>
         <p style="color:var(--text-1);font-size:12px;font-weight:500;">{{ formatDate(d.purchasedAt) }}</p>

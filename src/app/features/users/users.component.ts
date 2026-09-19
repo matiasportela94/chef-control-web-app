@@ -13,13 +13,14 @@ import { ActionDialogComponent } from '../../shared/components/action-dialog/act
 import { DrawerComponent } from '../../shared/components/drawer/drawer.component';
 import { SpinnerComponent } from '../../shared/components/spinner/spinner.component';
 import { isFormFieldInvalid } from '../../core/utils/form';
+import { SelectComponent } from '../../shared/components/select/select.component';
 
 type Role = 'OWNER' | 'MANAGER' | 'KITCHEN' | 'READONLY';
 
 @Component({
   selector: 'app-users',
   standalone: true,
-  imports: [ReactiveFormsModule, ActionDialogComponent, DrawerComponent, SpinnerComponent],
+  imports: [ReactiveFormsModule, ActionDialogComponent, DrawerComponent, SpinnerComponent, SelectComponent],
   templateUrl: './users.component.html',
   styleUrl: './users.component.scss'
 })

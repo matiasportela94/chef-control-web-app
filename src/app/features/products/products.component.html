@@ -59,7 +59,56 @@
           <span style="font-size:12px;color:var(--text-3);">Probá con otro término o cambiá los filtros.</span>
         </div>
       } @else {
-        <div class="table-wrap">
+        <!-- Mobile: cards -->
+        <div class="md:hidden" style="display:flex;flex-direction:column;gap:8px;">
+          @for (p of pagedProducts(); track p.id) {
+            <div class="data-card" style="padding:12px 14px;">
+              <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:8px;">
+                <div style="min-width:0;">
+                  <p style="color:var(--text-1);font-weight:600;font-size:13px;">{{ p.name }}</p>
+                  @if (p.sku) {
+                    <p style="font-size:11px;color:var(--text-3);">{{ p.sku }}</p>
+                  }
+                  @if (p.category) {
+                    <p style="font-size:11px;color:var(--text-3);margin-top:2px;">{{ p.category.name }}</p>
+                  }
+                </div>
+                @if (p.isActive) {
+                  <span class="badge badge-accent">Activo</span>
+                } @else {
+                  <span class="badge badge-neutral">Inactivo</span>
+                }
+              </div>
+              <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:10px;">
+                <span style="font-size:11px;color:var(--text-3);">Stock</span>
+                @if (p.currentStock != null) {
+                  <span style="font-weight:600;font-size:13px;"
+                        [style.color]="(p.minStock != null && p.currentStock < p.minStock) ? 'var(--red)'
+                                     : (p.maxStock != null && p.currentStock > p.maxStock) ? '#d97706'
+                                     : '#16a34a'">
+                    {{ p.currentStock | number:'1.0-2' }}
+                    @if (p.defaultUnit?.abbreviation) { <span style="font-size:10px;color:var(--text-3);"> {{ p.defaultUnit!.abbreviation }}</span> }
+                  </span>
+                } @else {
+                  <span style="color:var(--text-3);">—</span>
+                }
+              </div>
+              <div style="display:flex;align-items:center;gap:6px;">
+                <button (click)="openEdit(p)" class="btn-secondary btn-sm" style="flex:1;justify-content:center;">
+                  <i class="ti ti-edit"></i> Editar
+                </button>
+                @if (p.isActive) {
+                  <button (click)="deactivating.set(p)" class="btn-danger btn-sm" style="flex:1;justify-content:center;">
+                    Desactivar
+                  </button>
+                }
+              </div>
+            </div>
+          }
+        </div>
+
+        <!-- Desktop: table -->
+        <div class="table-wrap hidden md:block">
           <div style="overflow-x:auto;">
             <table class="data-table">
               <thead>
@@ -149,18 +198,18 @@
               </tbody>
             </table>
           </div>
-
-          @if (filteredProducts().length > pageSize) {
-            <div style="border-top:1px solid var(--border);padding:14px 20px;">
-              <app-paginator
-                [currentPage]="page()"
-                [totalItems]="filteredProducts().length"
-                [itemsPerPage]="pageSize"
-                (pageChange)="goToPage($event)">
-              </app-paginator>
-            </div>
-          }
         </div>
+
+        @if (filteredProducts().length > pageSize) {
+          <div style="padding-top:14px;">
+            <app-paginator
+              [currentPage]="page()"
+              [totalItems]="filteredProducts().length"
+              [itemsPerPage]="pageSize"
+              (pageChange)="goToPage($event)">
+            </app-paginator>
+          </div>
+        }
       }
     }
   }
@@ -202,24 +251,14 @@
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
       <div>
         <label class="field-label">Unidad <span style="color:var(--red);">*</span></label>
-        <select formControlName="defaultUnitId" class="field-select" [class.input-error]="isInvalid('defaultUnitId')">
-          <option value="">Seleccioná</option>
-          @for (u of units(); track u.id) {
-            <option [value]="u.id">{{ u.name }} ({{ u.abbreviation }})</option>
-          }
-        </select>
+        <app-select formControlName="defaultUnitId" [options]="unitOptions()" placeholder="Seleccioná" [invalid]="isInvalid('defaultUnitId')"></app-select>
         @if (isInvalid('defaultUnitId')) {
           <p style="font-size:11px;color:var(--red);margin-top:4px;">Requerida</p>
         }
       </div>
       <div>
         <label class="field-label">Categoría <span style="color:var(--text-3);font-weight:400;">(opc.)</span></label>
-        <select formControlName="categoryId" class="field-select">
-          <option value="">Sin categoría</option>
-          @for (c of categories(); track c.id) {
-            <option [value]="c.id">{{ c.name }}</option>
-          }
-        </select>
+        <app-select formControlName="categoryId" [options]="categoryOptions()" placeholder="Sin categoría"></app-select>
       </div>
     </div>
 

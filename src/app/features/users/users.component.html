@@ -35,7 +35,44 @@
         </button>
       </div>
     } @else {
-      <div class="table-wrap">
+      <!-- Mobile: cards -->
+      <div class="md:hidden" style="display:flex;flex-direction:column;gap:8px;margin-bottom:16px;">
+        @for (u of users(); track u.id) {
+          <div class="data-card" style="padding:12px 14px;">
+            <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">
+              <div style="width:32px;height:32px;border-radius:50%;background:rgba(243,101,37,0.12);border:1.5px solid rgba(243,101,37,0.25);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                <span style="font-size:11px;font-weight:700;color:var(--accent);">{{ (u.name ?? '?').charAt(0).toUpperCase() }}</span>
+              </div>
+              <div style="flex:1;min-width:0;">
+                <p style="color:var(--text-1);font-weight:600;font-size:13px;">{{ u.name }}</p>
+                <p style="font-size:11px;color:var(--text-3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{ u.email ?? '—' }}</p>
+              </div>
+              <span class="badge" [class]="roleClass(u.role)">{{ roleLabel(u.role) }}</span>
+            </div>
+            <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:10px;">
+              @if (u.isActive) {
+                <span class="badge badge-accent">Activo</span>
+              } @else {
+                <span class="badge badge-neutral">Inactivo</span>
+              }
+              <span style="font-size:11px;color:var(--text-3);">Desde {{ formatDate(u.memberSince) }}</span>
+            </div>
+            <div style="display:flex;align-items:center;gap:6px;">
+              <button (click)="openEdit(u)" class="btn-secondary btn-sm" style="flex:1;justify-content:center;">
+                <i class="ti ti-edit"></i> Editar
+              </button>
+              @if (u.isActive) {
+                <button (click)="deactivating.set(u)" class="btn-danger btn-sm" style="flex:1;justify-content:center;">
+                  Desactivar
+                </button>
+              }
+            </div>
+          </div>
+        }
+      </div>
+
+      <!-- Desktop: table -->
+      <div class="table-wrap hidden md:block">
         <div style="overflow-x:auto;">
           <table class="data-table">
             <thead>
@@ -121,11 +158,7 @@
 
       <div style="margin-bottom:0;">
         <label class="field-label">Rol <span style="color:var(--red);">*</span></label>
-        <select formControlName="role" class="field-select" [class.input-error]="isInvalid('role')">
-          @for (r of roles; track r.value) {
-            <option [value]="r.value">{{ r.label }}</option>
-          }
-        </select>
+        <app-select formControlName="role" [options]="roles" [invalid]="isInvalid('role')"></app-select>
         <p style="font-size:11px;color:var(--text-3);margin-top:4px;">Define qué puede ver y hacer este usuario en el sistema.</p>
       </div>
 

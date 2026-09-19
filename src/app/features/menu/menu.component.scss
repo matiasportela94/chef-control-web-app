@@ -44,3 +44,11 @@
   gap: 0.5rem;
   align-items: center;
 }
+
+// Below tablet, columns no longer fit side by side — stack fields vertically.
+@media (max-width: 639px) {
+  .recipe-row {
+    grid-template-columns: 1fr;
+    gap: 6px;
+  }
+}

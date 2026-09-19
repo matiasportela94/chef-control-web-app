@@ -1,4 +1,4 @@
-import { Component, HostListener, OnInit, DestroyRef, inject, signal } from '@angular/core';
+import { Component, HostListener, OnInit, DestroyRef, computed, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormArray, FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Api } from '../../api/api';
@@ -27,11 +27,12 @@ import { extractApiError } from '../../core/utils/api-error';
 import { PaginatorComponent } from '../../shared/components/paginator/paginator.component';
 import { DrawerComponent } from '../../shared/components/drawer/drawer.component';
 import { SpinnerComponent } from '../../shared/components/spinner/spinner.component';
+import { SelectComponent, SelectOption } from '../../shared/components/select/select.component';
 
 @Component({
   selector: 'app-purchases',
   standalone: true,
-  imports: [ReactiveFormsModule, DecimalPipe, NgClass, PaginatorComponent, DrawerComponent, SpinnerComponent],
+  imports: [ReactiveFormsModule, DecimalPipe, NgClass, PaginatorComponent, DrawerComponent, SpinnerComponent, SelectComponent],
   templateUrl: './purchases.component.html',
   styleUrl: './purchases.component.scss'
 })
@@ -48,6 +49,16 @@ export class PurchasesComponent implements OnInit {
   products  = signal<ProductResponse[]>([]);
   suppliers = signal<SupplierResponse[]>([]);
   units     = signal<UnitResponse[]>([]);
+
+  productOptions = computed<SelectOption[]>(() =>
+    this.products().map(p => ({ value: p.id ?? '', label: p.sku ? `${p.name} · ${p.sku}` : (p.name ?? '') }))
+  );
+  supplierOptions = computed<SelectOption[]>(() =>
+    this.suppliers().map(s => ({ value: s.id ?? '', label: s.name ?? '' }))
+  );
+  unitOptions = computed<SelectOption[]>(() =>
+    this.units().map(u => ({ value: u.id ?? '', label: u.abbreviation ?? '' }))
+  );
 
   createOpen = signal(false);
   editMode   = signal(false);

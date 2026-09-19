@@ -35,7 +35,31 @@
         </button>
       </div>
     } @else {
-      <div class="table-wrap" style="margin-bottom:16px;">
+      <!-- Mobile: cards -->
+      <div class="md:hidden" style="display:flex;flex-direction:column;gap:8px;margin-bottom:16px;">
+        @for (e of events(); track e.id) {
+          <div class="data-card" style="padding:12px 14px;">
+            <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:8px;">
+              <div style="min-width:0;">
+                <p style="color:var(--text-1);font-weight:600;font-size:13px;">{{ e.productName ?? '—' }}</p>
+                @if (e.productSku) {
+                  <p style="font-size:11px;color:var(--text-3);">{{ e.productSku }}</p>
+                }
+              </div>
+              <p style="color:var(--text-1);font-weight:700;font-size:13px;white-space:nowrap;">{{ formatARS(e.cost) }}</p>
+            </div>
+            <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;">
+              <span class="badge" [class]="reasonClass(e.reason)">{{ reasonLabel(e.reason) }}</span>
+              <span style="font-size:11px;color:var(--text-3);white-space:nowrap;">
+                {{ formatDate(e.createdAt) }} · {{ e.quantity }} {{ e.unitAbbreviation ?? '' }}
+              </span>
+            </div>
+          </div>
+        }
+      </div>
+
+      <!-- Desktop: table -->
+      <div class="table-wrap hidden md:block" style="margin-bottom:16px;">
         <div style="overflow-x:auto;">
           <table class="data-table">
             <thead>
@@ -93,13 +117,8 @@
 
       <div style="margin-bottom:0;">
         <label class="field-label">Insumo <span style="color:var(--red);">*</span></label>
-        <select formControlName="productId" class="field-select" [class.input-error]="isInvalid('productId')"
-                (change)="onProductChange()">
-          <option value="">— Seleccioná un insumo —</option>
-          @for (p of products(); track p.id) {
-            <option [value]="p.id">{{ p.name }} @if (p.sku) { ({{ p.sku }}) }</option>
-          }
-        </select>
+        <app-select formControlName="productId" [options]="productOptions()" placeholder="— Seleccioná un insumo —"
+                    [invalid]="isInvalid('productId')" (change)="onProductChange()"></app-select>
         @if (isInvalid('productId')) { <p style="font-size:11px;color:var(--red);margin-top:4px;">Campo requerido</p> }
       </div>
 
@@ -113,13 +132,8 @@
 
         <div style="margin-bottom:0;">
           <label class="field-label">Unidad <span style="color:var(--red);">*</span></label>
-          <select formControlName="unitId" class="field-select" [class.input-error]="isInvalid('unitId')"
-                  [disabled]="filteredUnits().length === 0">
-            <option value="">— Unidad —</option>
-            @for (u of filteredUnits(); track u.id) {
-              <option [value]="u.id">{{ u.abbreviation }} — {{ u.name }}</option>
-            }
-          </select>
+          <app-select formControlName="unitId" [options]="filteredUnitOptions()" placeholder="— Unidad —"
+                      [invalid]="isInvalid('unitId')" [disabled]="filteredUnits().length === 0"></app-select>
           @if (isInvalid('unitId')) { <p style="font-size:11px;color:var(--red);margin-top:4px;">Campo requerido</p> }
           @if (filteredUnits().length === 0 && form.get('productId')?.value) {
             <p style="font-size:11px;color:var(--text-3);margin-top:4px;">Seleccioná un insumo para ver las unidades disponibles</p>
@@ -129,11 +143,7 @@
 
       <div style="margin-bottom:0;">
         <label class="field-label">Motivo</label>
-        <select formControlName="reason" class="field-select">
-          @for (r of reasons; track r.value) {
-            <option [value]="r.value">{{ r.label }}</option>
-          }
-        </select>
+        <app-select formControlName="reason" [options]="reasons"></app-select>
       </div>
 
       <div style="background:var(--bg-input);border-radius:10px;padding:10px 14px;font-size:11px;color:var(--text-3);">

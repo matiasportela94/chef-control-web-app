@@ -13,13 +13,14 @@ import { RecipeCostResponse } from '../../api/models/recipe-cost-response';
 import { parseBlob } from '../../core/utils/parse-blob';
 import { formatARS, formatDate, formatNum, formatPct } from '../../core/utils/format';
 import { todayISO, firstOfMonth, thisMonth, lastMonth, lastNDays } from '../../core/utils/date';
+import { SelectComponent, SelectOption } from '../../shared/components/select/select.component';
 
 interface Preset { label: string; from: string; to: string; }
 
 @Component({
   selector: 'app-food-cost',
   standalone: true,
-  imports: [FormsModule],
+  imports: [FormsModule, SelectComponent],
   templateUrl: './food-cost.component.html',
   styleUrl: './food-cost.component.scss'
 })
@@ -57,6 +58,10 @@ export class FoodCostComponent implements OnInit {
   readonly Math = Math;
 
   constructor(private api: Api) {}
+
+  menuItemOptions(): SelectOption[] {
+    return this.menuItems().map(m => ({ value: m.id!, label: m.name! }));
+  }
 
   async ngOnInit(): Promise<void> {
     await this.loadMenuItems();

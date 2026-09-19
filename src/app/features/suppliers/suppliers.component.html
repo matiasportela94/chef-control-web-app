@@ -35,7 +35,42 @@
         </button>
       </div>
     } @else {
-      <div class="table-wrap">
+      <!-- Mobile: cards -->
+      <div class="md:hidden" style="display:flex;flex-direction:column;gap:8px;margin-bottom:16px;">
+        @for (s of suppliers(); track s.id) {
+          <div class="data-card" style="padding:12px 14px;">
+            <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:8px;">
+              <div style="min-width:0;">
+                <p style="color:var(--text-1);font-weight:600;font-size:13px;">{{ s.name }}</p>
+                @if (s.address) {
+                  <p style="font-size:11px;color:var(--text-3);">{{ s.address }}</p>
+                }
+              </div>
+              @if (s.isActive) {
+                <span class="badge badge-accent">Activo</span>
+              } @else {
+                <span class="badge badge-neutral">Inactivo</span>
+              }
+            </div>
+            <p style="font-size:11px;color:var(--text-3);margin-bottom:10px;">
+              {{ s.email || '—' }} @if (s.phone) { · {{ s.phone }} }
+            </p>
+            <div style="display:flex;align-items:center;gap:6px;">
+              <button (click)="openEdit(s)" class="btn-secondary btn-sm" style="flex:1;justify-content:center;">
+                <i class="ti ti-edit"></i> Editar
+              </button>
+              @if (s.isActive) {
+                <button (click)="deactivating.set(s)" class="btn-danger btn-sm" style="flex:1;justify-content:center;">
+                  Desactivar
+                </button>
+              }
+            </div>
+          </div>
+        }
+      </div>
+
+      <!-- Desktop: table -->
+      <div class="table-wrap hidden md:block">
         <div style="overflow-x:auto;">
           <table class="data-table">
             <thead>

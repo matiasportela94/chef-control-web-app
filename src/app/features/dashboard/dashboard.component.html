@@ -28,7 +28,7 @@
   @if (!loading() && !error() && data()) {
 
     <!-- Fila 1: Ventas (pop) · Compras · Food Cost -->
-    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:12px;">
+    <div class="dash-grid" style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:12px;">
 
       <!-- Ventas — POP CARD -->
       <a routerLink="/sales" style="
@@ -142,7 +142,7 @@
     </div>
 
     <!-- Fila 2: Merma · Bajo stock · Sobrestock -->
-    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:16px;">
+    <div class="dash-grid" style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:16px;">
 
       <!-- Merma -->
       <a routerLink="/waste" style="

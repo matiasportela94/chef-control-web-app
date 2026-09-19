@@ -16,6 +16,7 @@ import { AiInputComponent } from '../../shared/components/ai-input/ai-input.comp
 })
 export class ShellComponent implements OnInit, OnDestroy {
   aiInputOpen = signal(false);
+  sidebarOpen = signal(false);
 
   private aiSub?: Subscription;
 

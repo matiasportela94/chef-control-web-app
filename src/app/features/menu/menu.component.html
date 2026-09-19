@@ -55,7 +55,45 @@
           <span style="font-size:12px;color:var(--text-3);">Probá con otro término o cambiá los filtros.</span>
         </div>
       } @else {
-        <div class="table-wrap">
+        <!-- Mobile: cards -->
+        <div class="md:hidden" style="display:flex;flex-direction:column;gap:8px;">
+          @for (item of pagedItems(); track item.id) {
+            <div class="data-card" style="padding:12px 14px;">
+              <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:8px;">
+                <div style="min-width:0;">
+                  <p style="color:var(--text-1);font-weight:600;font-size:13px;">{{ item.name }}</p>
+                  @if (item.category) {
+                    <p style="font-size:11px;color:var(--text-3);">{{ item.category }}</p>
+                  }
+                </div>
+                <div style="text-align:right;flex-shrink:0;">
+                  <p style="font-weight:700;color:var(--accent);font-size:13px;">{{ formatARS(item.price) }}</p>
+                  @if (item.active) {
+                    <span class="badge badge-accent" style="margin-top:2px;">Activo</span>
+                  } @else {
+                    <span class="badge badge-neutral" style="margin-top:2px;">Inactivo</span>
+                  }
+                </div>
+              </div>
+              <div style="display:flex;align-items:center;gap:6px;">
+                <button (click)="openView(item)" class="btn-secondary btn-sm">
+                  <i class="ti ti-eye"></i>
+                </button>
+                <button (click)="openEdit(item)" class="btn-secondary btn-sm" style="flex:1;justify-content:center;">
+                  <i class="ti ti-edit"></i> Editar
+                </button>
+                @if (item.active) {
+                  <button (click)="deactivating.set(item)" class="btn-danger btn-sm" style="flex:1;justify-content:center;">
+                    Desactivar
+                  </button>
+                }
+              </div>
+            </div>
+          }
+        </div>
+
+        <!-- Desktop: table -->
+        <div class="table-wrap hidden md:block">
           <div style="overflow-x:auto;">
             <table class="data-table">
               <thead>
@@ -127,18 +165,18 @@
               </tbody>
             </table>
           </div>
-
-          @if (filteredItems().length > pageSize) {
-            <div style="border-top:1px solid var(--border);padding:14px 20px;">
-              <app-paginator
-                [currentPage]="page()"
-                [totalItems]="filteredItems().length"
-                [itemsPerPage]="pageSize"
-                (pageChange)="goToPage($event)">
-              </app-paginator>
-            </div>
-          }
         </div>
+
+        @if (filteredItems().length > pageSize) {
+          <div style="padding-top:14px;">
+            <app-paginator
+              [currentPage]="page()"
+              [totalItems]="filteredItems().length"
+              [itemsPerPage]="pageSize"
+              (pageChange)="goToPage($event)">
+            </app-paginator>
+          </div>
+        }
       }
     }
   }
@@ -317,27 +355,17 @@
             @for (item of recipeItems.controls; track $index; let i = $index) {
               <div [formGroupName]="i" style="display:grid;grid-template-columns:1fr auto auto auto;gap:6px;align-items:center;background:var(--bg-input);border:1.5px solid var(--border);border-radius:10px;padding:8px 10px;">
 
-                <select formControlName="productId" (change)="onRecipeProductChange(i)"
-                        class="field-select" style="font-size:12px;padding:6px 10px;"
-                        [class.input-error]="isRecipeItemInvalid(i, 'productId')">
-                  <option value="">Insumo</option>
-                  @for (p of products(); track p.id) {
-                    <option [value]="p.id">{{ p.name }}</option>
-                  }
-                </select>
+                <app-select formControlName="productId" (change)="onRecipeProductChange(i)"
+                            [options]="productOptions()" placeholder="Insumo" compact
+                            [invalid]="isRecipeItemInvalid(i, 'productId')"></app-select>
 
                 <input formControlName="quantity" type="number" min="0.001" step="any" placeholder="0"
                        class="field-input" style="width:70px;font-size:12px;padding:6px 8px;"
                        [class.input-error]="isRecipeItemInvalid(i, 'quantity')">
 
-                <select formControlName="unitId"
-                        class="field-select" style="width:64px;font-size:12px;padding:6px 8px;"
-                        [class.input-error]="isRecipeItemInvalid(i, 'unitId')">
-                  <option value="">U.</option>
-                  @for (u of units(); track u.id) {
-                    <option [value]="u.id">{{ u.abbreviation }}</option>
-                  }
-                </select>
+                <app-select formControlName="unitId" style="width:64px;"
+                            [options]="unitOptions()" placeholder="U." compact
+                            [invalid]="isRecipeItemInvalid(i, 'unitId')"></app-select>
 
                 <button type="button" (click)="removeRecipeItem(i)" class="btn-icon" style="width:30px;height:30px;font-size:13px;color:var(--text-3);">
                   <i class="ti ti-x"></i>

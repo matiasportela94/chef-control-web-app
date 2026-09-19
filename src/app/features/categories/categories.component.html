@@ -32,7 +32,40 @@
         </button>
       </div>
     } @else {
-      <div class="table-wrap">
+      <!-- Mobile: cards -->
+      <div class="md:hidden" style="display:flex;flex-direction:column;gap:8px;margin-bottom:16px;">
+        @for (cat of categories(); track cat.id) {
+          <div class="data-card" style="padding:12px 14px;">
+            <div style="display:flex;align-items:center;gap:10px;">
+              <span style="width:32px;height:32px;border-radius:9px;flex-shrink:0;display:flex;align-items:center;justify-content:center;"
+                    [style.background]="cat.color ? cat.color + '22' : 'var(--bg-input)'">
+                @if (cat.icon) {
+                  <i [class]="'ti ti-' + cat.icon" style="font-size:16px;" [style.color]="cat.color ?? 'var(--accent)'"></i>
+                } @else {
+                  <i class="ti ti-tag" style="font-size:14px;color:var(--text-3);opacity:.5;"></i>
+                }
+              </span>
+              <div style="flex:1;min-width:0;">
+                <p style="color:var(--text-1);font-weight:600;font-size:13px;">{{ cat.name }}</p>
+                @if (cat.isSystem) {
+                  <span class="badge badge-neutral" style="margin-top:2px;">Sistema</span>
+                } @else if (cat.description) {
+                  <p style="font-size:11px;color:var(--text-3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{ cat.description }}</p>
+                }
+              </div>
+              @if (!cat.isSystem) {
+                <div style="display:flex;align-items:center;gap:6px;flex-shrink:0;">
+                  <button (click)="openEdit(cat)" class="btn-secondary btn-sm"><i class="ti ti-edit"></i></button>
+                  <button (click)="deleting.set(cat)" class="btn-danger btn-sm"><i class="ti ti-trash"></i></button>
+                </div>
+              }
+            </div>
+          </div>
+        }
+      </div>
+
+      <!-- Desktop: table -->
+      <div class="table-wrap hidden md:block">
         <table class="data-table">
           <thead>
             <tr>

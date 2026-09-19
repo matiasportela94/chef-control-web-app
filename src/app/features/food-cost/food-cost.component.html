@@ -127,14 +127,12 @@
     <!-- Dish selector -->
     <div style="margin-bottom:20px;">
       <label class="field-label" style="display:block;margin-bottom:6px;">Plato</label>
-      <select [ngModel]="selectedMenuItemId()"
-              (ngModelChange)="selectedMenuItemId.set($event); onDishSelect()"
-              class="field-select" style="max-width:320px;">
-        <option value="">— Seleccioná un plato —</option>
-        @for (m of menuItems(); track m.id) {
-          <option [value]="m.id">{{ m.name }}</option>
-        }
-      </select>
+      <app-select [ngModel]="selectedMenuItemId()"
+                  (ngModelChange)="selectedMenuItemId.set($event); onDishSelect()"
+                  [options]="menuItemOptions()"
+                  placeholder="— Seleccioná un plato —"
+                  style="max-width:320px;">
+      </app-select>
     </div>
 
     @if (!selectedMenuItemId()) {
@@ -143,7 +141,7 @@
       </div>
     } @else {
 
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;">
+      <div class="fc-dish-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:20px;">
 
         <!-- Left: Receta teórica -->
         <div class="data-card" style="padding:20px;display:flex;flex-direction:column;">
@@ -172,7 +170,7 @@
 
           @if (recipeCostLoading()) {
             <div style="display:flex;flex-direction:column;gap:10px;">
-              <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;">
+              <div class="fc-kpi-row" style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;">
                 @for (i of [1,2,3]; track i) {
                   <div style="height:64px;background:var(--bg-input);border-radius:10px;"></div>
                 }
@@ -192,7 +190,7 @@
           @if (!recipeCostLoading() && recipeCost(); as rc) {
 
             <!-- KPI mini-row -->
-            <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:16px;">
+            <div class="fc-kpi-row" style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:16px;">
               <div class="cost-box" style="background:var(--bg-input);border-radius:10px;padding:10px;">
                 <p class="section-title" style="margin-bottom:4px;">Precio venta</p>
                 <p style="font-size:13px;font-weight:700;color:var(--text-1);">{{ formatARS(rc.menuPrice) }}</p>

@@ -35,7 +35,38 @@
         </button>
       </div>
     } @else {
-      <div class="table-wrap">
+      <!-- Mobile: cards -->
+      <div class="md:hidden" style="display:flex;flex-direction:column;gap:8px;margin-bottom:16px;">
+        @for (sale of sales(); track sale.id) {
+          <div class="data-card" style="padding:12px 14px;">
+            <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:8px;">
+              <div style="min-width:0;">
+                <p style="font-weight:600;color:var(--text-1);font-size:13px;">{{ formatDate(sale.soldAt) }}</p>
+                @if (sale.notes) {
+                  <p style="font-size:11px;color:var(--text-3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{ sale.notes }}</p>
+                }
+              </div>
+              <div style="text-align:right;flex-shrink:0;">
+                <p style="font-weight:600;color:var(--text-1);font-size:13px;">{{ formatARS(sale.totalAmount) }}</p>
+                <p style="font-size:11px;color:var(--text-3);">{{ sale.itemCount ?? '—' }} platos</p>
+              </div>
+            </div>
+            <div style="display:flex;align-items:center;justify-content:flex-end;gap:6px;">
+              @if (sale.status === 'REVERSED') {
+                <span class="badge badge-neutral">Revertida</span>
+              } @else {
+                <button (click)="openReverseModal(sale)" class="btn-ghost btn-sm">Corregir</button>
+              }
+              <button (click)="openDetail(sale)" class="btn-secondary btn-sm">
+                <i class="ti ti-eye"></i> Ver
+              </button>
+            </div>
+          </div>
+        }
+      </div>
+
+      <!-- Desktop: table -->
+      <div class="table-wrap hidden md:block">
         <div style="overflow-x:auto;">
           <table class="data-table">
             <thead>
@@ -79,18 +110,18 @@
             </tbody>
           </table>
         </div>
-
-        @if (total() > pageSize) {
-          <div style="border-top:1px solid var(--border);padding:14px 20px;">
-            <app-paginator
-              [currentPage]="page()"
-              [totalItems]="total()"
-              [itemsPerPage]="pageSize"
-              (pageChange)="goToPage($event)">
-            </app-paginator>
-          </div>
-        }
       </div>
+
+      @if (total() > pageSize) {
+        <div style="padding-top:14px;">
+          <app-paginator
+            [currentPage]="page()"
+            [totalItems]="total()"
+            [itemsPerPage]="pageSize"
+            (pageChange)="goToPage($event)">
+          </app-paginator>
+        </div>
+      }
     }
   }
 
@@ -135,13 +166,8 @@
           @for (item of items.controls; track $index; let i = $index) {
             <div [formGroupName]="i" class="sale-row" style="background:var(--bg-input);border-radius:10px;padding:10px;">
 
-              <select formControlName="menuItemId"
-                      class="field-select" [class.input-error]="isItemInvalid(i, 'menuItemId')" style="font-size:12px;padding:6px 10px;">
-                <option value="">Seleccioná un plato</option>
-                @for (m of menuItems(); track m.id) {
-                  <option [value]="m.id">{{ m.name }}@if (m.price) { · {{ formatARS(m.price) }} }</option>
-                }
-              </select>
+              <app-select formControlName="menuItemId" [options]="menuItemOptions()" placeholder="Seleccioná un plato"
+                          [invalid]="isItemInvalid(i, 'menuItemId')" compact></app-select>
 
               <input formControlName="quantity" type="number" min="1" step="1" placeholder="1"
                      class="field-input" style="text-align:center;font-size:12px;padding:6px 10px;"
