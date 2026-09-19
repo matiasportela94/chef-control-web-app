@@ -54,3 +54,4 @@ src/environments/environment.local.ts
 .claude/
 docs/
 .firebase/
+scrollcraft/
