@@ -46,3 +46,11 @@ Thumbs.db
 
 # Local environment overrides
 src/environments/environment.local.ts
+
+# No committear docs internos, dumps ni artefactos de tooling AI
+*.md
+*.dump
+.codegraph/
+.claude/
+docs/
+.firebase/
