@@ -24,10 +24,4 @@ export class I18nService {
     }
     return typeof node === 'string' ? node : key;
   }
-
-  error(code: string | undefined, fallback = 'Ocurrió un error'): string {
-    if (!code) return fallback;
-    const translated = this.t(`errors.${code}`);
-    return translated !== `errors.${code}` ? translated : fallback;
-  }
 }

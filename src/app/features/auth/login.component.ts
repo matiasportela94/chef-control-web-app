@@ -3,7 +3,7 @@ import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angula
 import { Router, ActivatedRoute, RouterLink } from '@angular/router';
 import { take } from 'rxjs';
 import { AuthService } from '../../core/services/auth.service';
-import { I18nService } from '../../core/services/i18n.service';
+import { extractApiError } from '../../core/utils/api-error';
 import { RestaurantSummary } from '../../api/models/restaurant-summary';
 
 export type AuthView = 'login' | 'register' | 'forgot' | 'restaurant-select';
@@ -30,8 +30,7 @@ export class LoginComponent implements OnInit {
     private fb: FormBuilder,
     private authService: AuthService,
     private router: Router,
-    private route: ActivatedRoute,
-    private i18n: I18nService
+    private route: ActivatedRoute
   ) {
     this.loginForm = this.fb.group({
       email:    ['', [Validators.required, Validators.email]],
@@ -75,7 +74,7 @@ export class LoginComponent implements OnInit {
         this.router.navigate(['/dashboard']);
       }
     } catch (e: any) {
-      const msg = this.i18n.error(e?.error?.errorCode,'Email o contraseña incorrectos');
+      const msg = extractApiError(e, 'Email o contraseña incorrectos');
       const ctrl = this.loginForm.get('password')!;
       ctrl.setErrors({ serverError: msg });
       ctrl.valueChanges.pipe(take(1)).subscribe(() => {
@@ -96,7 +95,7 @@ export class LoginComponent implements OnInit {
       await this.authService.register(this.registerForm.getRawValue());
       this.router.navigate(['/dashboard']);
     } catch (e: any) {
-      this.errorMsg.set(this.i18n.error(e?.error?.errorCode,'Error al crear la cuenta'));
+      this.errorMsg.set(extractApiError(e, 'Error al crear la cuenta'));
     } finally {
       this.loading.set(false);
     }
@@ -110,7 +109,7 @@ export class LoginComponent implements OnInit {
       await this.authService.forgotPassword(this.forgotForm.getRawValue());
       this.forgotSent.set(true);
     } catch (e: any) {
-      this.errorMsg.set(this.i18n.error(e?.error?.errorCode,'Error al enviar el correo'));
+      this.errorMsg.set(extractApiError(e, 'Error al enviar el correo'));
     } finally {
       this.loading.set(false);
     }
@@ -124,7 +123,7 @@ export class LoginComponent implements OnInit {
       await this.authService.switchToRestaurant(r.id);
       this.router.navigate(['/dashboard']);
     } catch (e: any) {
-      this.errorMsg.set(this.i18n.error(e?.error?.errorCode,'Error al conectar con el restaurante'));
+      this.errorMsg.set(extractApiError(e, 'Error al conectar con el restaurante'));
     } finally {
       this.loading.set(false);
     }
