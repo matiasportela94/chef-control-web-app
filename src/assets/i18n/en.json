@@ -129,5 +129,12 @@
     "expired":          "expired",
     "expiresToday":     "today",
     "daysShort":        "d"
+  },
+  "maintenance": {
+    "title":     "No connection to the system",
+    "body":      "We couldn't connect. It may be an update in progress or a network problem. We're retrying automatically.",
+    "retry":     "Retry now",
+    "checking":  "Checking...",
+    "autoRetry": "Retrying in"
   }
 }

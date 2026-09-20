@@ -129,5 +129,12 @@
     "expired":          "vencido",
     "expiresToday":     "hoy",
     "daysShort":        "d"
+  },
+  "maintenance": {
+    "title":     "Sin conexión con el sistema",
+    "body":      "No pudimos conectarnos. Puede ser una actualización en curso o un problema de red. Estamos reintentando solo.",
+    "retry":     "Reintentar ahora",
+    "checking":  "Probando...",
+    "autoRetry": "Reintentamos en"
   }
 }

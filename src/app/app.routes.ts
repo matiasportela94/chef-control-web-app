@@ -6,6 +6,10 @@ import { permissionGuard } from './core/guards/role.guard';
 export const routes: Routes = [
   { path: '', component: LandingComponent },
   {
+    path: 'maintenance',
+    loadComponent: () => import('./features/maintenance/maintenance.component').then(m => m.MaintenanceComponent)
+  },
+  {
     path: 'login',
     loadComponent: () => import('./features/auth/login.component').then(m => m.LoginComponent)
   },

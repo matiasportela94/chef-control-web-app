@@ -8,13 +8,14 @@ import { ApiConfiguration } from './api/api-configuration';
 import { credentialsInterceptor } from './core/interceptors/credentials.interceptor';
 import { authErrorInterceptor } from './core/interceptors/auth-error.interceptor';
 import { blobErrorInterceptor } from './core/interceptors/blob-error.interceptor';
+import { serverErrorInterceptor } from './core/interceptors/server-error.interceptor';
 
 export const appConfig: ApplicationConfig = {
   providers: [
     provideZoneChangeDetection({ eventCoalescing: true }),
     provideRouter(routes),
     provideHttpClient(
-      withInterceptors([blobErrorInterceptor, credentialsInterceptor, authErrorInterceptor])
+      withInterceptors([blobErrorInterceptor, credentialsInterceptor, authErrorInterceptor, serverErrorInterceptor])
     ),
     {
       provide: ApiConfiguration,
