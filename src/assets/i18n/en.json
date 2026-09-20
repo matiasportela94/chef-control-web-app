@@ -121,5 +121,13 @@
     "emptyInactive":        "No deactivated dishes",
     "catalogActive":        "In the catalog",
     "catalogInactive":      "Deactivated"
+  },
+  "products": {
+    "nextExpiry":       "Expires",
+    "sortByExpiry":     "Expiring first",
+    "sortByExpiryHint": "Sorts items by the batch that expires soonest",
+    "expired":          "expired",
+    "expiresToday":     "today",
+    "daysShort":        "d"
   }
 }

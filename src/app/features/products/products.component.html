@@ -51,6 +51,15 @@
         </app-search-filter-bar>
       </div>
 
+      <!-- Orden por vencimiento -->
+      <div style="margin-bottom:12px;">
+        <button (click)="toggleSortByExpiration()"
+                [class]="sortByExpiration() ? 'btn-primary btn-sm' : 'btn-secondary btn-sm'"
+                [title]="t('products.sortByExpiryHint')">
+          <i class="ti ti-clock-exclamation"></i> {{ t('products.sortByExpiry') }}
+        </button>
+      </div>
+
       <!-- No filter results -->
       @if (pagedProducts().length === 0) {
         <div class="empty-state">
@@ -93,6 +102,16 @@
                   <span style="color:var(--text-3);">—</span>
                 }
               </div>
+              @if (p.nextExpirationDate) {
+                <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:10px;">
+                  <span style="font-size:11px;color:var(--text-3);">{{ t('products.nextExpiry') }}</span>
+                  <span style="font-weight:600;font-size:13px;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"
+                        [style.color]="expiryColor(p)">
+                    {{ formatDateOnly(p.nextExpirationDate) }}
+                    <span style="font-size:10px;">({{ expiryHint(p) }})</span>
+                  </span>
+                </div>
+              }
               <div style="display:flex;align-items:center;gap:6px;">
                 <button (click)="openEdit(p)" class="btn-secondary btn-sm" style="flex:1;justify-content:center;">
                   <i class="ti ti-edit"></i> Editar
@@ -117,6 +136,7 @@
                   <th class="hidden md:table-cell">Unidad</th>
                   <th class="hidden lg:table-cell">Categoría</th>
                   <th style="text-align:right;">Stock</th>
+                  <th class="hidden sm:table-cell" style="text-align:right;">{{ t('products.nextExpiry') }}</th>
                   <th class="hidden md:table-cell" style="text-align:right;">Mín</th>
                   <th class="hidden md:table-cell" style="text-align:right;">Máx</th>
                   <th style="text-align:center;">Estado</th>
@@ -164,6 +184,17 @@
                         @if (p.defaultUnit?.abbreviation) {
                           <span style="font-size:10px;color:var(--text-3);margin-left:3px;">{{ p.defaultUnit!.abbreviation }}</span>
                         }
+                      } @else {
+                        <span style="color:var(--text-3);">—</span>
+                      }
+                    </td>
+                    <!-- Próximo vencimiento -->
+                    <td class="hidden sm:table-cell" style="text-align:right;">
+                      @if (p.nextExpirationDate) {
+                        <span style="font-weight:600;" [style.color]="expiryColor(p)">
+                          {{ formatDateOnly(p.nextExpirationDate) }}
+                        </span>
+                        <span style="font-size:10px;color:var(--text-3);margin-left:3px;">{{ expiryHint(p) }}</span>
                       } @else {
                         <span style="color:var(--text-3);">—</span>
                       }

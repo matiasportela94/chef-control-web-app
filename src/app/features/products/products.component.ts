@@ -19,6 +19,8 @@ import { SpinnerComponent } from '../../shared/components/spinner/spinner.compon
 import { SearchFilterBarComponent, FilterBarState } from '../../shared/components/search-filter-bar/search-filter-bar.component';
 import { SelectComponent, SelectOption } from '../../shared/components/select/select.component';
 import { parseBlob } from '../../core/utils/parse-blob';
+import { formatDateOnly } from '../../core/utils/format';
+import { I18nService } from '../../core/services/i18n.service';
 import { extractApiError } from '../../core/utils/api-error';
 import { isFormFieldInvalid } from '../../core/utils/form';
 
@@ -40,11 +42,14 @@ export class ProductsComponent implements OnInit {
   filterCategoryId = signal('');
   filterOnlyActive = signal(true);
 
+  /** Ordenar por lo que se vence primero — los insumos sin fecha quedan al final. */
+  sortByExpiration = signal(false);
+
   filteredProducts = computed(() => {
     const term       = this.filterSearch().toLowerCase().trim();
     const catId      = this.filterCategoryId();
     const onlyActive = this.filterOnlyActive();
-    return this.products().filter(p => {
+    const list = this.products().filter(p => {
       if (onlyActive && !p.isActive) return false;
       if (catId && p.category?.id !== catId) return false;
       if (term) {
@@ -52,6 +57,13 @@ export class ProductsComponent implements OnInit {
                (p.sku?.toLowerCase().includes(term)  ?? false);
       }
       return true;
+    });
+
+    if (!this.sortByExpiration()) return list;
+    return [...list].sort((a, b) => {
+      if (!a.nextExpirationDate) return b.nextExpirationDate ? 1 : 0;
+      if (!b.nextExpirationDate) return -1;
+      return a.nextExpirationDate.localeCompare(b.nextExpirationDate); // ISO: orden alfabetico = cronologico
     });
   });
 
@@ -88,7 +100,8 @@ export class ProductsComponent implements OnInit {
 
   constructor(
     private api: Api,
-    private fb: FormBuilder
+    private fb: FormBuilder,
+    private i18n: I18nService
   ) {
     this.form = this.fb.group({
       name:          ['', Validators.required],
@@ -214,6 +227,44 @@ export class ProductsComponent implements OnInit {
   goToPage(p: number): void {
     this.page.set(p);
   }
+
+  // ── Vencimiento más próximo ─────────────────────────────────
+
+  /** Días hasta el vencimiento más próximo; negativo si ya venció, null si no hay fecha. */
+  daysToExpiry(p: ProductResponse): number | null {
+    if (!p.nextExpirationDate) return null;
+    const today  = new Date(); today.setHours(0, 0, 0, 0);
+    const expiry = new Date(p.nextExpirationDate + 'T00:00:00');
+    return Math.round((expiry.getTime() - today.getTime()) / 86400000);
+  }
+
+  expiryColor(p: ProductResponse): string {
+    const d = this.daysToExpiry(p);
+    if (d == null) return 'var(--text-3)';
+    if (d <= 0)    return 'var(--red)';
+    if (d <= 7)    return '#d97706';
+    return 'var(--text-2)';
+  }
+
+  /** Texto corto al lado de la fecha: "vencido", "hoy", "3 d". */
+  expiryHint(p: ProductResponse): string {
+    const d = this.daysToExpiry(p);
+    if (d == null)  return '';
+    if (d < 0)      return this.t('products.expired');
+    if (d === 0)    return this.t('products.expiresToday');
+    return d + ' ' + this.t('products.daysShort');
+  }
+
+  toggleSortByExpiration(): void {
+    this.sortByExpiration.update(v => !v);
+    this.page.set(1);
+  }
+
+  t(key: string): string {
+    return this.i18n.t(key);
+  }
+
+  readonly formatDateOnly = formatDateOnly;
 
   isInvalid = (field: string) => isFormFieldInvalid(this.form, field);
 }

@@ -43,8 +43,8 @@
           <i class="ti ti-trash"></i>
         </button>
       }
-      <button (click)="openCreateCarta()" class="btn-secondary btn-sm">
-        <i class="ti ti-plus"></i> {{ t('menu.newCarta') }}
+      <button (click)="openCreateCarta()" class="btn-secondary btn-sm" [title]="t('menu.newCarta')">
+        <i class="ti ti-notebook"></i> <span class="hidden sm:inline">{{ t('menu.newCarta') }}</span>
       </button>
     </div>
   </div>
@@ -636,7 +636,7 @@
             <input type="checkbox" [checked]="isAddSelected(item.id)" (change)="toggleAddItem(item.id)"
                    style="width:16px;height:16px;flex-shrink:0;" />
             <span style="flex:1;min-width:0;">
-              <span style="display:block;font-size:13px;font-weight:600;color:var(--text-1);">{{ item.name }}</span>
+              <span style="display:block;font-size:13px;font-weight:600;color:var(--text-1);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{ item.name }}</span>
               @if (item.category) {
                 <span style="display:block;font-size:11px;color:var(--text-3);">{{ item.category }}</span>
               }

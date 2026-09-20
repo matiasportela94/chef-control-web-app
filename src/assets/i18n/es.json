@@ -121,5 +121,13 @@
     "emptyInactive":        "No hay platos dados de baja",
     "catalogActive":        "En el catálogo",
     "catalogInactive":      "Dados de baja"
+  },
+  "products": {
+    "nextExpiry":       "Vence",
+    "sortByExpiry":     "Por vencer primero",
+    "sortByExpiryHint": "Ordena los insumos por el lote que vence antes",
+    "expired":          "vencido",
+    "expiresToday":     "hoy",
+    "daysShort":        "d"
   }
 }
