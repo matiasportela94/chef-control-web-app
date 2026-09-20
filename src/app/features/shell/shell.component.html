@@ -197,6 +197,18 @@
         </a>
       }
 
+      @if (authService.hasPermission('RESTAURANTS_VIEW')) {
+        <a routerLink="/restaurants" routerLinkActive="side-link-active" class="side-link">
+          <i class="ti ti-building-store"></i> Restaurantes
+        </a>
+      }
+
+      @if (authService.hasPermission('ACCOUNT_VIEW')) {
+        <a routerLink="/plan" routerLinkActive="side-link-active" class="side-link">
+          <i class="ti ti-credit-card"></i> Plan y cuenta
+        </a>
+      }
+
       @if (authService.hasPermission('AUDIT_VIEW')) {
         <a routerLink="/audit" routerLinkActive="side-link-active" class="side-link">
           <i class="ti ti-history"></i> Auditoría

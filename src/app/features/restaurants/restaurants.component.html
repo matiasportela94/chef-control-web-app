@@ -1,0 +1,118 @@
+<div class="page-wrap">
+
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">Restaurantes</h1>
+      <p class="page-subtitle">
+        @if (!loading()) { {{ restaurants().length }} locales en tu cuenta }
+      </p>
+    </div>
+    @if (canCreate) {
+      <button (click)="openCreate()" class="btn-primary btn-sm">
+        <i class="ti ti-plus"></i> Nuevo restaurante
+      </button>
+    }
+  </div>
+
+  @if (loading()) { <app-spinner /> }
+
+  @if (!loading() && error()) {
+    <div style="background:var(--red-bg);border:1.5px solid var(--red);border-radius:14px;padding:20px;text-align:center;">
+      <p style="font-size:12px;color:var(--red);margin-bottom:12px;">{{ error() }}</p>
+      <button (click)="load()" class="btn-secondary btn-sm">Reintentar</button>
+    </div>
+  }
+
+  @if (!loading() && !error()) {
+    <div style="display:flex;flex-direction:column;gap:8px;">
+      @for (r of restaurants(); track r.id) {
+        <div class="data-card" style="padding:14px 16px;" [style.opacity]="r.isActive ? 1 : 0.6">
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;">
+            <div style="display:flex;align-items:center;gap:8px;min-width:0;flex-wrap:wrap;">
+              <p style="color:var(--text-1);font-weight:600;font-size:13px;">{{ r.name }}</p>
+              @if (isCurrent(r)) { <span class="badge badge-owner">Local actual</span> }
+              @if (!r.isActive) {
+                <span class="badge" style="background:var(--red-bg);color:var(--red);">Deshabilitado</span>
+              }
+              <span style="font-size:11px;color:var(--text-3);">{{ r.timezone }}</span>
+            </div>
+            <div style="display:flex;align-items:center;gap:6px;">
+              @if (canUpdate) {
+                <button (click)="openEdit(r)" class="btn-secondary btn-sm">
+                  <i class="ti ti-edit"></i> Editar
+                </button>
+                @if (!isCurrent(r)) {
+                  <button (click)="toggleActive(r)" [disabled]="rowBusy() === r.id" class="btn-secondary btn-sm">
+                    <i class="ti" [class.ti-player-play]="!r.isActive" [class.ti-player-pause]="r.isActive"></i>
+                    {{ r.isActive ? 'Deshabilitar' : 'Habilitar' }}
+                  </button>
+                }
+              }
+              @if (canDelete && !isCurrent(r)) {
+                <button (click)="openDelete(r)" class="btn-danger btn-sm">
+                  <i class="ti ti-trash"></i>
+                </button>
+              }
+              @if (isCurrent(r)) {
+                <span style="font-size:11px;color:var(--text-3);">Cambiá de local para deshabilitarlo o eliminarlo</span>
+              }
+            </div>
+          </div>
+        </div>
+      }
+    </div>
+  }
+
+</div>
+
+<app-drawer [isOpen]="drawerOpen()" [title]="editing() ? 'Editar restaurante' : 'Nuevo restaurante'" (closed)="closeDrawer()">
+  <form id="restaurant-form" [formGroup]="form" (ngSubmit)="save()" style="display:flex;flex-direction:column;gap:16px;">
+
+    <div>
+      <label class="field-label">Nombre <span style="color:var(--red);">*</span></label>
+      <input formControlName="name" type="text" placeholder="Ej: Sucursal Palermo"
+             class="field-input" [class.input-error]="isInvalid('name')">
+      @if (isInvalid('name')) { <p style="font-size:11px;color:var(--red);margin-top:4px;">Campo requerido</p> }
+    </div>
+
+    <div>
+      <label class="field-label">Zona horaria</label>
+      <input formControlName="timezone" type="text" placeholder="America/Argentina/Buenos_Aires" class="field-input">
+      <p style="font-size:11px;color:var(--text-3);margin-top:4px;">Vacío usa la zona horaria por defecto.</p>
+    </div>
+
+    @if (saveError()) {
+      <div style="background:var(--red-bg);border:1.5px solid var(--red);border-radius:10px;padding:12px 16px;font-size:12px;color:var(--red);">
+        {{ saveError() }}
+      </div>
+    }
+
+  </form>
+
+  <div drawer-footer style="padding:14px 20px;border-top:1px solid var(--border);display:flex;gap:8px;background:var(--bg-card);">
+    <button type="button" (click)="closeDrawer()" class="btn-secondary btn-sm">Cancelar</button>
+    <button type="submit" form="restaurant-form" [disabled]="saving()" class="btn-primary btn-sm" style="flex:1;justify-content:center;">
+      @if (saving()) { <span class="loader"></span> }
+      {{ editing() ? 'Guardar cambios' : 'Crear restaurante' }}
+    </button>
+  </div>
+</app-drawer>
+
+<app-action-dialog
+  [visible]="!!deleting()"
+  title="Eliminar restaurante"
+  icon="⚠️"
+  tone="danger"
+  [message]="deleteError() ?? 'Se borra TODA la data de este local: stock, compras, ventas, mermas, recetas, menú y accesos de usuarios. No se puede deshacer.'"
+  [itemTitle]="deleting()?.name ?? ''"
+  helperText="Solo queda el registro de auditoría de que el local existió y se eliminó."
+  inputLabel="Escribí el nombre del restaurante para confirmar"
+  [inputPlaceholder]="deleting()?.name ?? ''"
+  [inputValue]="deleteConfirm()"
+  (inputValueChange)="deleteConfirm.set($event)"
+  confirmLabel="Eliminar definitivamente"
+  cancelLabel="Cancelar"
+  [confirmDisabled]="deleteBlocked()"
+  (confirm)="confirmDelete()"
+  (cancel)="closeDelete()">
+</app-action-dialog>

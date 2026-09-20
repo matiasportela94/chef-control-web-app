@@ -73,6 +73,16 @@ export const routes: Routes = [
         loadComponent: () => import('./features/stock-counts/stock-counts.component').then(m => m.StockCountsComponent)
       },
       {
+        path: 'restaurants',
+        canActivate: [permissionGuard('RESTAURANTS_VIEW')],
+        loadComponent: () => import('./features/restaurants/restaurants.component').then(m => m.RestaurantsComponent)
+      },
+      {
+        path: 'plan',
+        canActivate: [permissionGuard('ACCOUNT_VIEW')],
+        loadComponent: () => import('./features/plan/plan.component').then(m => m.PlanComponent)
+      },
+      {
         path: 'audit',
         canActivate: [permissionGuard('AUDIT_VIEW')],
         loadComponent: () => import('./features/audit/audit.component').then(m => m.AuditComponent)

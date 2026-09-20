@@ -4,7 +4,7 @@ import { DecimalPipe } from '@angular/common';
 import { Api } from '../../api/api';
 import { list4 as listMenuItems }      from '../../api/fn/menu-item-controller/list-4';
 import { create4 as createMenuItem }   from '../../api/fn/menu-item-controller/create-4';
-import { update1 as updateMenuItem }    from '../../api/fn/menu-item-controller/update-1';
+import { update2 as updateMenuItem }    from '../../api/fn/menu-item-controller/update-2';
 import { deactivate as deactivateMenuItem } from '../../api/fn/menu-item-controller/deactivate';
 import { bulkDeactivate as bulkDeactivateMenuItems } from '../../api/fn/menu-item-controller/bulk-deactivate';
 import { activate as activateMenuItem } from '../../api/fn/menu-item-controller/activate';

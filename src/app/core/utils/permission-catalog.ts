@@ -32,6 +32,8 @@ export const PERMISSION_MODULES: PermissionModule[] = [
   { label: 'Usuarios',    view: 'USERS_VIEW',         create: 'USERS_CREATE',         update: 'USERS_UPDATE',         delete: 'USERS_DELETE' },
   { label: 'Auditoría',   view: 'AUDIT_VIEW' },
   { label: 'Roles',       view: 'ROLES_VIEW',         create: 'ROLES_CREATE',         update: 'ROLES_UPDATE',         delete: 'ROLES_DELETE' },
+  { label: 'Restaurantes', view: 'RESTAURANTS_VIEW',  create: 'RESTAURANTS_CREATE',  update: 'RESTAURANTS_UPDATE',  delete: 'RESTAURANTS_DELETE' },
+  { label: 'Plan y cuenta', view: 'ACCOUNT_VIEW' },
   { label: 'Entrada rápida (IA)', single: { key: 'AI_USE', label: 'Permitido' } },
 ];
 
