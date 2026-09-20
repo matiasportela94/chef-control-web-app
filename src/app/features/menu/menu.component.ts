@@ -2,8 +2,8 @@ import { Component, HostListener, OnInit, computed, signal } from '@angular/core
 import { FormArray, FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { DecimalPipe } from '@angular/common';
 import { Api } from '../../api/api';
-import { list3 as listMenuItems }      from '../../api/fn/menu-item-controller/list-3';
-import { create3 as createMenuItem }   from '../../api/fn/menu-item-controller/create-3';
+import { list4 as listMenuItems }      from '../../api/fn/menu-item-controller/list-4';
+import { create4 as createMenuItem }   from '../../api/fn/menu-item-controller/create-4';
 import { update1 as updateMenuItem }    from '../../api/fn/menu-item-controller/update-1';
 import { deactivate as deactivateMenuItem } from '../../api/fn/menu-item-controller/deactivate';
 import { bulkDeactivate as bulkDeactivateMenuItems } from '../../api/fn/menu-item-controller/bulk-deactivate';

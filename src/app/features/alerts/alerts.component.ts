@@ -1,6 +1,6 @@
 import { Component, OnInit, signal } from '@angular/core';
 import { Api } from '../../api/api';
-import { list6 as list4 } from '../../api/fn/alert-controller/list-6';
+import { list7 as list4 } from '../../api/fn/alert-controller/list-7';
 import { markRead } from '../../api/fn/alert-controller/mark-read';
 import { resolve } from '../../api/fn/alert-controller/resolve';
 import { AlertResponse } from '../../api/models/alert-response';

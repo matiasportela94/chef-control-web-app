@@ -8,7 +8,7 @@ import { list1 as listSales }      from '../../api/fn/sale-controller/list-1';
 import { create1 as createSale }   from '../../api/fn/sale-controller/create-1';
 import { get3 as getSale }         from '../../api/fn/sale-controller/get-3';
 import { reverse1 as reverseSale } from '../../api/fn/sale-controller/reverse-1';
-import { list3 as listMenuItems }  from '../../api/fn/menu-item-controller/list-3';
+import { list4 as listMenuItems }  from '../../api/fn/menu-item-controller/list-4';
 import { SaleResponse }            from '../../api/models/sale-response';
 import { MenuItemResponse }        from '../../api/models/menu-item-response';
 import { PagedResponseSaleResponse }     from '../../api/models/paged-response-sale-response';

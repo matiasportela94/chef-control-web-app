@@ -2,7 +2,7 @@ import { Component, OnInit, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Api } from '../../api/api';
 import { calculate } from '../../api/fn/food-cost-controller/calculate';
-import { list3 as list2 } from '../../api/fn/menu-item-controller/list-3';
+import { list4 as list2 } from '../../api/fn/menu-item-controller/list-4';
 import { getRecipeCost } from '../../api/fn/menu-item-controller/get-recipe-cost';
 import { getFoodCost } from '../../api/fn/menu-item-controller/get-food-cost';
 import { FoodCostResponse } from '../../api/models/food-cost-response';
