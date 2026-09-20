@@ -69,7 +69,14 @@
     "NOT_FOUND":                    "Resource not found",
     "FORBIDDEN":                    "You don't have permission to perform this action",
     "UNPROCESSABLE":                "Could not process the operation",
-    "INTERNAL_ERROR":               "Internal server error"
+    "INTERNAL_ERROR":               "Internal server error",
+    "ROLE_NOT_FOUND":               "Role not found",
+    "DUPLICATE_ROLE_NAME":          "A role with that name already exists in your account",
+    "SYSTEM_ROLE_IMMUTABLE":        "The account owner role cannot be edited, deleted or assigned",
+    "ROLE_IN_USE":                  "Cannot delete: users are still assigned to this role",
+    "PLAN_LIMIT_REACHED":           "Your current plan does not allow more restaurants",
+    "CANNOT_MODIFY_CURRENT_RESTAURANT": "Switch to another restaurant before disabling or deleting this one",
+    "NOT_ACCOUNT_OWNER":            "Only the account owner can do this"
   },
   "ai": {
     "title":       "Quick entry",

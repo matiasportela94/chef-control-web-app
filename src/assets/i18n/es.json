@@ -69,7 +69,14 @@
     "NOT_FOUND":                    "Recurso no encontrado",
     "FORBIDDEN":                    "Sin permiso para realizar esta acción",
     "UNPROCESSABLE":                "No se pudo procesar la operación",
-    "INTERNAL_ERROR":               "Error interno del servidor. Intentá de nuevo."
+    "INTERNAL_ERROR":               "Error interno del servidor. Intentá de nuevo.",
+    "ROLE_NOT_FOUND":               "No se encontró el rol",
+    "DUPLICATE_ROLE_NAME":          "Ya existe un rol con ese nombre en tu cuenta",
+    "SYSTEM_ROLE_IMMUTABLE":        "El rol del dueño de la cuenta no se puede editar, eliminar ni asignar",
+    "ROLE_IN_USE":                  "No se puede eliminar: hay usuarios con este rol asignado",
+    "PLAN_LIMIT_REACHED":           "Tu plan actual no permite más restaurantes",
+    "CANNOT_MODIFY_CURRENT_RESTAURANT": "Cambiá a otro restaurante antes de deshabilitar o eliminar este",
+    "NOT_ACCOUNT_OWNER":            "Solo el dueño de la cuenta puede hacer esto"
   },
   "ai": {
     "title":       "Entrada rápida",

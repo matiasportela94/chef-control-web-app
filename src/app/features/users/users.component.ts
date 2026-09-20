@@ -122,7 +122,7 @@ export class UsersComponent implements OnInit {
     this.saveError.set(null);
     this.drawerOpen.set(true);
     this.permissionsError.set(null);
-    if (this.authService.isOwner && u.id && !u.roleIsSystem) void this.loadPermissions(u.id);
+    if (this.authService.hasPermission('ROLES_VIEW') && u.id && !u.roleIsSystem) void this.loadPermissions(u.id);
   }
 
   // ── Permisos ─────────────────────────────────────────────────

@@ -1,8 +1,13 @@
-import { Component, OnInit, signal } from '@angular/core';
+import { Component, OnInit, computed, signal } from '@angular/core';
+import { Router } from '@angular/router';
 import { Api } from '../../api/api';
 import { get4 as getAccount } from '../../api/fn/account-controller/get-4';
+import { delete2 as deleteAccount } from '../../api/fn/account-controller/delete-2';
 import { AccountResponse } from '../../api/models/account-response';
 import { parseBlob } from '../../core/utils/parse-blob';
+import { extractApiError } from '../../core/utils/api-error';
+import { AuthService } from '../../core/services/auth.service';
+import { ActionDialogComponent } from '../../shared/components/action-dialog/action-dialog.component';
 import { SpinnerComponent } from '../../shared/components/spinner/spinner.component';
 
 /** Etiquetas de Feature (domain/plan/Feature.java) — las que no estén acá se muestran crudas. */
@@ -25,7 +30,7 @@ const FEATURE_LABELS: Record<string, string> = {
 @Component({
   selector: 'app-plan',
   standalone: true,
-  imports: [SpinnerComponent],
+  imports: [SpinnerComponent, ActionDialogComponent],
   templateUrl: './plan.component.html',
   styleUrl: './plan.component.scss'
 })
@@ -34,7 +39,23 @@ export class PlanComponent implements OnInit {
   loading = signal(true);
   error   = signal<string | null>(null);
 
-  constructor(private api: Api) {}
+  deleting      = signal(false);
+  deleteConfirm = signal('');
+  deleteLoading = signal(false);
+  deleteError   = signal<string | null>(null);
+
+  deleteBlocked = computed(() =>
+    this.deleteLoading() || this.deleteConfirm().trim() !== (this.account()?.name ?? ''));
+
+  /**
+   * Solo el dueño puede cerrar la cuenta — y el backend lo vuelve a exigir, esto es únicamente
+   * para no mostrar un botón que va a rebotar. Se compara por email porque el nombre del rol
+   * es texto libre de cada cuenta y no sirve para identificar al dueño.
+   */
+  isOwner = computed(() =>
+    !!this.account()?.ownerEmail && this.account()!.ownerEmail === this.auth.currentUser()?.email);
+
+  constructor(private api: Api, private auth: AuthService, private router: Router) {}
 
   async ngOnInit(): Promise<void> {
     await this.load();
@@ -50,6 +71,32 @@ export class PlanComponent implements OnInit {
       this.error.set('No se pudo cargar la información de la cuenta.');
     } finally {
       this.loading.set(false);
+    }
+  }
+
+  openDelete(): void {
+    this.deleting.set(true);
+    this.deleteConfirm.set('');
+    this.deleteError.set(null);
+  }
+
+  closeDelete(): void {
+    this.deleting.set(false);
+    this.deleteConfirm.set('');
+  }
+
+  async confirmDelete(): Promise<void> {
+    if (this.deleteBlocked()) return;
+    this.deleteLoading.set(true);
+    this.deleteError.set(null);
+    try {
+      await this.api.invoke(deleteAccount);
+      await this.auth.logout();
+      await this.router.navigate(['/']);
+    } catch (e: any) {
+      this.deleteError.set(extractApiError(e, 'No se pudo eliminar la cuenta'));
+    } finally {
+      this.deleteLoading.set(false);
     }
   }
 

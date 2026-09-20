@@ -178,7 +178,7 @@
 
     </form>
 
-    @if (editing() && authService.isOwner) {
+    @if (editing() && authService.hasPermission('ROLES_UPDATE')) {
       <div class="sec-div">Permisos</div>
 
       @if (editing()?.roleIsSystem) {

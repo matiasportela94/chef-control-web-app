@@ -88,10 +88,6 @@ export class AuthService {
     this.currentUser.set(user);
   }
 
-  get isOwner(): boolean {
-    return this.currentUser()?.role === 'OWNER';
-  }
-
   /** Permiso efectivo (rol + overrides), ya resuelto por el backend y guardado en el login. */
   hasPermission(permission: string): boolean {
     return this.currentUser()?.permissions.includes(permission) ?? false;
