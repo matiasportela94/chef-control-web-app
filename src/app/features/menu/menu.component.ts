@@ -1,13 +1,13 @@
 import { Component, HostListener, OnInit, computed, signal } from '@angular/core';
-import { FormArray, FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
-import { DecimalPipe } from '@angular/common';
-import { Api } from '../../api/api';
-import { list4 as listMenuItems }      from '../../api/fn/menu-item-controller/list-4';
-import { create4 as createMenuItem }   from '../../api/fn/menu-item-controller/create-4';
-import { update2 as updateMenuItem }    from '../../api/fn/menu-item-controller/update-2';
-import { deactivate as deactivateMenuItem } from '../../api/fn/menu-item-controller/deactivate';
-import { bulkDeactivate as bulkDeactivateMenuItems } from '../../api/fn/menu-item-controller/bulk-deactivate';
-import { activate as activateMenuItem } from '../../api/fn/menu-item-controller/activate';
+import { FormArray, FormBuilder, FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { DecimalPipe }                 from '@angular/common';
+import { Api }                         from '../../api/api';
+import { listMenuItems }               from '../../api/fn/menu-item-controller/list-menu-items';
+import { createMenuItem }              from '../../api/fn/menu-item-controller/create-menu-item';
+import { updateMenuItem }              from '../../api/fn/menu-item-controller/update-menu-item';
+import { deactivateMenuItem }          from '../../api/fn/menu-item-controller/deactivate-menu-item';
+import { bulkDeactivateMenuItems }     from '../../api/fn/menu-item-controller/bulk-deactivate-menu-items';
+import { activateMenuItem }            from '../../api/fn/menu-item-controller/activate-menu-item';
 import { getRecipe }                   from '../../api/fn/menu-item-controller/get-recipe';
 import { setRecipe }                   from '../../api/fn/menu-item-controller/set-recipe';
 import { deleteRecipe }                from '../../api/fn/menu-item-controller/delete-recipe';
@@ -20,17 +20,26 @@ import { RecipeCostResponse }          from '../../api/models/recipe-cost-respon
 import { ProductResponse }             from '../../api/models/product-response';
 import { UnitResponse }                from '../../api/models/unit-response';
 import { PagedResponseMenuItemResponse } from '../../api/models/paged-response-menu-item-response';
-import { PagedResponseProductResponse }  from '../../api/models/paged-response-product-response';
-import { parseBlob } from '../../core/utils/parse-blob';
-import { formatARS } from '../../core/utils/format';
-import { extractApiError } from '../../core/utils/api-error';
-import { PaginatorComponent } from '../../shared/components/paginator/paginator.component';
-import { ActionDialogComponent } from '../../shared/components/action-dialog/action-dialog.component';
-import { DrawerComponent } from '../../shared/components/drawer/drawer.component';
-import { SpinnerComponent } from '../../shared/components/spinner/spinner.component';
+import { PagedResponseProductResponse } from '../../api/models/paged-response-product-response';
+import { parseBlob }                   from '../../core/utils/parse-blob';
+import { formatARS }                   from '../../core/utils/format';
+import { extractApiError }             from '../../core/utils/api-error';
+import { PaginatorComponent }          from '../../shared/components/paginator/paginator.component';
+import { ActionDialogComponent }       from '../../shared/components/action-dialog/action-dialog.component';
+import { DrawerComponent }             from '../../shared/components/drawer/drawer.component';
+import { SpinnerComponent }            from '../../shared/components/spinner/spinner.component';
 import { SearchFilterBarComponent, FilterBarState } from '../../shared/components/search-filter-bar/search-filter-bar.component';
-import { isFormFieldInvalid } from '../../core/utils/form';
+import { isFormFieldInvalid }          from '../../core/utils/form';
 import { SelectComponent, SelectOption } from '../../shared/components/select/select.component';
+import { listCartas }                  from '../../api/fn/carta-controller/list-cartas';
+import { createCarta }                 from '../../api/fn/carta-controller/create-carta';
+import { updateCarta }                 from '../../api/fn/carta-controller/update-carta';
+import { deleteCarta }                 from '../../api/fn/carta-controller/delete-carta';
+import { addCartaItems }               from '../../api/fn/carta-controller/add-carta-items';
+import { removeCartaItems }            from '../../api/fn/carta-controller/remove-carta-items';
+import { listCartaMenuItems }          from '../../api/fn/carta-controller/list-carta-menu-items';
+import { CartaResponse }               from '../../api/models/carta-response';
+import { I18nService }                 from '../../core/services/i18n.service';
 
 @Component({
   selector: 'app-menu',
@@ -49,8 +58,56 @@ export class MenuComponent implements OnInit {
   filterSearch     = signal('');
   filterCategoryId = signal('');
 
-  /** Carta actual (activa, default) vs cartas pasadas (desactivadas) — vistas separadas, no mezcladas. */
+  /**
+   * Qué se está mirando: una carta concreta, o el catálogo completo de platos ('').
+   * La carta dice qué se ofrece; el catálogo, qué existe. Son cosas distintas.
+   */
+  cartas          = signal<CartaResponse[]>([]);
+  selectedCartaId = signal<string>('');
+  cartaControl    = new FormControl<string>('', { nonNullable: true });
+
+  selectedCarta = computed(() => this.cartas().find(c => c.id === this.selectedCartaId()) ?? null);
+  catalogMode   = computed(() => this.selectedCartaId() === '');
+
+  cartaOptions = computed<SelectOption[]>(() => [
+    ...this.cartas().map(c => ({
+      value: c.id ?? '',
+      label: c.active ? (c.name ?? '') : `${c.name} (${this.t('menu.inactive')})`,
+    })),
+    { value: '', label: this.t('menu.allDishes') },
+  ]);
+
+  /** Solo en el catálogo: ver los platos dados de baja para reactivarlos. */
   viewMode = signal<'active' | 'inactive'>('active');
+
+  // ── Drawer de carta (crear / renombrar) ─────────────────────────
+  cartaDrawerOpen = signal(false);
+  editingCarta    = signal<CartaResponse | null>(null);
+  cartaSaving     = signal(false);
+  cartaSaveError  = signal<string | null>(null);
+  deletingCarta   = signal<CartaResponse | null>(null);
+  deleteCartaLoading = signal(false);
+  togglingCarta   = signal(false);
+
+  // ── Drawer "agregar platos a la carta" ──────────────────────────
+  addItemsOpen      = signal(false);
+  catalogItems      = signal<MenuItemResponse[]>([]);
+  catalogLoading    = signal(false);
+  addItemsSelected  = signal<Set<string>>(new Set());
+  addItemsSaving    = signal(false);
+  addItemsSearch    = signal('');
+  removingFromCarta = signal(false);
+
+  /** El catálogo menos lo que la carta ya tiene. */
+  addableItems = computed(() => {
+    const already = new Set(this.selectedCarta()?.menuItemIds ?? []);
+    const term = this.addItemsSearch().toLowerCase().trim();
+    return this.catalogItems().filter(i => {
+      if (!i.id || already.has(i.id)) return false;
+      if (term) return i.name?.toLowerCase().includes(term) ?? false;
+      return true;
+    });
+  });
 
   filteredItems = computed(() => {
     const term = this.filterSearch().toLowerCase().trim();
@@ -69,7 +126,9 @@ export class MenuComponent implements OnInit {
 
   isFiltered = computed(() => this.filterSearch() !== '' || this.filterCategoryId() !== '');
 
-  // ── Selección múltiple (solo en la carta activa) ────────────────
+  // ── Selección múltiple (no en la vista de dados de baja) ────────
+  canSelect = computed(() => !this.catalogMode() || this.viewMode() === 'active');
+
   selectedIds = signal<Set<string>>(new Set());
   selectedCount = computed(() => this.selectedIds().size);
   allVisibleSelected = computed(() => {
@@ -118,7 +177,13 @@ export class MenuComponent implements OnInit {
   itemForm:   FormGroup;
   recipeForm: FormGroup;
 
-  constructor(private api: Api, private fb: FormBuilder) {
+  cartaForm: FormGroup;
+
+  constructor(private api: Api, private fb: FormBuilder, private i18n: I18nService) {
+    this.cartaForm = this.fb.group({
+      name: ['', Validators.required],
+    });
+
     this.itemForm = this.fb.group({
       name:        ['', Validators.required],
       description: [''],
@@ -133,15 +198,41 @@ export class MenuComponent implements OnInit {
   }
 
   async ngOnInit(): Promise<void> {
+    await this.loadCartas();
+    // Arranca en la primera carta activa; si no hay ninguna, en el catálogo completo.
+    const first = this.cartas().find(c => c.active) ?? this.cartas()[0];
+    if (first?.id) {
+      this.selectedCartaId.set(first.id);
+      this.cartaControl.setValue(first.id);
+    }
     await Promise.all([this.loadMenuItems(), this.loadFormData()]);
+  }
+
+  t(key: string): string {
+    return this.i18n.t(key);
+  }
+
+  itemsLabel(): string {
+    if (!this.catalogMode()) return this.t('menu.dishesInCarta');
+    return this.viewMode() === 'active' ? this.t('menu.dishesInCatalog') : this.t('menu.dishesInactive');
+  }
+
+  async loadCartas(): Promise<void> {
+    try {
+      const raw = await this.api.invoke(listCartas, {}) as unknown;
+      this.cartas.set(await parseBlob<CartaResponse[]>(raw) ?? []);
+    } catch { /* la pantalla sigue usable en modo catálogo */ }
   }
 
   async loadMenuItems(): Promise<void> {
     if (this.menuItems().length === 0) this.loading.set(true); // evita el flash de spinner (y el salto de scroll) en recargas tras crear/editar/desactivar
     this.error.set(null);
     try {
-      const raw = await this.api.invoke(listMenuItems,
-        { page: 0, size: 999, active: this.viewMode() === 'active' }) as unknown;
+      const cartaId = this.selectedCartaId();
+      const raw = cartaId
+        ? await this.api.invoke(listCartaMenuItems, { id: cartaId, page: 0, size: 999 }) as unknown
+        : await this.api.invoke(listMenuItems,
+            { page: 0, size: 999, active: this.viewMode() === 'active' }) as unknown;
       const res = await parseBlob<PagedResponseMenuItemResponse>(raw);
       this.menuItems.set(res.content ?? []);
       void this.loadAllCosts(res.content ?? []);
@@ -152,7 +243,157 @@ export class MenuComponent implements OnInit {
     }
   }
 
-  // ── Vista: carta actual / cartas pasadas ────────────────────────
+  // ── Cambio de carta / catálogo ──────────────────────────────────
+
+  async switchCarta(cartaId: string): Promise<void> {
+    if (this.selectedCartaId() === cartaId) return;
+    this.selectedCartaId.set(cartaId);
+    this.viewMode.set('active');
+    this.clearSelection();
+    this.page.set(1);
+    this.menuItems.set([]); // cambio real de dataset: acá sí va el spinner
+    await this.loadMenuItems();
+  }
+
+  // ── CRUD de carta ───────────────────────────────────────────────
+
+  openCreateCarta(): void {
+    this.editingCarta.set(null);
+    this.cartaForm.reset({ name: '' });
+    this.cartaSaveError.set(null);
+    this.cartaDrawerOpen.set(true);
+  }
+
+  openEditCarta(): void {
+    const carta = this.selectedCarta();
+    if (!carta) return;
+    this.editingCarta.set(carta);
+    this.cartaForm.reset({ name: carta.name ?? '' });
+    this.cartaSaveError.set(null);
+    this.cartaDrawerOpen.set(true);
+  }
+
+  async saveCarta(): Promise<void> {
+    if (this.cartaForm.invalid) { this.cartaForm.markAllAsTouched(); return; }
+    this.cartaSaving.set(true);
+    this.cartaSaveError.set(null);
+    const name = this.cartaForm.getRawValue().name!.trim();
+    try {
+      const editing = this.editingCarta();
+      if (editing?.id) {
+        await this.api.invoke(updateCarta, { id: editing.id, body: { name } });
+        await this.loadCartas();
+      } else {
+        const raw = await this.api.invoke(createCarta, { body: { name, menuItemIds: [] } }) as unknown;
+        const created = await parseBlob<CartaResponse>(raw);
+        await this.loadCartas();
+        if (created.id) {
+          this.cartaControl.setValue(created.id);
+          await this.switchCarta(created.id);
+        }
+      }
+      this.cartaDrawerOpen.set(false);
+    } catch (e: any) {
+      this.cartaSaveError.set(extractApiError(e, this.t('menu.saveCartaError')));
+    } finally {
+      this.cartaSaving.set(false);
+    }
+  }
+
+  async toggleCartaActive(): Promise<void> {
+    const carta = this.selectedCarta();
+    if (!carta?.id) return;
+    this.togglingCarta.set(true);
+    try {
+      await this.api.invoke(updateCarta, { id: carta.id, body: { active: !carta.active } });
+      await this.loadCartas();
+    } catch { /* el interceptor global muestra el error */ }
+    finally { this.togglingCarta.set(false); }
+  }
+
+  async confirmDeleteCarta(): Promise<void> {
+    const carta = this.deletingCarta();
+    if (!carta?.id) return;
+    this.deleteCartaLoading.set(true);
+    try {
+      await this.api.invoke(deleteCarta, { id: carta.id });
+      this.deletingCarta.set(null);
+      await this.loadCartas();
+      const next = this.cartas().find(c => c.active) ?? this.cartas()[0];
+      this.cartaControl.setValue(next?.id ?? '');
+      this.selectedCartaId.set('');          // fuerza que switchCarta detecte el cambio
+      await this.switchCarta(next?.id ?? '');
+      if (!next?.id) await this.loadMenuItems();
+    } catch { /* stays in dialog */ }
+    finally { this.deleteCartaLoading.set(false); }
+  }
+
+  // ── Agregar platos del catálogo a la carta ──────────────────────
+
+  async openAddItems(): Promise<void> {
+    this.addItemsSelected.set(new Set());
+    this.addItemsSearch.set('');
+    this.addItemsOpen.set(true);
+    this.catalogLoading.set(true);
+    try {
+      const raw = await this.api.invoke(listMenuItems, { page: 0, size: 999, active: true }) as unknown;
+      const res = await parseBlob<PagedResponseMenuItemResponse>(raw);
+      this.catalogItems.set(res.content ?? []);
+    } catch { this.catalogItems.set([]); }
+    finally { this.catalogLoading.set(false); }
+  }
+
+  toggleAddItem(id?: string): void {
+    if (!id) return;
+    const next = new Set(this.addItemsSelected());
+    next.has(id) ? next.delete(id) : next.add(id);
+    this.addItemsSelected.set(next);
+  }
+
+  isAddSelected(id?: string): boolean {
+    return !!id && this.addItemsSelected().has(id);
+  }
+
+  async confirmAddItems(): Promise<void> {
+    const cartaId = this.selectedCartaId();
+    const menuItemIds = [...this.addItemsSelected()];
+    if (!cartaId || menuItemIds.length === 0) return;
+    this.addItemsSaving.set(true);
+    try {
+      await this.api.invoke(addCartaItems, { id: cartaId, body: { menuItemIds } });
+      this.addItemsOpen.set(false);
+      await Promise.all([this.loadCartas(), this.loadMenuItems()]);
+    } catch { /* stays in drawer */ }
+    finally { this.addItemsSaving.set(false); }
+  }
+
+  /** Sacar un plato suelto — misma llamada en lote, con una lista de uno. */
+  async removeItemFromCarta(item: MenuItemResponse): Promise<void> {
+    const cartaId = this.selectedCartaId();
+    if (!cartaId || !item.id) return;
+    this.removingFromCarta.set(true);
+    try {
+      await this.api.invoke(removeCartaItems, { id: cartaId, body: { menuItemIds: [item.id] } });
+      await Promise.all([this.loadCartas(), this.loadMenuItems()]);
+    } catch { /* el interceptor global muestra el error */ }
+    finally { this.removingFromCarta.set(false); }
+  }
+
+  /** Sacar de la carta ≠ dar de baja: el plato sigue en el catálogo. */
+  async removeSelectedFromCarta(): Promise<void> {
+    const cartaId = this.selectedCartaId();
+    const menuItemIds = [...this.selectedIds()];
+    if (!cartaId || menuItemIds.length === 0) return;
+    this.removingFromCarta.set(true);
+    try {
+      await this.api.invoke(removeCartaItems, { id: cartaId, body: { menuItemIds } });
+      this.clearSelection();
+      await Promise.all([this.loadCartas(), this.loadMenuItems()]);
+    } catch { /* el interceptor global muestra el error */ }
+    finally { this.removingFromCarta.set(false); }
+  }
+
+  // ── Vista del catálogo: activos / dados de baja ──────────────────
 
   async switchView(mode: 'active' | 'inactive'): Promise<void> {
     if (this.viewMode() === mode) return;
@@ -461,8 +702,11 @@ export class MenuComponent implements OnInit {
 
   @HostListener('document:keydown.escape')
   onEscape(): void {
-    if (this.drawerOpen())    this.closeDrawer();
-    else if (this.deactivating()) this.deactivating.set(null);
+    if (this.drawerOpen())            this.closeDrawer();
+    else if (this.addItemsOpen())     this.addItemsOpen.set(false);
+    else if (this.cartaDrawerOpen())  this.cartaDrawerOpen.set(false);
+    else if (this.deletingCarta())    this.deletingCarta.set(null);
+    else if (this.deactivating())     this.deactivating.set(null);
   }
 
   onFiltersChange(state: FilterBarState): void {

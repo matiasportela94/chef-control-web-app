@@ -1,6 +1,6 @@
 import { Injectable, signal } from '@angular/core';
 import { Api } from '../../api/api';
-import { list7 as list4 } from '../../api/fn/alert-controller/list-7';
+import { listAlerts } from '../../api/fn/alert-controller/list-alerts';
 import { PagedResponseAlertResponse } from '../../api/models/paged-response-alert-response';
 import { parseBlob } from '../utils/parse-blob';
 
@@ -12,7 +12,7 @@ export class AlertNotificationService {
 
   async refresh(): Promise<void> {
     try {
-      const raw = await this.api.invoke(list4, { page: 0, size: 100 }) as unknown;
+      const raw = await this.api.invoke(listAlerts, { page: 0, size: 100 }) as unknown;
       const res = await parseBlob<PagedResponseAlertResponse>(raw);
       const count = (res.content ?? []).filter(a => !a.isRead && !a.resolvedAt).length;
       this.unreadCount.set(count);

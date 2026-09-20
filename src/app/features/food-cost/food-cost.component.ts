@@ -2,7 +2,7 @@ import { Component, OnInit, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Api } from '../../api/api';
 import { calculate } from '../../api/fn/food-cost-controller/calculate';
-import { list4 as list2 } from '../../api/fn/menu-item-controller/list-4';
+import { listMenuItems } from '../../api/fn/menu-item-controller/list-menu-items';
 import { getRecipeCost } from '../../api/fn/menu-item-controller/get-recipe-cost';
 import { getFoodCost } from '../../api/fn/menu-item-controller/get-food-cost';
 import { FoodCostResponse } from '../../api/models/food-cost-response';
@@ -69,7 +69,7 @@ export class FoodCostComponent implements OnInit {
 
   async loadMenuItems(): Promise<void> {
     try {
-      const raw = await this.api.invoke(list2, { page: 0, size: 999 }) as unknown;
+      const raw = await this.api.invoke(listMenuItems, { page: 0, size: 999 }) as unknown;
       const res = await parseBlob<PagedResponseMenuItemResponse>(raw);
       this.menuItems.set(res.content ?? []);
     } catch { /* non-critical */ }

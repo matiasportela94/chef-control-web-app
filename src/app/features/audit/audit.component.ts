@@ -1,6 +1,6 @@
 import { Component, OnInit, signal } from '@angular/core';
 import { Api } from '../../api/api';
-import { list6 as listAuditLogs } from '../../api/fn/audit-log-controller/list-6';
+import { listAuditLogs } from '../../api/fn/audit-log-controller/list-audit-logs';
 import { AuditLogResponse } from '../../api/models/audit-log-response';
 import { PagedResponseAuditLogResponse } from '../../api/models/paged-response-audit-log-response';
 import { parseBlob } from '../../core/utils/parse-blob';

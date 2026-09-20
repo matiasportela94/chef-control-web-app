@@ -1,6 +1,6 @@
 import { Component, OnInit, signal } from '@angular/core';
 import { Api } from '../../api/api';
-import { list7 as list4 } from '../../api/fn/alert-controller/list-7';
+import { listAlerts } from '../../api/fn/alert-controller/list-alerts';
 import { markRead } from '../../api/fn/alert-controller/mark-read';
 import { resolve } from '../../api/fn/alert-controller/resolve';
 import { AlertResponse } from '../../api/models/alert-response';
@@ -41,7 +41,7 @@ export class AlertsComponent implements OnInit {
     if (this.alerts().length === 0) this.loading.set(true); // evita el flash de spinner (y el salto de scroll) en recargas tras marcar leída/resolver
     this.error.set(null);
     try {
-      const raw = await this.api.invoke(list4, { page: this.page() - 1, size: this.pageSize }) as unknown;
+      const raw = await this.api.invoke(listAlerts, { page: this.page() - 1, size: this.pageSize }) as unknown;
       const res = await parseBlob<PagedResponseAlertResponse>(raw);
       const all = res.content ?? [];
       this.total.set(res.totalElements ?? 0);

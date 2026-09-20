@@ -7,12 +7,9 @@
       <p class="page-subtitle">
         @if (!loading()) {
           @if (isFiltered()) {
-            {{ filteredItems().length | number }} de {{ menuItems().length | number }}
-            {{ viewMode() === 'active' ? 'platos en la carta actual' : 'platos de cartas pasadas' }}
-          } @else if (viewMode() === 'active') {
-            {{ menuItems().length | number }} platos en la carta actual
+            {{ filteredItems().length | number }} de {{ menuItems().length | number }} {{ itemsLabel() }}
           } @else {
-            {{ menuItems().length | number }} platos de cartas pasadas
+            {{ menuItems().length | number }} {{ itemsLabel() }}
           }
         }
       </p>
@@ -22,15 +19,47 @@
     </button>
   </div>
 
-  <!-- Carta actual / cartas pasadas -->
-  <div class="status-toggle" style="margin-bottom:16px;max-width:340px;">
-    <button class="status-btn" [class.on]="viewMode() === 'active'" (click)="switchView('active')">
-      <i class="ti ti-clipboard-list" style="font-size:13px;margin-right:4px;"></i> Carta actual
-    </button>
-    <button class="status-btn" [class.on]="viewMode() === 'inactive'" (click)="switchView('inactive')">
-      <i class="ti ti-history" style="font-size:13px;margin-right:4px;"></i> Cartas pasadas
-    </button>
+  <!-- Carta seleccionada / catálogo -->
+  <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:16px;">
+    <div style="display:flex;align-items:center;gap:8px;flex:1;min-width:200px;">
+      <span style="font-size:12px;color:var(--text-3);font-weight:600;flex-shrink:0;">{{ t('menu.carta') }}</span>
+      <app-select [formControl]="cartaControl" [options]="cartaOptions()" (change)="switchCarta($event)"
+                  style="flex:1;max-width:260px;"></app-select>
+    </div>
+    <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
+      @if (!catalogMode()) {
+        <button (click)="openAddItems()" class="btn-secondary btn-sm">
+          <i class="ti ti-plus"></i> {{ t('menu.addDishes') }}
+        </button>
+        <button (click)="openEditCarta()" class="btn-icon" style="width:32px;height:32px;" [title]="t('menu.renameCarta')">
+          <i class="ti ti-edit"></i>
+        </button>
+        <button (click)="toggleCartaActive()" [disabled]="togglingCarta()" class="btn-icon" style="width:32px;height:32px;"
+                [title]="selectedCarta()?.active ? t('menu.deactivateCarta') : t('menu.activateCarta')">
+          <i class="ti" [class.ti-eye-off]="selectedCarta()?.active" [class.ti-eye]="!selectedCarta()?.active"></i>
+        </button>
+        <button (click)="deletingCarta.set(selectedCarta())" class="btn-icon" style="width:32px;height:32px;color:var(--red);"
+                [title]="t('menu.deleteCarta')">
+          <i class="ti ti-trash"></i>
+        </button>
+      }
+      <button (click)="openCreateCarta()" class="btn-secondary btn-sm">
+        <i class="ti ti-plus"></i> {{ t('menu.newCarta') }}
+      </button>
+    </div>
   </div>
+
+  <!-- Catálogo: activos vs dados de baja -->
+  @if (catalogMode()) {
+    <div class="status-toggle" style="margin-bottom:16px;max-width:340px;">
+      <button class="status-btn" [class.on]="viewMode() === 'active'" (click)="switchView('active')">
+        <i class="ti ti-clipboard-list" style="font-size:13px;margin-right:4px;"></i> {{ t('menu.catalogActive') }}
+      </button>
+      <button class="status-btn" [class.on]="viewMode() === 'inactive'" (click)="switchView('inactive')">
+        <i class="ti ti-history" style="font-size:13px;margin-right:4px;"></i> {{ t('menu.catalogInactive') }}
+      </button>
+    </div>
+  }
 
   @if (loading()) { <app-spinner /> }
 
@@ -45,15 +74,21 @@
     @if (menuItems().length === 0) {
       <div class="empty-state">
         <i class="ti ti-receipt"></i>
-        @if (viewMode() === 'active') {
-          <p>Sin platos en la carta actual</p>
+        @if (!catalogMode()) {
+          <p>{{ t('menu.emptyCarta') }}</p>
+          <span style="font-size:12px;color:var(--text-3);margin-bottom:16px;display:block;">{{ t('menu.emptyCartaHint') }}</span>
+          <button (click)="openAddItems()" class="btn-primary btn-sm">
+            <i class="ti ti-plus"></i> {{ t('menu.addDishes') }}
+          </button>
+        } @else if (viewMode() === 'active') {
+          <p>{{ t('menu.emptyCatalog') }}</p>
           <span style="font-size:12px;color:var(--text-3);margin-bottom:16px;display:block;">Creá los platos de tu menú y asignales una receta con sus insumos.</span>
           <button (click)="openCreate()" class="btn-primary btn-sm">
             <i class="ti ti-plus"></i> Nuevo plato
           </button>
         } @else {
-          <p>No hay platos de cartas pasadas</p>
-          <span style="font-size:12px;color:var(--text-3);">Los platos que desactivés van a aparecer acá para reactivarlos cuando vuelvan al menú.</span>
+          <p>{{ t('menu.emptyInactive') }}</p>
+          <span style="font-size:12px;color:var(--text-3);">Los platos que des de baja van a aparecer acá para reactivarlos.</span>
         }
       </div>
     } @else {
@@ -67,14 +102,20 @@
         </app-search-filter-bar>
       </div>
 
-      @if (viewMode() === 'active' && selectedCount() > 0) {
+      @if (canSelect() && selectedCount() > 0) {
         <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;background:var(--bg-input);border:1.5px solid var(--accent);border-radius:12px;padding:10px 14px;margin-bottom:12px;">
           <span style="font-size:12px;color:var(--text-1);font-weight:600;">{{ selectedCount() }} seleccionado{{ selectedCount() > 1 ? 's' : '' }}</span>
           <div style="display:flex;gap:8px;">
             <button (click)="clearSelection()" class="btn-secondary btn-sm">Cancelar</button>
-            <button (click)="bulkDeactivating.set(true)" class="btn-danger btn-sm">
-              <i class="ti ti-trash"></i> Desactivar seleccionados
-            </button>
+            @if (catalogMode()) {
+              <button (click)="bulkDeactivating.set(true)" class="btn-danger btn-sm">
+                <i class="ti ti-trash"></i> Desactivar seleccionados
+              </button>
+            } @else {
+              <button (click)="removeSelectedFromCarta()" [disabled]="removingFromCarta()" class="btn-danger btn-sm">
+                <i class="ti ti-playlist-x"></i> {{ t('menu.removeFromCarta') }}
+              </button>
+            }
           </div>
         </div>
       }
@@ -92,7 +133,7 @@
             <div class="data-card" style="padding:12px 14px;">
               <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:8px;">
                 <div style="display:flex;align-items:flex-start;gap:8px;min-width:0;">
-                  @if (viewMode() === 'active') {
+                  @if (canSelect()) {
                     <input type="checkbox" [checked]="isSelected(item.id)" (change)="toggleSelect(item.id)"
                            style="margin-top:3px;width:16px;height:16px;flex-shrink:0;" />
                   }
@@ -119,7 +160,12 @@
                 <button (click)="openEdit(item)" class="btn-secondary btn-sm" style="flex:1;justify-content:center;">
                   <i class="ti ti-edit"></i> Editar
                 </button>
-                @if (viewMode() === 'active') {
+                @if (!catalogMode()) {
+                  <button (click)="removeItemFromCarta(item)" [disabled]="removingFromCarta()"
+                          class="btn-danger btn-sm" style="flex:1;justify-content:center;">
+                    {{ t('menu.remove') }}
+                  </button>
+                } @else if (viewMode() === 'active') {
                   <button (click)="deactivating.set(item)" class="btn-danger btn-sm" style="flex:1;justify-content:center;">
                     Desactivar
                   </button>
@@ -140,7 +186,7 @@
             <table class="data-table">
               <thead>
                 <tr>
-                  @if (viewMode() === 'active') {
+                  @if (canSelect()) {
                     <th style="width:32px;">
                       <input type="checkbox" [checked]="allVisibleSelected()" (change)="toggleSelectAllVisible()"
                              style="width:16px;height:16px;" />
@@ -158,7 +204,7 @@
               <tbody>
                 @for (item of pagedItems(); track item.id) {
                   <tr>
-                    @if (viewMode() === 'active') {
+                    @if (canSelect()) {
                       <td>
                         <input type="checkbox" [checked]="isSelected(item.id)" (change)="toggleSelect(item.id)"
                                style="width:16px;height:16px;" />
@@ -207,7 +253,11 @@
                         <button (click)="openEdit(item)" class="btn-secondary btn-sm" title="Editar">
                           <i class="ti ti-edit"></i>
                         </button>
-                        @if (viewMode() === 'active') {
+                        @if (!catalogMode()) {
+                          <button (click)="removeItemFromCarta(item)" [disabled]="removingFromCarta()" class="btn-danger btn-sm">
+                            {{ t('menu.remove') }}
+                          </button>
+                        } @else if (viewMode() === 'active') {
                           <button (click)="deactivating.set(item)" class="btn-danger btn-sm">
                             Desactivar
                           </button>
@@ -520,7 +570,7 @@
   title="Desactivar platos seleccionados"
   icon="⚠️"
   tone="danger"
-  [message]="'Esta acción va a sacar ' + selectedCount() + ' plato' + (selectedCount() > 1 ? 's' : '') + ' de la carta actual. Vas a poder reactivarlos después desde \'Cartas pasadas\'.'"
+  [message]="'Esta acción da de baja ' + selectedCount() + ' plato' + (selectedCount() > 1 ? 's' : '') + ' del catálogo y los saca de todas las cartas. Vas a poder reactivarlos después.'"
   [itemTitle]="selectedCount() + ' plato' + (selectedCount() > 1 ? 's' : '') + ' seleccionado' + (selectedCount() > 1 ? 's' : '')"
   [itemSubtitle]="selectedNamesPreview"
   confirmLabel="Desactivar"
@@ -528,4 +578,97 @@
   [confirmDisabled]="bulkDeactivateLoading()"
   (confirm)="confirmBulkDeactivate()"
   (cancel)="bulkDeactivating.set(false)">
+</app-action-dialog>
+
+<!-- ══ DRAWER: crear / renombrar carta ══ -->
+<app-drawer
+  [isOpen]="cartaDrawerOpen()"
+  [title]="editingCarta() ? t('menu.editCarta') : t('menu.newCarta')"
+  [subtitle]="t('menu.cartaSubtitle')"
+  size="sm"
+  (closed)="cartaDrawerOpen.set(false)">
+
+  <form [formGroup]="cartaForm" (ngSubmit)="saveCarta()" style="display:flex;flex-direction:column;gap:12px;">
+    <div class="field">
+      <label class="field-label">{{ t('menu.cartaName') }}</label>
+      <input formControlName="name" type="text" class="field-input"
+             [placeholder]="t('menu.cartaNamePlaceholder')"
+             [class.input-error]="isInvalid(cartaForm, 'name')">
+    </div>
+
+    @if (cartaSaveError()) {
+      <p style="font-size:12px;color:var(--red);">{{ cartaSaveError() }}</p>
+    }
+
+    <div style="display:flex;gap:8px;justify-content:flex-end;">
+      <button type="button" (click)="cartaDrawerOpen.set(false)" class="btn-secondary btn-sm">Cancelar</button>
+      <button type="submit" [disabled]="cartaSaving()" class="btn-primary btn-sm">
+        @if (cartaSaving()) { <span class="loader"></span> } @else { Guardar }
+      </button>
+    </div>
+  </form>
+</app-drawer>
+
+<!-- ══ DRAWER: agregar platos a la carta ══ -->
+<app-drawer
+  [isOpen]="addItemsOpen()"
+  [title]="t('menu.addDishes')"
+  [subtitle]="selectedCarta()?.name ?? ''"
+  size="md"
+  (closed)="addItemsOpen.set(false)">
+
+  <div style="display:flex;flex-direction:column;gap:12px;">
+    <input type="text" class="field-input" [placeholder]="t('menu.searchDish')"
+           [value]="addItemsSearch()" (input)="addItemsSearch.set($any($event.target).value)">
+
+    @if (catalogLoading()) {
+      <app-spinner />
+    } @else if (addableItems().length === 0) {
+      <div class="empty-state">
+        <i class="ti ti-checks"></i>
+        <p>{{ t('menu.addDishesEmpty') }}</p>
+      </div>
+    } @else {
+      <div style="display:flex;flex-direction:column;gap:6px;max-height:52vh;overflow-y:auto;">
+        @for (item of addableItems(); track item.id) {
+          <label style="display:flex;align-items:center;gap:10px;padding:8px 10px;border:1.5px solid var(--border);border-radius:10px;cursor:pointer;"
+                 [style.border-color]="isAddSelected(item.id) ? 'var(--accent)' : 'var(--border)'">
+            <input type="checkbox" [checked]="isAddSelected(item.id)" (change)="toggleAddItem(item.id)"
+                   style="width:16px;height:16px;flex-shrink:0;" />
+            <span style="flex:1;min-width:0;">
+              <span style="display:block;font-size:13px;font-weight:600;color:var(--text-1);">{{ item.name }}</span>
+              @if (item.category) {
+                <span style="display:block;font-size:11px;color:var(--text-3);">{{ item.category }}</span>
+              }
+            </span>
+            <span style="font-size:13px;font-weight:700;color:var(--accent);flex-shrink:0;">{{ formatARS(item.price) }}</span>
+          </label>
+        }
+      </div>
+    }
+
+    <div style="display:flex;gap:8px;justify-content:flex-end;">
+      <button type="button" (click)="addItemsOpen.set(false)" class="btn-secondary btn-sm">Cancelar</button>
+      <button type="button" (click)="confirmAddItems()"
+              [disabled]="addItemsSaving() || addItemsSelected().size === 0" class="btn-primary btn-sm">
+        @if (addItemsSaving()) { <span class="loader"></span> } @else { {{ t('menu.addSelected') }} ({{ addItemsSelected().size }}) }
+      </button>
+    </div>
+  </div>
+</app-drawer>
+
+<!-- ══ BORRAR CARTA ══ -->
+<app-action-dialog
+  [visible]="!!deletingCarta()"
+  [title]="t('menu.deleteCarta')"
+  icon="⚠️"
+  tone="danger"
+  [message]="t('menu.deleteCartaMessage')"
+  [itemTitle]="deletingCarta()?.name ?? ''"
+  [itemSubtitle]="(deletingCarta()?.itemCount ?? 0) + ' ' + t('menu.dishesInCarta')"
+  confirmLabel="Borrar"
+  cancelLabel="Cancelar"
+  [confirmDisabled]="deleteCartaLoading()"
+  (confirm)="confirmDeleteCarta()"
+  (cancel)="deletingCarta.set(null)">
 </app-action-dialog>

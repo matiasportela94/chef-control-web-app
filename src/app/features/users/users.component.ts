@@ -9,7 +9,7 @@ import { updateUser } from '../../api/fn/user-controller/update-user';
 import { deactivateUser } from '../../api/fn/user-controller/deactivate-user';
 import { getPermissions } from '../../api/fn/user-controller/get-permissions';
 import { setPermissions } from '../../api/fn/user-controller/set-permissions';
-import { list2 as listRoles } from '../../api/fn/role-controller/list-2';
+import { listRoles } from '../../api/fn/role-controller/list-roles';
 import { UserResponse } from '../../api/models/user-response';
 import { UserPermissionsResponse } from '../../api/models/user-permissions-response';
 import { RoleResponse } from '../../api/models/role-response';

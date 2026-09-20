@@ -1,11 +1,11 @@
 import { Component, HostListener, OnInit, computed, signal } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Api } from '../../api/api';
-import { list3 as listRestaurants } from '../../api/fn/restaurant-controller/list-3';
-import { create3 as createRestaurant } from '../../api/fn/restaurant-controller/create-3';
-import { update1 as updateRestaurant } from '../../api/fn/restaurant-controller/update-1';
-import { setActive as setRestaurantActive } from '../../api/fn/restaurant-controller/set-active';
-import { delete1 as deleteRestaurant } from '../../api/fn/restaurant-controller/delete-1';
+import { listRestaurants } from '../../api/fn/restaurant-controller/list-restaurants';
+import { createRestaurant } from '../../api/fn/restaurant-controller/create-restaurant';
+import { updateRestaurant } from '../../api/fn/restaurant-controller/update-restaurant';
+import { setRestaurantActive } from '../../api/fn/restaurant-controller/set-restaurant-active';
+import { deleteRestaurant } from '../../api/fn/restaurant-controller/delete-restaurant';
 import { RestaurantResponse } from '../../api/models/restaurant-response';
 import { parseBlob } from '../../core/utils/parse-blob';
 import { extractApiError } from '../../core/utils/api-error';

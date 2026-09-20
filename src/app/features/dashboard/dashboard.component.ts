@@ -5,7 +5,7 @@ import { RouterLink } from '@angular/router';
 import { Api } from '../../api/api';
 import { AiRefreshService } from '../../core/services/ai-refresh.service';
 import { getSummary } from '../../api/fn/dashboard-controller/get-summary';
-import { list7 as list4 } from '../../api/fn/alert-controller/list-7';
+import { listAlerts } from '../../api/fn/alert-controller/list-alerts';
 import { DashboardResponse } from '../../api/models/dashboard-response';
 import { AlertResponse } from '../../api/models/alert-response';
 import { PagedResponseAlertResponse } from '../../api/models/paged-response-alert-response';
@@ -97,7 +97,7 @@ export class DashboardComponent implements OnInit {
 
   async loadAlerts(): Promise<void> {
     try {
-      const raw = await this.api.invoke(list4, { page: 0, size: 5 }) as unknown;
+      const raw = await this.api.invoke(listAlerts, { page: 0, size: 5 }) as unknown;
       const res = await parseBlob<PagedResponseAlertResponse>(raw);
       this.alerts.set((res.content ?? []).filter(a => !a.resolvedAt));
     } catch { /* non-critical */ }

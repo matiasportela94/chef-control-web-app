@@ -90,5 +90,36 @@
       "waste":      "Log waste or loss",
       "stockCount": "Update stock / count"
     }
+  },
+  "menu": {
+    "carta":                "Menu",
+    "allDishes":            "All dishes",
+    "inactive":             "inactive",
+    "newCarta":             "New menu",
+    "editCarta":            "Rename menu",
+    "renameCarta":          "Rename",
+    "cartaSubtitle":        "Menus group dishes from the catalog. The price comes from the dish.",
+    "cartaName":            "Menu name",
+    "cartaNamePlaceholder": "Summer menu, Lunch, Delivery...",
+    "activateCarta":        "Activate menu",
+    "deactivateCarta":      "Deactivate menu",
+    "deleteCarta":          "Delete menu",
+    "deleteCartaMessage":   "This deletes the menu, not the dishes: they stay in the catalog and in other menus.",
+    "saveCartaError":       "Could not save the menu",
+    "addDishes":            "Add dishes",
+    "addSelected":          "Add",
+    "addDishesEmpty":       "Every dish in the catalog is already on this menu",
+    "searchDish":           "Search dish...",
+    "remove":               "Remove",
+    "removeFromCarta":      "Remove from menu",
+    "dishesInCarta":        "dishes on this menu",
+    "dishesInCatalog":      "dishes in the catalog",
+    "dishesInactive":       "deactivated dishes",
+    "emptyCarta":           "This menu has no dishes",
+    "emptyCartaHint":       "Add dishes from the catalog to build it.",
+    "emptyCatalog":         "No dishes yet",
+    "emptyInactive":        "No deactivated dishes",
+    "catalogActive":        "In the catalog",
+    "catalogInactive":      "Deactivated"
   }
 }

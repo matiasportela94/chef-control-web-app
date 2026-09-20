@@ -90,5 +90,36 @@
       "waste":      "Cargar merma o pérdida",
       "stockCount": "Actualizar stock / conteo"
     }
+  },
+  "menu": {
+    "carta":                "Carta",
+    "allDishes":            "Todos los platos",
+    "inactive":             "inactiva",
+    "newCarta":             "Nueva carta",
+    "editCarta":            "Renombrar carta",
+    "renameCarta":          "Renombrar",
+    "cartaSubtitle":        "Las cartas agrupan platos del catálogo. El precio es el del plato.",
+    "cartaName":            "Nombre de la carta",
+    "cartaNamePlaceholder": "Carta de verano, Almuerzo, Delivery...",
+    "activateCarta":        "Activar carta",
+    "deactivateCarta":      "Desactivar carta",
+    "deleteCarta":          "Borrar carta",
+    "deleteCartaMessage":   "Se borra la carta, no los platos: siguen en el catálogo y en las demás cartas.",
+    "saveCartaError":       "Error al guardar la carta",
+    "addDishes":            "Agregar platos",
+    "addSelected":          "Agregar",
+    "addDishesEmpty":       "Todos los platos del catálogo ya están en esta carta",
+    "searchDish":           "Buscar plato...",
+    "remove":               "Sacar",
+    "removeFromCarta":      "Sacar de la carta",
+    "dishesInCarta":        "platos en esta carta",
+    "dishesInCatalog":      "platos en el catálogo",
+    "dishesInactive":       "platos dados de baja",
+    "emptyCarta":           "Esta carta no tiene platos",
+    "emptyCartaHint":       "Agregá platos del catálogo para armarla.",
+    "emptyCatalog":         "Todavía no hay platos",
+    "emptyInactive":        "No hay platos dados de baja",
+    "catalogActive":        "En el catálogo",
+    "catalogInactive":      "Dados de baja"
   }
 }

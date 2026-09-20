@@ -1,8 +1,8 @@
 import { Component, OnInit, computed, signal } from '@angular/core';
 import { Router } from '@angular/router';
 import { Api } from '../../api/api';
-import { get4 as getAccount } from '../../api/fn/account-controller/get-4';
-import { delete2 as deleteAccount } from '../../api/fn/account-controller/delete-2';
+import { getAccount } from '../../api/fn/account-controller/get-account';
+import { deleteAccount } from '../../api/fn/account-controller/delete-account';
 import { AccountResponse } from '../../api/models/account-response';
 import { parseBlob } from '../../core/utils/parse-blob';
 import { extractApiError } from '../../core/utils/api-error';

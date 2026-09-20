@@ -1,10 +1,10 @@
 import { Component, HostListener, OnInit, signal } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Api } from '../../api/api';
-import { list2 as listRoles } from '../../api/fn/role-controller/list-2';
-import { create2 as createRole } from '../../api/fn/role-controller/create-2';
-import { update as updateRole } from '../../api/fn/role-controller/update';
-import { delete$ as deleteRole } from '../../api/fn/role-controller/delete';
+import { listRoles } from '../../api/fn/role-controller/list-roles';
+import { createRole } from '../../api/fn/role-controller/create-role';
+import { updateRole } from '../../api/fn/role-controller/update-role';
+import { deleteRole } from '../../api/fn/role-controller/delete-role';
 import { RoleResponse } from '../../api/models/role-response';
 import { parseBlob } from '../../core/utils/parse-blob';
 import { extractApiError } from '../../core/utils/api-error';
