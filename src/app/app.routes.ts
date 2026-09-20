@@ -64,6 +64,11 @@ export const routes: Routes = [
         loadComponent: () => import('./features/users/users.component').then(m => m.UsersComponent)
       },
       {
+        path: 'roles',
+        canActivate: [permissionGuard('ROLES_VIEW')],
+        loadComponent: () => import('./features/roles/roles.component').then(m => m.RolesComponent)
+      },
+      {
         path: 'stock-counts',
         loadComponent: () => import('./features/stock-counts/stock-counts.component').then(m => m.StockCountsComponent)
       },

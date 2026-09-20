@@ -5,7 +5,7 @@ import { RouterLink } from '@angular/router';
 import { Api } from '../../api/api';
 import { AiRefreshService } from '../../core/services/ai-refresh.service';
 import { getSummary } from '../../api/fn/dashboard-controller/get-summary';
-import { list5 as list4 } from '../../api/fn/alert-controller/list-5';
+import { list6 as list4 } from '../../api/fn/alert-controller/list-6';
 import { DashboardResponse } from '../../api/models/dashboard-response';
 import { AlertResponse } from '../../api/models/alert-response';
 import { PagedResponseAlertResponse } from '../../api/models/paged-response-alert-response';

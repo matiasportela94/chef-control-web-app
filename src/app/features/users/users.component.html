@@ -61,7 +61,7 @@
               <button (click)="openEdit(u)" class="btn-secondary btn-sm" style="flex:1;justify-content:center;">
                 <i class="ti ti-edit"></i> Editar
               </button>
-              @if (u.isActive) {
+              @if (u.isActive && !u.roleIsSystem) {
                 <button (click)="deactivating.set(u)" class="btn-danger btn-sm" style="flex:1;justify-content:center;">
                   Desactivar
                 </button>
@@ -117,7 +117,7 @@
                       <button (click)="openEdit(u)" class="btn-secondary btn-sm">
                         <i class="ti ti-edit"></i>
                       </button>
-                      @if (u.isActive) {
+                      @if (u.isActive && !u.roleIsSystem) {
                         <button (click)="deactivating.set(u)" class="btn-danger btn-sm">
                           Desactivar
                         </button>
@@ -158,8 +158,8 @@
 
       <div style="margin-bottom:0;">
         <label class="field-label">Rol <span style="color:var(--red);">*</span></label>
-        <app-select formControlName="role" [options]="roles" [invalid]="isInvalid('role')"></app-select>
-        <p style="font-size:11px;color:var(--text-3);margin-top:4px;">Define qué puede ver y hacer este usuario en el sistema.</p>
+        <app-select formControlName="roleId" [options]="roleOptions()" [invalid]="isInvalid('roleId')"></app-select>
+        <p style="font-size:11px;color:var(--text-3);margin-top:4px;">Define qué puede ver y hacer este usuario por default — se puede ajustar por persona más abajo.</p>
       </div>
 
       <div style="margin-bottom:0;">
@@ -180,50 +180,82 @@
 
     @if (editing() && authService.isOwner) {
       <div class="sec-div">Permisos</div>
-      <p style="font-size:11px;color:var(--text-3);margin-top:-8px;margin-bottom:12px;">
-        Ya vienen marcados los del rol <strong>{{ roleLabel(editing()?.role) }}</strong>. Tildá o destildá
-        para dar una excepción puntual a esta persona — no afecta a nadie más con el mismo rol.
-      </p>
 
-      @if (permissionsLoading()) {
-        <app-spinner />
+      @if (editing()?.roleIsSystem) {
+        <p style="font-size:11px;color:var(--text-3);">
+          Esta persona es el dueño de la cuenta — siempre tiene todos los permisos, no se puede ajustar.
+        </p>
       } @else {
-        @if (permissionsError()) {
-          <div style="background:var(--red-bg);border:1.5px solid var(--red);border-radius:10px;padding:10px 14px;font-size:12px;color:var(--red);margin-bottom:10px;">
-            {{ permissionsError() }}
-          </div>
-        }
+        <p style="font-size:11px;color:var(--text-3);margin-top:-8px;margin-bottom:12px;">
+          Ya vienen marcados los del rol <strong>{{ roleLabel(editing()?.role) }}</strong>. Tildá o destildá
+          para dar una excepción puntual a esta persona — no afecta a nadie más con el mismo rol. También podés
+          crear un rol nuevo desde <a routerLink="/roles" style="color:var(--accent);">Roles</a> si esto se repite para varias personas.
+        </p>
 
-        <div style="display:flex;flex-direction:column;gap:2px;margin-bottom:14px;">
-          @for (m of permissionModules; track m.label) {
-            <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;padding:7px 4px;border-bottom:1px solid var(--border);">
-              <span style="font-size:12px;color:var(--text-2);">{{ m.label }}</span>
-              <div style="display:flex;align-items:center;gap:14px;">
-                @if (m.view) {
-                  <label style="display:flex;align-items:center;gap:5px;font-size:11px;cursor:pointer;"
-                         [style.color]="isOverridden(m.view) ? 'var(--accent)' : 'var(--text-3)'">
-                    <input type="checkbox" [checked]="hasEffectivePermission(m.view)" (change)="togglePermission(m.view)"
-                           style="width:14px;height:14px;" />
-                    Ver
-                  </label>
-                }
-                @if (m.manage) {
-                  <label style="display:flex;align-items:center;gap:5px;font-size:11px;cursor:pointer;"
-                         [style.color]="isOverridden(m.manage) ? 'var(--accent)' : 'var(--text-3)'">
-                    <input type="checkbox" [checked]="hasEffectivePermission(m.manage)" (change)="togglePermission(m.manage)"
-                           style="width:14px;height:14px;" />
-                    Gestionar
-                  </label>
-                }
-              </div>
+        @if (permissionsLoading()) {
+          <app-spinner />
+        } @else {
+          @if (permissionsError()) {
+            <div style="background:var(--red-bg);border:1.5px solid var(--red);border-radius:10px;padding:10px 14px;font-size:12px;color:var(--red);margin-bottom:10px;">
+              {{ permissionsError() }}
             </div>
           }
-        </div>
 
-        <button type="button" (click)="savePermissions()" [disabled]="permissionsSaving()" class="btn-secondary btn-sm">
-          @if (permissionsSaving()) { <span class="loader"></span> }
-          Guardar permisos
-        </button>
+          <div style="display:flex;flex-direction:column;gap:2px;margin-bottom:14px;">
+            @for (m of permissionModules; track m.label) {
+              <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;padding:7px 4px;border-bottom:1px solid var(--border);flex-wrap:wrap;">
+                <span style="font-size:12px;color:var(--text-2);min-width:110px;">{{ m.label }}</span>
+                <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+                  @if (m.single) {
+                    <label style="display:flex;align-items:center;gap:5px;font-size:11px;cursor:pointer;"
+                           [style.color]="isOverridden(m.single.key) ? 'var(--accent)' : 'var(--text-3)'">
+                      <input type="checkbox" [checked]="hasEffectivePermission(m.single.key)" (change)="togglePermission(m.single.key)"
+                             style="width:14px;height:14px;" />
+                      {{ m.single.label }}
+                    </label>
+                  }
+                  @if (m.view) {
+                    <label style="display:flex;align-items:center;gap:5px;font-size:11px;cursor:pointer;"
+                           [style.color]="isOverridden(m.view) ? 'var(--accent)' : 'var(--text-3)'">
+                      <input type="checkbox" [checked]="hasEffectivePermission(m.view)" (change)="togglePermission(m.view)"
+                             style="width:14px;height:14px;" />
+                      Ver
+                    </label>
+                  }
+                  @if (m.create) {
+                    <label style="display:flex;align-items:center;gap:5px;font-size:11px;cursor:pointer;"
+                           [style.color]="isOverridden(m.create) ? 'var(--accent)' : 'var(--text-3)'">
+                      <input type="checkbox" [checked]="hasEffectivePermission(m.create)" (change)="togglePermission(m.create)"
+                             style="width:14px;height:14px;" />
+                      Crear
+                    </label>
+                  }
+                  @if (m.update) {
+                    <label style="display:flex;align-items:center;gap:5px;font-size:11px;cursor:pointer;"
+                           [style.color]="isOverridden(m.update) ? 'var(--accent)' : 'var(--text-3)'">
+                      <input type="checkbox" [checked]="hasEffectivePermission(m.update)" (change)="togglePermission(m.update)"
+                             style="width:14px;height:14px;" />
+                      Editar
+                    </label>
+                  }
+                  @if (m.delete) {
+                    <label style="display:flex;align-items:center;gap:5px;font-size:11px;cursor:pointer;"
+                           [style.color]="isOverridden(m.delete) ? 'var(--accent)' : 'var(--text-3)'">
+                      <input type="checkbox" [checked]="hasEffectivePermission(m.delete)" (change)="togglePermission(m.delete)"
+                             style="width:14px;height:14px;" />
+                      Borrar
+                    </label>
+                  }
+                </div>
+              </div>
+            }
+          </div>
+
+          <button type="button" (click)="savePermissions()" [disabled]="permissionsSaving()" class="btn-secondary btn-sm">
+            @if (permissionsSaving()) { <span class="loader"></span> }
+            Guardar permisos
+          </button>
+        }
       }
     }
 

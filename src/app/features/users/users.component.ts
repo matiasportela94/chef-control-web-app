@@ -1,5 +1,6 @@
-import { Component, HostListener, OnInit, signal } from '@angular/core';
+import { Component, HostListener, OnInit, computed, signal } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { RouterLink } from '@angular/router';
 import { Api } from '../../api/api';
 import { AuthService } from '../../core/services/auth.service';
 import { listUsers } from '../../api/fn/user-controller/list-users';
@@ -8,9 +9,12 @@ import { updateUser } from '../../api/fn/user-controller/update-user';
 import { deactivateUser } from '../../api/fn/user-controller/deactivate-user';
 import { getPermissions } from '../../api/fn/user-controller/get-permissions';
 import { setPermissions } from '../../api/fn/user-controller/set-permissions';
+import { list2 as listRoles } from '../../api/fn/role-controller/list-2';
 import { UserResponse } from '../../api/models/user-response';
 import { UserPermissionsResponse } from '../../api/models/user-permissions-response';
+import { RoleResponse } from '../../api/models/role-response';
 import { OverrideItem } from '../../api/models/override-item';
+import { PermissionKey, PERMISSION_MODULES, allPermissionKeys } from '../../core/utils/permission-catalog';
 import { parseBlob } from '../../core/utils/parse-blob';
 import { formatDate } from '../../core/utils/format';
 import { extractApiError } from '../../core/utils/api-error';
@@ -18,39 +22,27 @@ import { ActionDialogComponent } from '../../shared/components/action-dialog/act
 import { DrawerComponent } from '../../shared/components/drawer/drawer.component';
 import { SpinnerComponent } from '../../shared/components/spinner/spinner.component';
 import { isFormFieldInvalid } from '../../core/utils/form';
-import { SelectComponent } from '../../shared/components/select/select.component';
+import { SelectComponent, SelectOption } from '../../shared/components/select/select.component';
 
-type Role = 'OWNER' | 'MANAGER' | 'KITCHEN' | 'READONLY';
-type PermissionKey = OverrideItem['permission'];
+/** Labels lindos para los roles semilla — cualquier otro (custom) muestra su propio nombre tal cual. */
+const SEED_ROLE_LABELS: Record<string, string> = {
+  SUPERADMIN: 'Dueño de cuenta',
+  MANAGER:    'Gerente',
+  KITCHEN:    'Cocina',
+  READONLY:   'Solo lectura',
+};
 
-interface PermissionModule {
-  label: string;
-  view?: PermissionKey;
-  manage?: PermissionKey;
-}
-
-/** Mismo catálogo que el backend (domain/user/Permission.java) — agrupado por módulo para la UI. */
-const PERMISSION_MODULES: PermissionModule[] = [
-  { label: 'Insumos',       view: 'PRODUCTS_VIEW',      manage: 'PRODUCTS_MANAGE' },
-  { label: 'Categorías',    view: 'CATEGORIES_VIEW',    manage: 'CATEGORIES_MANAGE' },
-  { label: 'Proveedores',   view: 'SUPPLIERS_VIEW',     manage: 'SUPPLIERS_MANAGE' },
-  { label: 'Compras',       view: 'PURCHASES_VIEW',     manage: 'PURCHASES_MANAGE' },
-  { label: 'Ventas',        view: 'SALES_VIEW',         manage: 'SALES_MANAGE' },
-  { label: 'Merma',         view: 'WASTE_VIEW',         manage: 'WASTE_MANAGE' },
-  { label: 'Stock',         view: 'STOCK_VIEW',         manage: 'STOCK_MANAGE' },
-  { label: 'Conteos',       view: 'STOCK_COUNTS_VIEW',  manage: 'STOCK_COUNTS_MANAGE' },
-  { label: 'Menú',          view: 'MENU_VIEW',          manage: 'MENU_MANAGE' },
-  { label: 'Food Cost',     view: 'FOOD_COST_VIEW' },
-  { label: 'Alertas',       view: 'ALERTS_VIEW',        manage: 'ALERTS_MANAGE' },
-  { label: 'Usuarios',      view: 'USERS_VIEW',         manage: 'USERS_MANAGE' },
-  { label: 'Auditoría',     view: 'AUDIT_VIEW' },
-  { label: 'Entrada rápida (IA)', manage: 'AI_USE' },
-];
+const SEED_ROLE_BADGE: Record<string, string> = {
+  SUPERADMIN: 'badge-owner',
+  MANAGER:    'badge-manager',
+  KITCHEN:    'badge-kitchen',
+  READONLY:   'badge-neutral',
+};
 
 @Component({
   selector: 'app-users',
   standalone: true,
-  imports: [ReactiveFormsModule, ActionDialogComponent, DrawerComponent, SpinnerComponent, SelectComponent],
+  imports: [ReactiveFormsModule, RouterLink, ActionDialogComponent, DrawerComponent, SpinnerComponent, SelectComponent],
   templateUrl: './users.component.html',
   styleUrl: './users.component.scss'
 })
@@ -58,6 +50,11 @@ export class UsersComponent implements OnInit {
   users   = signal<UserResponse[]>([]);
   loading = signal(true);
   error   = signal<string | null>(null);
+
+  roles = signal<RoleResponse[]>([]);
+  /** No se puede asignar el rol de sistema (dueño de cuenta) desde acá — es único, automático. */
+  roleOptions = computed<SelectOption[]>(() =>
+    this.roles().filter(r => !r.isSystem).map(r => ({ value: r.id ?? '', label: this.roleLabel(r.name) })));
 
   drawerOpen        = signal(false);
   editing           = signal<UserResponse | null>(null);
@@ -75,26 +72,19 @@ export class UsersComponent implements OnInit {
   roleDefaults       = signal<Set<string>>(new Set());
   effectivePerms     = signal<Set<string>>(new Set());
 
-  readonly roles: { value: Role; label: string }[] = [
-    { value: 'OWNER',    label: 'Propietario'   },
-    { value: 'MANAGER',  label: 'Gerente'        },
-    { value: 'KITCHEN',  label: 'Cocina'         },
-    { value: 'READONLY', label: 'Solo lectura'   },
-  ];
-
   form: FormGroup;
 
   constructor(private api: Api, private fb: FormBuilder, public authService: AuthService) {
     this.form = this.fb.group({
-      name:  ['', Validators.required],
-      email: ['', [Validators.required, Validators.email]],
-      role:  ['KITCHEN', Validators.required],
-      phone: ['', Validators.required],
+      name:   ['', Validators.required],
+      email:  ['', [Validators.required, Validators.email]],
+      roleId: ['', Validators.required],
+      phone:  ['', Validators.required],
     });
   }
 
   async ngOnInit(): Promise<void> {
-    await this.load();
+    await Promise.all([this.load(), this.loadRoles()]);
   }
 
   async load(): Promise<void> {
@@ -110,9 +100,16 @@ export class UsersComponent implements OnInit {
     }
   }
 
+  async loadRoles(): Promise<void> {
+    try {
+      const raw = await this.api.invoke(listRoles) as unknown;
+      this.roles.set(await parseBlob<RoleResponse[]>(raw));
+    } catch { /* non-critical — el dropdown queda vacío */ }
+  }
+
   openCreate(): void {
     this.editing.set(null);
-    this.form.reset({ name: '', email: '', role: 'KITCHEN', phone: '' });
+    this.form.reset({ name: '', email: '', roleId: '', phone: '' });
     this.form.get('email')?.enable();
     this.saveError.set(null);
     this.drawerOpen.set(true);
@@ -120,12 +117,12 @@ export class UsersComponent implements OnInit {
 
   openEdit(u: UserResponse): void {
     this.editing.set(u);
-    this.form.reset({ name: u.name ?? '', email: u.email ?? '', role: u.role ?? 'KITCHEN', phone: u.phone ?? '' });
+    this.form.reset({ name: u.name ?? '', email: u.email ?? '', roleId: u.roleId ?? '', phone: u.phone ?? '' });
     this.form.get('email')?.disable();
     this.saveError.set(null);
     this.drawerOpen.set(true);
     this.permissionsError.set(null);
-    if (this.authService.isOwner && u.id) void this.loadPermissions(u.id);
+    if (this.authService.isOwner && u.id && !u.roleIsSystem) void this.loadPermissions(u.id);
   }
 
   // ── Permisos ─────────────────────────────────────────────────
@@ -170,7 +167,7 @@ export class UsersComponent implements OnInit {
     try {
       // Solo mandamos las excepciones al default del rol — no todo el catálogo.
       const overrides: OverrideItem[] = [];
-      for (const perm of this.allPermissionKeys()) {
+      for (const perm of allPermissionKeys()) {
         const effective = this.effectivePerms().has(perm);
         if (effective !== this.roleDefaults().has(perm)) {
           overrides.push({ permission: perm, granted: effective });
@@ -185,10 +182,6 @@ export class UsersComponent implements OnInit {
     } finally {
       this.permissionsSaving.set(false);
     }
-  }
-
-  private allPermissionKeys(): PermissionKey[] {
-    return this.permissionModules.flatMap(m => [m.view, m.manage].filter((p): p is PermissionKey => !!p));
   }
 
   closeDrawer(): void {
@@ -209,19 +202,10 @@ export class UsersComponent implements OnInit {
     try {
       const u = this.editing();
       if (u?.id) {
-        const body = {
-          name:  v.name,
-          role:  v.role as Role,
-          phone: v.phone.trim(),
-        };
+        const body = { name: v.name, roleId: v.roleId, phone: v.phone.trim() };
         await this.api.invoke(updateUser, { id: u.id, body });
       } else {
-        const body = {
-          name:  v.name,
-          email: v.email,
-          role:  v.role as Role,
-          phone: v.phone.trim(),
-        };
+        const body = { name: v.name, email: v.email, roleId: v.roleId, phone: v.phone.trim() };
         await this.api.invoke(createUser, { body });
       }
       this.drawerOpen.set(false);
@@ -248,18 +232,11 @@ export class UsersComponent implements OnInit {
   isInvalid = (field: string) => isFormFieldInvalid(this.form, field);
 
   roleLabel(r?: string): string {
-    const found = this.roles.find(x => x.value === r);
-    return found ? found.label : (r ?? '—');
+    return r ? (SEED_ROLE_LABELS[r] ?? r) : '—';
   }
 
   roleClass(r?: string): string {
-    const map: Record<string, string> = {
-      OWNER:    'badge-owner',
-      MANAGER:  'badge-manager',
-      KITCHEN:  'badge-kitchen',
-      READONLY: 'badge-neutral',
-    };
-    return r ? (map[r] ?? 'badge-neutral') : 'badge-neutral';
+    return r ? (SEED_ROLE_BADGE[r] ?? 'badge-neutral') : 'badge-neutral';
   }
 
   readonly formatDate = formatDate;

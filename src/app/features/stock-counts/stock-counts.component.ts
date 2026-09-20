@@ -2,7 +2,7 @@ import { Component, HostListener, OnInit, signal } from '@angular/core';
 import { FormArray, FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Api } from '../../api/api';
 import { list as listStockCounts } from '../../api/fn/stock-count-controller/list';
-import { get1 as getStockCount }    from '../../api/fn/stock-count-controller/get-1';
+import { get2 as getStockCount }    from '../../api/fn/stock-count-controller/get-2';
 import { create as createStockCount } from '../../api/fn/stock-count-controller/create';
 import { listProducts } from '../../api/fn/product-controller/list-products';
 import { listUnits }    from '../../api/fn/unit-controller/list-units';

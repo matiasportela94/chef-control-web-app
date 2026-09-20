@@ -1,6 +1,6 @@
 import { Injectable, signal } from '@angular/core';
 import { Api } from '../../api/api';
-import { list5 as list4 } from '../../api/fn/alert-controller/list-5';
+import { list6 as list4 } from '../../api/fn/alert-controller/list-6';
 import { PagedResponseAlertResponse } from '../../api/models/paged-response-alert-response';
 import { parseBlob } from '../utils/parse-blob';
 
