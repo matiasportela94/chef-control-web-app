@@ -28,9 +28,6 @@
     </div>
     <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
       @if (!catalogMode()) {
-        <button (click)="openAddItems()" class="btn-secondary btn-sm">
-          <i class="ti ti-plus"></i> {{ t('menu.addDishes') }}
-        </button>
         <button (click)="openEditCarta()" class="btn-icon" style="width:32px;height:32px;" [title]="t('menu.renameCarta')">
           <i class="ti ti-edit"></i>
         </button>
@@ -74,21 +71,15 @@
     @if (menuItems().length === 0) {
       <div class="empty-state">
         <i class="ti ti-receipt"></i>
-        @if (!catalogMode()) {
-          <p>{{ t('menu.emptyCarta') }}</p>
-          <span style="font-size:12px;color:var(--text-3);margin-bottom:16px;display:block;">{{ t('menu.emptyCartaHint') }}</span>
-          <button (click)="openAddItems()" class="btn-primary btn-sm">
-            <i class="ti ti-plus"></i> {{ t('menu.addDishes') }}
-          </button>
-        } @else if (viewMode() === 'active') {
+        @if (catalogMode() && viewMode() === 'inactive') {
+          <p>{{ t('menu.emptyInactive') }}</p>
+          <span style="font-size:12px;color:var(--text-3);">Los platos que des de baja van a aparecer acá para reactivarlos.</span>
+        } @else {
           <p>{{ t('menu.emptyCatalog') }}</p>
           <span style="font-size:12px;color:var(--text-3);margin-bottom:16px;display:block;">Creá los platos de tu menú y asignales una receta con sus insumos.</span>
           <button (click)="openCreate()" class="btn-primary btn-sm">
             <i class="ti ti-plus"></i> Nuevo plato
           </button>
-        } @else {
-          <p>{{ t('menu.emptyInactive') }}</p>
-          <span style="font-size:12px;color:var(--text-3);">Los platos que des de baja van a aparecer acá para reactivarlos.</span>
         }
       </div>
     } @else {
@@ -96,16 +87,34 @@
       <div style="margin-bottom:16px;">
         <app-search-filter-bar
           placeholder="Buscar por nombre..."
-          [categories]="menuCategories()"
           [showActiveToggle]="false"
           (filtersChange)="onFiltersChange($event)">
         </app-search-filter-bar>
+      </div>
+
+      <!-- Filtro por paso del menú -->
+      <div class="section-chips">
+        <button class="chip" [class.on]="filterSectionId() === ''" (click)="filterSection('')">
+          {{ t('menu.allSections') }}
+        </button>
+        @for (sec of sections(); track sec.id) {
+          <button class="chip" [class.on]="filterSectionId() === sec.id" (click)="filterSection(sec.id!)">
+            <span class="chip-dot" [style.background]="sec.color || 'var(--text-3)'"></span>{{ sec.name }}
+          </button>
+        }
+        <button class="chip chip-ghost" (click)="openSections()" [title]="t('menu.manageSections')">
+          <i class="ti ti-adjustments-horizontal"></i>
+          <span class="hidden sm:inline">{{ t('menu.manageSections') }}</span>
+        </button>
       </div>
 
       @if (canSelect() && selectedCount() > 0) {
         <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;background:var(--bg-input);border:1.5px solid var(--accent);border-radius:12px;padding:10px 14px;margin-bottom:12px;">
           <span style="font-size:12px;color:var(--text-1);font-weight:600;">{{ selectedCount() }} seleccionado{{ selectedCount() > 1 ? 's' : '' }}</span>
           <div style="display:flex;gap:8px;">
+            <button (click)="toggleSelectAllVisible()" class="btn-secondary btn-sm">
+              {{ allVisibleSelected() ? t('menu.unselectAll') : t('menu.selectAll') }}
+            </button>
             <button (click)="clearSelection()" class="btn-secondary btn-sm">Cancelar</button>
             @if (catalogMode()) {
               <button (click)="bulkDeactivating.set(true)" class="btn-danger btn-sm">
@@ -127,44 +136,61 @@
           <span style="font-size:12px;color:var(--text-3);">Probá con otro término o cambiá los filtros.</span>
         </div>
       } @else {
-        <!-- Mobile: cards -->
-        <div class="md:hidden" style="display:flex;flex-direction:column;gap:8px;">
+        <!-- Grilla de tarjetas: el catálogo completo; la carta solo decide cuáles van destacadas -->
+        <div class="dish-grid">
           @for (item of pagedItems(); track item.id) {
-            <div class="data-card" style="padding:12px 14px;">
-              <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:8px;">
-                <div style="display:flex;align-items:flex-start;gap:8px;min-width:0;">
-                  @if (canSelect()) {
-                    <input type="checkbox" [checked]="isSelected(item.id)" (change)="toggleSelect(item.id)"
-                           style="margin-top:3px;width:16px;height:16px;flex-shrink:0;" />
-                  }
-                  <div style="min-width:0;">
-                    <p style="color:var(--text-1);font-weight:600;font-size:13px;">{{ item.name }}</p>
-                    @if (item.category) {
-                      <p style="font-size:11px;color:var(--text-3);">{{ item.category }}</p>
-                    }
-                  </div>
-                </div>
-                <div style="text-align:right;flex-shrink:0;">
-                  <p style="font-weight:700;color:var(--accent);font-size:13px;">{{ formatARS(item.price) }}</p>
-                  @if (item.active) {
-                    <span class="badge badge-accent" style="margin-top:2px;">Activo</span>
+            <article class="dish-card" [class.dimmed]="!catalogMode() && !isInCarta(item)">
+
+              <div class="dish-top" [style.background]="sectionColor(item)">
+                @if (canSelect()) {
+                  <label class="dish-pick">
+                    <input type="checkbox" [checked]="isSelected(item.id)" (change)="toggleSelect(item.id)" />
+                  </label>
+                }
+                <span class="dish-initial">{{ initial(item) }}</span>
+                @if (item.section?.name) {
+                  <span class="dish-section">{{ item.section!.name }}</span>
+                }
+              </div>
+
+              <div class="dish-body">
+                <h3 class="dish-name">{{ item.name }}</h3>
+                <p class="dish-desc">{{ item.description || '—' }}</p>
+
+                <div class="dish-foot">
+                  <span class="dish-price">{{ formatARS(item.price) }}</span>
+                  @let fc = itemCosts().get(item.id!);
+                  @if (fc && fc.foodCostPercentage != null) {
+                    <span class="dish-fc"
+                          [style.color]="fc.foodCostPercentage > 35 ? 'var(--red)' : fc.foodCostPercentage > 28 ? '#d97706' : '#16a34a'">
+                      {{ fc.foodCostPercentage | number:'1.1-1' }}%
+                    </span>
                   } @else {
-                    <span class="badge badge-neutral" style="margin-top:2px;">Inactivo</span>
+                    <span class="dish-fc" style="color:var(--text-3);">—</span>
                   }
                 </div>
               </div>
-              <div style="display:flex;align-items:center;gap:6px;">
-                <button (click)="openView(item)" class="btn-secondary btn-sm">
+
+              <div class="dish-actions">
+                <button (click)="openView(item)" class="btn-secondary btn-sm" title="Ver detalle">
                   <i class="ti ti-eye"></i>
                 </button>
-                <button (click)="openEdit(item)" class="btn-secondary btn-sm" style="flex:1;justify-content:center;">
-                  <i class="ti ti-edit"></i> Editar
+                <button (click)="openEdit(item)" class="btn-secondary btn-sm" title="Editar">
+                  <i class="ti ti-edit"></i>
                 </button>
+
                 @if (!catalogMode()) {
-                  <button (click)="removeItemFromCarta(item)" [disabled]="removingFromCarta()"
-                          class="btn-danger btn-sm" style="flex:1;justify-content:center;">
-                    {{ t('menu.remove') }}
-                  </button>
+                  @if (isInCarta(item)) {
+                    <button (click)="removeItemFromCarta(item)" [disabled]="removingFromCarta()"
+                            class="btn-secondary btn-sm dish-toggle on" style="flex:1;justify-content:center;">
+                      <i class="ti ti-check"></i> {{ t('menu.inCarta') }}
+                    </button>
+                  } @else {
+                    <button (click)="addItemToCarta(item)" class="btn-primary btn-sm"
+                            style="flex:1;justify-content:center;">
+                      <i class="ti ti-plus"></i> {{ t('menu.addToCarta') }}
+                    </button>
+                  }
                 } @else if (viewMode() === 'active') {
                   <button (click)="deactivating.set(item)" class="btn-danger btn-sm" style="flex:1;justify-content:center;">
                     Desactivar
@@ -176,105 +202,9 @@
                   </button>
                 }
               </div>
-            </div>
+            </article>
           }
         </div>
-
-        <!-- Desktop: table -->
-        <div class="table-wrap hidden md:block">
-          <div style="overflow-x:auto;">
-            <table class="data-table">
-              <thead>
-                <tr>
-                  @if (canSelect()) {
-                    <th style="width:32px;">
-                      <input type="checkbox" [checked]="allVisibleSelected()" (change)="toggleSelectAllVisible()"
-                             style="width:16px;height:16px;" />
-                    </th>
-                  }
-                  <th>Plato</th>
-                  <th class="hidden md:table-cell">Categoría</th>
-                  <th class="hidden sm:table-cell" style="text-align:right;">Precio</th>
-                  <th class="hidden lg:table-cell" style="text-align:right;">Costo</th>
-                  <th class="hidden lg:table-cell" style="text-align:center;">Food cost</th>
-                  <th style="text-align:center;">Estado</th>
-                  <th style="text-align:right;">Acciones</th>
-                </tr>
-              </thead>
-              <tbody>
-                @for (item of pagedItems(); track item.id) {
-                  <tr>
-                    @if (canSelect()) {
-                      <td>
-                        <input type="checkbox" [checked]="isSelected(item.id)" (change)="toggleSelect(item.id)"
-                               style="width:16px;height:16px;" />
-                      </td>
-                    }
-                    <td>
-                      <p style="color:var(--text-1);font-weight:600;">{{ item.name }}</p>
-                      @if (item.description) {
-                        <p style="font-size:11px;color:var(--text-3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:240px;">{{ item.description }}</p>
-                      }
-                    </td>
-                    <td class="hidden md:table-cell" style="color:var(--text-2);">{{ item.category || '—' }}</td>
-                    <td class="hidden sm:table-cell" style="text-align:right;color:var(--text-2);">{{ formatARS(item.price) }}</td>
-                    <td class="hidden lg:table-cell" style="text-align:right;">
-                      @let cost = itemCosts().get(item.id!);
-                      @if (cost) {
-                        <span style="color:var(--text-2);">{{ formatARS(cost.costPerServing) }}</span>
-                      } @else {
-                        <span style="color:var(--text-3);">—</span>
-                      }
-                    </td>
-                    <td class="hidden lg:table-cell" style="text-align:center;">
-                      @let fc = itemCosts().get(item.id!);
-                      @if (fc && fc.foodCostPercentage != null) {
-                        <span style="font-size:11px;font-weight:700;padding:2px 7px;border-radius:20px;"
-                              [style.color]="fc.foodCostPercentage > 35 ? 'var(--red)' : fc.foodCostPercentage > 28 ? '#d97706' : '#16a34a'"
-                              [style.background]="fc.foodCostPercentage > 35 ? 'var(--red-bg)' : fc.foodCostPercentage > 28 ? '#fef3c7' : '#dcfce7'">
-                          {{ fc.foodCostPercentage | number:'1.1-1' }}%
-                        </span>
-                      } @else {
-                        <span style="color:var(--text-3);">—</span>
-                      }
-                    </td>
-                    <td style="text-align:center;">
-                      @if (item.active) {
-                        <span class="badge badge-accent">Activo</span>
-                      } @else {
-                        <span class="badge badge-neutral">Inactivo</span>
-                      }
-                    </td>
-                    <td style="text-align:right;">
-                      <div style="display:flex;align-items:center;justify-content:flex-end;gap:6px;">
-                        <button (click)="openView(item)" class="btn-secondary btn-sm" title="Ver detalle">
-                          <i class="ti ti-eye"></i>
-                        </button>
-                        <button (click)="openEdit(item)" class="btn-secondary btn-sm" title="Editar">
-                          <i class="ti ti-edit"></i>
-                        </button>
-                        @if (!catalogMode()) {
-                          <button (click)="removeItemFromCarta(item)" [disabled]="removingFromCarta()" class="btn-danger btn-sm">
-                            {{ t('menu.remove') }}
-                          </button>
-                        } @else if (viewMode() === 'active') {
-                          <button (click)="deactivating.set(item)" class="btn-danger btn-sm">
-                            Desactivar
-                          </button>
-                        } @else {
-                          <button (click)="reactivateItem(item)" [disabled]="activatingId() === item.id" class="btn-primary btn-sm">
-                            @if (activatingId() === item.id) { <span class="loader"></span> } @else { Reactivar }
-                          </button>
-                        }
-                      </div>
-                    </td>
-                  </tr>
-                }
-              </tbody>
-            </table>
-          </div>
-        </div>
-
         @if (filteredItems().length > pageSize) {
           <div style="padding-top:14px;">
             <app-paginator
@@ -295,7 +225,7 @@
 <app-drawer
   [isOpen]="drawerOpen()"
   [title]="readOnly() ? (viewing()?.name ?? 'Ver plato') : (editing() ? 'Editar plato' : 'Nuevo plato')"
-  [subtitle]="readOnly() ? (viewing()?.category ?? 'Detalle del plato') : (editing() ? ('Editando: ' + (editing()?.name ?? '')) : 'Agregá un plato al menú con su receta')"
+  [subtitle]="readOnly() ? (viewing()?.section?.name ?? 'Detalle del plato') : (editing() ? ('Editando: ' + (editing()?.name ?? '')) : 'Agregá un plato al menú con su receta')"
   size="lg"
   (closed)="closeDrawer()">
 
@@ -410,8 +340,9 @@
         }
       </div>
       <div>
-        <label class="field-label">Categoría <span style="color:var(--text-3);font-weight:400;">(opcional)</span></label>
-        <input formControlName="category" type="text" placeholder="Principales" class="field-input">
+        <label class="field-label">{{ t('menu.section') }} <span style="color:var(--text-3);font-weight:400;">(opcional)</span></label>
+        <app-select formControlName="sectionId" [options]="sectionOptions()"
+                    [placeholder]="t('menu.noSection')"></app-select>
       </div>
     </div>
 
@@ -609,54 +540,6 @@
   </form>
 </app-drawer>
 
-<!-- ══ DRAWER: agregar platos a la carta ══ -->
-<app-drawer
-  [isOpen]="addItemsOpen()"
-  [title]="t('menu.addDishes')"
-  [subtitle]="selectedCarta()?.name ?? ''"
-  size="md"
-  (closed)="addItemsOpen.set(false)">
-
-  <div style="display:flex;flex-direction:column;gap:12px;">
-    <input type="text" class="field-input" [placeholder]="t('menu.searchDish')"
-           [value]="addItemsSearch()" (input)="addItemsSearch.set($any($event.target).value)">
-
-    @if (catalogLoading()) {
-      <app-spinner />
-    } @else if (addableItems().length === 0) {
-      <div class="empty-state">
-        <i class="ti ti-checks"></i>
-        <p>{{ t('menu.addDishesEmpty') }}</p>
-      </div>
-    } @else {
-      <div style="display:flex;flex-direction:column;gap:6px;max-height:52vh;overflow-y:auto;">
-        @for (item of addableItems(); track item.id) {
-          <label style="display:flex;align-items:center;gap:10px;padding:8px 10px;border:1.5px solid var(--border);border-radius:10px;cursor:pointer;"
-                 [style.border-color]="isAddSelected(item.id) ? 'var(--accent)' : 'var(--border)'">
-            <input type="checkbox" [checked]="isAddSelected(item.id)" (change)="toggleAddItem(item.id)"
-                   style="width:16px;height:16px;flex-shrink:0;" />
-            <span style="flex:1;min-width:0;">
-              <span style="display:block;font-size:13px;font-weight:600;color:var(--text-1);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{ item.name }}</span>
-              @if (item.category) {
-                <span style="display:block;font-size:11px;color:var(--text-3);">{{ item.category }}</span>
-              }
-            </span>
-            <span style="font-size:13px;font-weight:700;color:var(--accent);flex-shrink:0;">{{ formatARS(item.price) }}</span>
-          </label>
-        }
-      </div>
-    }
-
-    <div style="display:flex;gap:8px;justify-content:flex-end;">
-      <button type="button" (click)="addItemsOpen.set(false)" class="btn-secondary btn-sm">Cancelar</button>
-      <button type="button" (click)="confirmAddItems()"
-              [disabled]="addItemsSaving() || addItemsSelected().size === 0" class="btn-primary btn-sm">
-        @if (addItemsSaving()) { <span class="loader"></span> } @else { {{ t('menu.addSelected') }} ({{ addItemsSelected().size }}) }
-      </button>
-    </div>
-  </div>
-</app-drawer>
-
 <!-- ══ BORRAR CARTA ══ -->
 <app-action-dialog
   [visible]="!!deletingCarta()"
@@ -671,4 +554,81 @@
   [confirmDisabled]="deleteCartaLoading()"
   (confirm)="confirmDeleteCarta()"
   (cancel)="deletingCarta.set(null)">
+</app-action-dialog>
+
+<!-- ══ DRAWER: pasos del menú ══ -->
+<app-drawer
+  [isOpen]="sectionsDrawerOpen()"
+  [title]="t('menu.sections')"
+  [subtitle]="t('menu.sectionsSubtitle')"
+  size="md"
+  (closed)="sectionsDrawerOpen.set(false)">
+
+  <div style="display:flex;flex-direction:column;gap:14px;">
+
+    @if (sections().length === 0) {
+      <p style="font-size:12px;color:var(--text-3);">{{ t('menu.noSections') }}</p>
+    } @else {
+      <div style="display:flex;flex-direction:column;gap:6px;">
+        @for (sec of sections(); track sec.id; let i = $index) {
+          <div style="display:flex;align-items:center;gap:8px;padding:8px 10px;border:1.5px solid var(--border);border-radius:10px;">
+            <span class="chip-dot" [style.background]="sec.color || 'var(--text-3)'"></span>
+            <span style="flex:1;min-width:0;font-size:13px;font-weight:600;color:var(--text-1);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
+              {{ sec.name }}
+            </span>
+            <button (click)="moveSection(i, -1)" [disabled]="i === 0 || reordering()" class="btn-icon" style="width:28px;height:28px;" title="Subir">
+              <i class="ti ti-chevron-up"></i>
+            </button>
+            <button (click)="moveSection(i, 1)" [disabled]="i === sections().length - 1 || reordering()" class="btn-icon" style="width:28px;height:28px;" title="Bajar">
+              <i class="ti ti-chevron-down"></i>
+            </button>
+            <button (click)="editSection(sec)" class="btn-icon" style="width:28px;height:28px;" title="Editar">
+              <i class="ti ti-edit"></i>
+            </button>
+            <button (click)="deletingSection.set(sec)" class="btn-icon" style="width:28px;height:28px;color:var(--red);" title="Borrar">
+              <i class="ti ti-trash"></i>
+            </button>
+          </div>
+        }
+      </div>
+    }
+
+    <form [formGroup]="sectionForm" (ngSubmit)="saveSection()" style="display:flex;flex-direction:column;gap:10px;border-top:1px solid var(--border);padding-top:14px;">
+      <div class="field-label">{{ editingSection() ? t('menu.editSection') : t('menu.newSection') }}</div>
+      <div style="display:flex;gap:8px;align-items:center;">
+        <input formControlName="name" type="text" class="field-input" style="flex:1;min-width:0;"
+               [placeholder]="t('menu.sectionNamePlaceholder')"
+               [class.input-error]="isInvalid(sectionForm, 'name')">
+        <input formControlName="color" type="color" title="Color"
+               style="width:42px;height:38px;padding:2px;border:1.5px solid var(--border);border-radius:10px;background:var(--bg-input);flex-shrink:0;">
+      </div>
+
+      @if (sectionError()) {
+        <p style="font-size:12px;color:var(--red);">{{ sectionError() }}</p>
+      }
+
+      <div style="display:flex;gap:8px;justify-content:flex-end;">
+        @if (editingSection()) {
+          <button type="button" (click)="cancelSectionEdit()" class="btn-secondary btn-sm">Cancelar</button>
+        }
+        <button type="submit" [disabled]="savingSection()" class="btn-primary btn-sm">
+          @if (savingSection()) { <span class="loader"></span> } @else { Guardar }
+        </button>
+      </div>
+    </form>
+  </div>
+</app-drawer>
+
+<!-- ══ BORRAR PASO ══ -->
+<app-action-dialog
+  [visible]="!!deletingSection()"
+  [title]="t('menu.deleteSection')"
+  icon="⚠️"
+  tone="danger"
+  [message]="t('menu.deleteSectionMessage')"
+  [itemTitle]="deletingSection()?.name ?? ''"
+  confirmLabel="Borrar"
+  cancelLabel="Cancelar"
+  (confirm)="confirmDeleteSection()"
+  (cancel)="deletingSection.set(null)">
 </app-action-dialog>

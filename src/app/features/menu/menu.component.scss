@@ -52,3 +52,160 @@
     gap: 6px;
   }
 }
+
+/* ── Grilla de platos ─────────────────────────────────────────
+   Mobile-first: una columna en teléfono, dos desde sm, tres desde lg. */
+.dish-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 12px;
+
+  @screen sm { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  @screen lg { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+
+.dish-card {
+  display: flex;
+  flex-direction: column;
+  border: 1.5px solid var(--border);
+  border-radius: 14px;
+  overflow: hidden;
+  background: var(--bg-card);
+  transition: border-color .15s, opacity .15s;
+
+  /* Fuera de la carta: apagado, pero legible. No es un estado de error. */
+  &.dimmed { opacity: .55; }
+  &.dimmed:hover { opacity: 1; }
+}
+
+.dish-top {
+  position: relative;
+  height: 88px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.dish-initial {
+  font-size: 34px;
+  font-weight: 700;
+  color: rgba(255, 255, 255, .92);
+  line-height: 1;
+}
+
+.dish-section {
+  position: absolute;
+  left: 8px;
+  bottom: 8px;
+  max-width: calc(100% - 16px);
+  padding: 2px 8px;
+  border-radius: 20px;
+  font-size: 10px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, .95);
+  background: rgba(0, 0, 0, .28);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.dish-pick {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  display: flex;
+  padding: 4px;
+  border-radius: 8px;
+  background: rgba(0, 0, 0, .25);
+  cursor: pointer;
+
+  input { width: 16px; height: 16px; cursor: pointer; }
+}
+
+.dish-body {
+  flex: 1;
+  padding: 12px 14px 10px;
+  min-width: 0;
+}
+
+.dish-name {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text-1);
+  margin-bottom: 4px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Tres líneas y corta: las descripciones largas no pueden descuadrar la grilla. */
+.dish-desc {
+  font-size: 12px;
+  line-height: 1.45;
+  color: var(--text-3);
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  min-height: 52px;
+}
+
+.dish-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: 10px;
+  padding-top: 8px;
+  border-top: 1px solid var(--border);
+}
+
+.dish-price { font-size: 14px; font-weight: 700; color: var(--accent); }
+.dish-fc    { font-size: 12px; font-weight: 700; }
+
+.dish-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 14px 12px;
+}
+
+.dish-toggle.on {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+/* ── Chips de pasos del menú ────────────────────────────────── */
+.section-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 12px;
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 12px;
+  border: 1.5px solid var(--border);
+  border-radius: 20px;
+  background: var(--bg-card);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-2);
+  cursor: pointer;
+  transition: border-color .15s, color .15s;
+
+  &:hover { border-color: var(--accent); }
+  &.on    { border-color: var(--accent); color: var(--accent); }
+}
+
+.chip-ghost { color: var(--text-3); }
+
+.chip-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}

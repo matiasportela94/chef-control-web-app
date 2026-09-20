@@ -37,8 +37,13 @@ import { updateCarta }                 from '../../api/fn/carta-controller/updat
 import { deleteCarta }                 from '../../api/fn/carta-controller/delete-carta';
 import { addCartaItems }               from '../../api/fn/carta-controller/add-carta-items';
 import { removeCartaItems }            from '../../api/fn/carta-controller/remove-carta-items';
-import { listCartaMenuItems }          from '../../api/fn/carta-controller/list-carta-menu-items';
 import { CartaResponse }               from '../../api/models/carta-response';
+import { listMenuSections }            from '../../api/fn/menu-section-controller/list-menu-sections';
+import { createMenuSection }           from '../../api/fn/menu-section-controller/create-menu-section';
+import { updateMenuSection }           from '../../api/fn/menu-section-controller/update-menu-section';
+import { deleteMenuSection }           from '../../api/fn/menu-section-controller/delete-menu-section';
+import { reorderMenuSections }         from '../../api/fn/menu-section-controller/reorder-menu-sections';
+import { MenuSectionResponse }         from '../../api/models/menu-section-response';
 import { I18nService }                 from '../../core/services/i18n.service';
 
 @Component({
@@ -57,6 +62,22 @@ export class MenuComponent implements OnInit {
 
   filterSearch     = signal('');
   filterCategoryId = signal('');
+
+  /** Pasos del menú del restaurante, en el orden en que se come (no alfabético). */
+  sections        = signal<MenuSectionResponse[]>([]);
+  filterSectionId = signal('');
+
+  sectionOptions = computed<SelectOption[]>(() =>
+    this.sections().map(s => ({ value: s.id ?? '', label: s.name ?? '' }))
+  );
+
+  // Drawer de pasos
+  sectionsDrawerOpen = signal(false);
+  editingSection     = signal<MenuSectionResponse | null>(null);
+  savingSection      = signal(false);
+  sectionError       = signal<string | null>(null);
+  deletingSection    = signal<MenuSectionResponse | null>(null);
+  reordering         = signal(false);
 
   /**
    * Qué se está mirando: una carta concreta, o el catálogo completo de platos ('').
@@ -89,31 +110,13 @@ export class MenuComponent implements OnInit {
   deleteCartaLoading = signal(false);
   togglingCarta   = signal(false);
 
-  // ── Drawer "agregar platos a la carta" ──────────────────────────
-  addItemsOpen      = signal(false);
-  catalogItems      = signal<MenuItemResponse[]>([]);
-  catalogLoading    = signal(false);
-  addItemsSelected  = signal<Set<string>>(new Set());
-  addItemsSaving    = signal(false);
-  addItemsSearch    = signal('');
   removingFromCarta = signal(false);
-
-  /** El catálogo menos lo que la carta ya tiene. */
-  addableItems = computed(() => {
-    const already = new Set(this.selectedCarta()?.menuItemIds ?? []);
-    const term = this.addItemsSearch().toLowerCase().trim();
-    return this.catalogItems().filter(i => {
-      if (!i.id || already.has(i.id)) return false;
-      if (term) return i.name?.toLowerCase().includes(term) ?? false;
-      return true;
-    });
-  });
 
   filteredItems = computed(() => {
     const term = this.filterSearch().toLowerCase().trim();
-    const cat  = this.filterCategoryId();
+    const sec  = this.filterSectionId();
     return this.menuItems().filter(item => {
-      if (cat && item.category !== cat) return false;
+      if (sec && item.section?.id !== sec) return false;
       if (term) return item.name?.toLowerCase().includes(term) ?? false;
       return true;
     });
@@ -124,7 +127,7 @@ export class MenuComponent implements OnInit {
     return this.filteredItems().slice(start, start + this.pageSize);
   });
 
-  isFiltered = computed(() => this.filterSearch() !== '' || this.filterCategoryId() !== '');
+  isFiltered = computed(() => this.filterSearch() !== '' || this.filterSectionId() !== '');
 
   // ── Selección múltiple (no en la vista de dados de baja) ────────
   canSelect = computed(() => !this.catalogMode() || this.viewMode() === 'active');
@@ -141,12 +144,23 @@ export class MenuComponent implements OnInit {
 
   activatingId = signal<string | null>(null);
 
-  menuCategories = computed(() => {
-    const cats = [...new Set(
-      this.menuItems().map(i => i.category).filter((c): c is string => !!c)
-    )].sort();
-    return cats.map(c => ({ id: c, name: c }));
-  });
+  /** En la carta se ven TODOS los platos del catálogo; los que están en la carta, destacados. */
+  isInCarta(item: MenuItemResponse): boolean {
+    return !!item.id && (this.selectedCarta()?.menuItemIds ?? []).includes(item.id);
+  }
+
+  sectionColor(item: MenuItemResponse): string {
+    return item.section?.color || 'var(--text-3)';
+  }
+
+  initial(item: MenuItemResponse): string {
+    return (item.name ?? '?').trim().charAt(0).toUpperCase();
+  }
+
+  filterSection(id: string): void {
+    this.filterSectionId.set(id);
+    this.page.set(1);
+  }
 
   products   = signal<ProductResponse[]>([]);
   units      = signal<UnitResponse[]>([]);
@@ -178,17 +192,23 @@ export class MenuComponent implements OnInit {
   recipeForm: FormGroup;
 
   cartaForm: FormGroup;
+  sectionForm: FormGroup;
 
   constructor(private api: Api, private fb: FormBuilder, private i18n: I18nService) {
     this.cartaForm = this.fb.group({
       name: ['', Validators.required],
     });
 
+    this.sectionForm = this.fb.group({
+      name:  ['', Validators.required],
+      color: ['#F36525'],
+    });
+
     this.itemForm = this.fb.group({
       name:        ['', Validators.required],
       description: [''],
       price:       [null as number | null],
-      category:    [''],
+      sectionId:   [''],
     });
 
     this.recipeForm = this.fb.group({
@@ -198,7 +218,7 @@ export class MenuComponent implements OnInit {
   }
 
   async ngOnInit(): Promise<void> {
-    await this.loadCartas();
+    await Promise.all([this.loadCartas(), this.loadSections()]);
     // Arranca en la primera carta activa; si no hay ninguna, en el catálogo completo.
     const first = this.cartas().find(c => c.active) ?? this.cartas()[0];
     if (first?.id) {
@@ -217,6 +237,13 @@ export class MenuComponent implements OnInit {
     return this.viewMode() === 'active' ? this.t('menu.dishesInCatalog') : this.t('menu.dishesInactive');
   }
 
+  async loadSections(): Promise<void> {
+    try {
+      const raw = await this.api.invoke(listMenuSections, {}) as unknown;
+      this.sections.set(await parseBlob<MenuSectionResponse[]>(raw) ?? []);
+    } catch { /* la pantalla sigue usable sin pasos */ }
+  }
+
   async loadCartas(): Promise<void> {
     try {
       const raw = await this.api.invoke(listCartas, {}) as unknown;
@@ -228,11 +255,9 @@ export class MenuComponent implements OnInit {
     if (this.menuItems().length === 0) this.loading.set(true); // evita el flash de spinner (y el salto de scroll) en recargas tras crear/editar/desactivar
     this.error.set(null);
     try {
-      const cartaId = this.selectedCartaId();
-      const raw = cartaId
-        ? await this.api.invoke(listCartaMenuItems, { id: cartaId, page: 0, size: 999 }) as unknown
-        : await this.api.invoke(listMenuItems,
-            { page: 0, size: 999, active: this.viewMode() === 'active' }) as unknown;
+      // Siempre el catálogo completo: la carta solo decide qué tarjetas se ven destacadas.
+      const raw = await this.api.invoke(listMenuItems,
+        { page: 0, size: 999, active: this.catalogMode() ? this.viewMode() === 'active' : true }) as unknown;
       const res = await parseBlob<PagedResponseMenuItemResponse>(raw);
       this.menuItems.set(res.content ?? []);
       void this.loadAllCosts(res.content ?? []);
@@ -328,43 +353,16 @@ export class MenuComponent implements OnInit {
     finally { this.deleteCartaLoading.set(false); }
   }
 
-  // ── Agregar platos del catálogo a la carta ──────────────────────
+  // ── Alta y baja de platos en la carta, desde la tarjeta ─────────
 
-  async openAddItems(): Promise<void> {
-    this.addItemsSelected.set(new Set());
-    this.addItemsSearch.set('');
-    this.addItemsOpen.set(true);
-    this.catalogLoading.set(true);
-    try {
-      const raw = await this.api.invoke(listMenuItems, { page: 0, size: 999, active: true }) as unknown;
-      const res = await parseBlob<PagedResponseMenuItemResponse>(raw);
-      this.catalogItems.set(res.content ?? []);
-    } catch { this.catalogItems.set([]); }
-    finally { this.catalogLoading.set(false); }
-  }
-
-  toggleAddItem(id?: string): void {
-    if (!id) return;
-    const next = new Set(this.addItemsSelected());
-    next.has(id) ? next.delete(id) : next.add(id);
-    this.addItemsSelected.set(next);
-  }
-
-  isAddSelected(id?: string): boolean {
-    return !!id && this.addItemsSelected().has(id);
-  }
-
-  async confirmAddItems(): Promise<void> {
+  /** Meter un plato suelto en la carta desde su tarjeta. */
+  async addItemToCarta(item: MenuItemResponse): Promise<void> {
     const cartaId = this.selectedCartaId();
-    const menuItemIds = [...this.addItemsSelected()];
-    if (!cartaId || menuItemIds.length === 0) return;
-    this.addItemsSaving.set(true);
+    if (!cartaId || !item.id) return;
     try {
-      await this.api.invoke(addCartaItems, { id: cartaId, body: { menuItemIds } });
-      this.addItemsOpen.set(false);
-      await Promise.all([this.loadCartas(), this.loadMenuItems()]);
-    } catch { /* stays in drawer */ }
-    finally { this.addItemsSaving.set(false); }
+      await this.api.invoke(addCartaItems, { id: cartaId, body: { menuItemIds: [item.id] } });
+      await this.loadCartas();
+    } catch { /* el interceptor global muestra el error */ }
   }
 
   /** Sacar un plato suelto — misma llamada en lote, con una lista de uno. */
@@ -374,7 +372,7 @@ export class MenuComponent implements OnInit {
     this.removingFromCarta.set(true);
     try {
       await this.api.invoke(removeCartaItems, { id: cartaId, body: { menuItemIds: [item.id] } });
-      await Promise.all([this.loadCartas(), this.loadMenuItems()]);
+      await this.loadCartas();
     } catch { /* el interceptor global muestra el error */ }
     finally { this.removingFromCarta.set(false); }
   }
@@ -388,7 +386,7 @@ export class MenuComponent implements OnInit {
     try {
       await this.api.invoke(removeCartaItems, { id: cartaId, body: { menuItemIds } });
       this.clearSelection();
-      await Promise.all([this.loadCartas(), this.loadMenuItems()]);
+      await this.loadCartas();
     } catch { /* el interceptor global muestra el error */ }
     finally { this.removingFromCarta.set(false); }
   }
@@ -520,7 +518,7 @@ export class MenuComponent implements OnInit {
       name:        item.name        ?? '',
       description: item.description ?? '',
       price:       item.price       ?? null,
-      category:    item.category    ?? '',
+      sectionId:   item.section?.id ?? '',
     });
   }
 
@@ -533,7 +531,7 @@ export class MenuComponent implements OnInit {
     this.recipeItems.clear();
     this.recipeForm.reset({ servings: 1 });
     this.itemForm.get('price')!.setValidators([Validators.required, Validators.min(0)]);
-    this.itemForm.reset({ name: '', description: '', price: null, category: '' });
+    this.itemForm.reset({ name: '', description: '', price: null, sectionId: '' });
     this.saveError.set(null);
     this.drawerOpen.set(true);
   }
@@ -551,7 +549,7 @@ export class MenuComponent implements OnInit {
       name:        item.name        ?? '',
       description: item.description ?? '',
       price:       item.price       ?? null,
-      category:    item.category    ?? '',
+      sectionId:   item.section?.id ?? '',
     });
     this.saveError.set(null);
     this.drawerOpen.set(true);
@@ -599,7 +597,7 @@ export class MenuComponent implements OnInit {
       name: v.name,
       ...(v.description?.trim() ? { description: v.description.trim() } : {}),
       ...(v.price != null       ? { price:       +v.price }             : {}),
-      ...(v.category?.trim()    ? { category:    v.category.trim() }    : {}),
+      ...(v.sectionId           ? { sectionId:   v.sectionId }          : {}),
     };
     try {
       const ed = this.editing();
@@ -700,10 +698,85 @@ export class MenuComponent implements OnInit {
     finally { this.deactivateLoading.set(false); }
   }
 
+  // ── Pasos del menú ──────────────────────────────────────────────
+
+  openSections(): void {
+    this.editingSection.set(null);
+    this.sectionError.set(null);
+    this.sectionForm.reset({ name: '', color: '#F36525' });
+    this.sectionsDrawerOpen.set(true);
+  }
+
+  editSection(section: MenuSectionResponse): void {
+    this.editingSection.set(section);
+    this.sectionError.set(null);
+    this.sectionForm.reset({ name: section.name ?? '', color: section.color ?? '#F36525' });
+  }
+
+  cancelSectionEdit(): void {
+    this.editingSection.set(null);
+    this.sectionError.set(null);
+    this.sectionForm.reset({ name: '', color: '#F36525' });
+  }
+
+  async saveSection(): Promise<void> {
+    if (this.sectionForm.invalid) { this.sectionForm.markAllAsTouched(); return; }
+    this.savingSection.set(true);
+    this.sectionError.set(null);
+    const v = this.sectionForm.getRawValue();
+    const body = { name: v.name!.trim(), color: v.color };
+    try {
+      const editing = this.editingSection();
+      if (editing?.id) await this.api.invoke(updateMenuSection, { id: editing.id, body });
+      else             await this.api.invoke(createMenuSection, { body });
+      this.cancelSectionEdit();
+      await Promise.all([this.loadSections(), this.loadMenuItems()]);
+    } catch (e: any) {
+      this.sectionError.set(extractApiError(e, this.t('menu.saveSectionError')));
+    } finally {
+      this.savingSection.set(false);
+    }
+  }
+
+  /** Mover un paso una posición: el backend recibe la lista completa ya ordenada. */
+  async moveSection(index: number, delta: number): Promise<void> {
+    const list = [...this.sections()];
+    const target = index + delta;
+    if (target < 0 || target >= list.length) return;
+    [list[index], list[target]] = [list[target], list[index]];
+
+    this.sections.set(list); // optimista: el orden se ve al toque
+    this.reordering.set(true);
+    try {
+      await this.api.invoke(reorderMenuSections,
+        { body: { sectionIds: list.map(s => s.id!) } });
+      await this.loadSections();
+    } catch {
+      await this.loadSections(); // si falla, vuelve a lo que dice el servidor
+    } finally {
+      this.reordering.set(false);
+    }
+  }
+
+  async confirmDeleteSection(): Promise<void> {
+    const section = this.deletingSection();
+    if (!section?.id) return;
+    try {
+      await this.api.invoke(deleteMenuSection, { id: section.id });
+      this.deletingSection.set(null);
+      if (this.filterSectionId() === section.id) this.filterSectionId.set('');
+      await Promise.all([this.loadSections(), this.loadMenuItems()]);
+    } catch (e: any) {
+      this.sectionError.set(extractApiError(e, this.t('menu.deleteSectionError')));
+      this.deletingSection.set(null);
+    }
+  }
+
   @HostListener('document:keydown.escape')
   onEscape(): void {
     if (this.drawerOpen())            this.closeDrawer();
-    else if (this.addItemsOpen())     this.addItemsOpen.set(false);
+    else if (this.deletingSection())  this.deletingSection.set(null);
+    else if (this.sectionsDrawerOpen()) this.sectionsDrawerOpen.set(false);
     else if (this.cartaDrawerOpen())  this.cartaDrawerOpen.set(false);
     else if (this.deletingCarta())    this.deletingCarta.set(null);
     else if (this.deactivating())     this.deactivating.set(null);
@@ -711,7 +784,6 @@ export class MenuComponent implements OnInit {
 
   onFiltersChange(state: FilterBarState): void {
     this.filterSearch.set(state.search);
-    this.filterCategoryId.set(state.categoryId);
     this.page.set(1);
   }
 
