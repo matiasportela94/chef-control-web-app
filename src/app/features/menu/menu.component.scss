@@ -246,3 +246,21 @@
   object-fit: cover;
   border-radius: 12px;
 }
+
+/* Ícono del paso en la tarjeta: mismo lugar que la inicial. */
+.dish-icon {
+  font-size: 34px;
+  color: rgba(255, 255, 255, .92);
+  line-height: 1;
+}
+
+.section-badge {
+  width: 26px;
+  height: 26px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  font-size: 15px;
+}

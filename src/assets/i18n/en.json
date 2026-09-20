@@ -138,7 +138,10 @@
     "removePhoto":            "Remove photo",
     "photoHint":              "Optional. JPG, PNG, WEBP or GIF. It gets resized before uploading.",
     "photoWorking":           "Working...",
-    "imageError":             "Could not save the photo"
+    "imageError":             "Could not save the photo",
+    "sectionColor":           "Course color",
+    "sectionIconPlaceholder": "salad, meat, cake, glass...",
+    "sectionIconHint":        "Icon name, same as in Categories. Find it at"
   },
   "products": {
     "nextExpiry":       "Expires",

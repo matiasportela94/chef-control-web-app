@@ -172,6 +172,16 @@ export class MenuComponent implements OnInit {
     return item.section?.color || 'var(--text-3)';
   }
 
+  /** Nombre del ícono de Tabler del paso, si tiene: la tarjeta lo usa en vez de la inicial. */
+  sectionIcon(item: MenuItemResponse): string | null {
+    return item.section?.icon?.trim() || null;
+  }
+
+  /** Preview en vivo mientras se escribe el nombre del ícono en el drawer de pasos. */
+  get sectionIconPreview(): string {
+    return (this.sectionForm.get('icon')?.value as string)?.trim() || '';
+  }
+
   initial(item: MenuItemResponse): string {
     return (item.name ?? '?').trim().charAt(0).toUpperCase();
   }
@@ -227,6 +237,7 @@ export class MenuComponent implements OnInit {
     this.sectionForm = this.fb.group({
       name:  ['', Validators.required],
       color: ['#F36525'],
+      icon:  [''],
     });
 
     this.itemForm = this.fb.group({
@@ -801,20 +812,24 @@ export class MenuComponent implements OnInit {
   openSections(): void {
     this.editingSection.set(null);
     this.sectionError.set(null);
-    this.sectionForm.reset({ name: '', color: '#F36525' });
+    this.sectionForm.reset({ name: '', color: '#F36525', icon: '' });
     this.sectionsDrawerOpen.set(true);
   }
 
   editSection(section: MenuSectionResponse): void {
     this.editingSection.set(section);
     this.sectionError.set(null);
-    this.sectionForm.reset({ name: section.name ?? '', color: section.color ?? '#F36525' });
+    this.sectionForm.reset({
+      name:  section.name ?? '',
+      color: section.color ?? '#F36525',
+      icon:  section.icon ?? '',
+    });
   }
 
   cancelSectionEdit(): void {
     this.editingSection.set(null);
     this.sectionError.set(null);
-    this.sectionForm.reset({ name: '', color: '#F36525' });
+    this.sectionForm.reset({ name: '', color: '#F36525', icon: '' });
   }
 
   async saveSection(): Promise<void> {
@@ -822,7 +837,7 @@ export class MenuComponent implements OnInit {
     this.savingSection.set(true);
     this.sectionError.set(null);
     const v = this.sectionForm.getRawValue();
-    const body = { name: v.name!.trim(), color: v.color };
+    const body = { name: v.name!.trim(), color: v.color, icon: v.icon?.trim() || undefined };
     try {
       const editing = this.editingSection();
       if (editing?.id) await this.api.invoke(updateMenuSection, { id: editing.id, body });

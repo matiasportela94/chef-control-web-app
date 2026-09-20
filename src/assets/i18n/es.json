@@ -138,7 +138,10 @@
     "removePhoto":            "Sacar foto",
     "photoHint":              "Opcional. JPG, PNG, WEBP o GIF. Se achica sola antes de subirse.",
     "photoWorking":           "Procesando...",
-    "imageError":             "No se pudo guardar la foto"
+    "imageError":             "No se pudo guardar la foto",
+    "sectionColor":           "Color del paso",
+    "sectionIconPlaceholder": "salad, meat, cake, glass...",
+    "sectionIconHint":        "Nombre del ícono, como en Categorías. Buscalo en"
   },
   "products": {
     "nextExpiry":       "Vence",
