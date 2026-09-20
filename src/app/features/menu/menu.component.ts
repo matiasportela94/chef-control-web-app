@@ -44,6 +44,10 @@ import { updateMenuSection }           from '../../api/fn/menu-section-controlle
 import { deleteMenuSection }           from '../../api/fn/menu-section-controller/delete-menu-section';
 import { reorderMenuSections }         from '../../api/fn/menu-section-controller/reorder-menu-sections';
 import { MenuSectionResponse }         from '../../api/models/menu-section-response';
+import { uploadMenuItemImage }         from '../../api/fn/menu-item-controller/upload-menu-item-image';
+import { deleteMenuItemImage }         from '../../api/fn/menu-item-controller/delete-menu-item-image';
+import { resizeImage }                 from '../../core/utils/image';
+import { environment }                 from '../../../environments/environment';
 import { I18nService }                 from '../../core/services/i18n.service';
 
 @Component({
@@ -149,6 +153,21 @@ export class MenuComponent implements OnInit {
     return !!item.id && (this.selectedCarta()?.menuItemIds ?? []).includes(item.id);
   }
 
+  /**
+   * La URL lleva ?v= con la fecha de la última subida: el backend responde immutable con cache
+   * de un año, así que sin ese parámetro el navegador se quedaría con la foto vieja para siempre.
+   */
+  imageUrl(item: MenuItemResponse): string | null {
+    if (!item.id || !item.imageUpdatedAt) return null;
+    return `${environment.apiUrl}/menu-items/${item.id}/image?v=${Date.parse(item.imageUpdatedAt)}`;
+  }
+
+  /** La foto del plato que está abierto en el drawer (editando o viendo). */
+  currentImageUrl(): string | null {
+    const item = this.editing() ?? this.viewing();
+    return item ? this.imageUrl(item) : null;
+  }
+
   sectionColor(item: MenuItemResponse): string {
     return item.section?.color || 'var(--text-3)';
   }
@@ -182,6 +201,12 @@ export class MenuComponent implements OnInit {
   saveError     = signal<string | null>(null);
   recipeLoading = signal(false);
   recipeCost    = signal<RecipeCostResponse | null>(null);
+
+  // Foto del plato: pendiente (elegida pero no subida) y preview local
+  pendingImage    = signal<Blob | null>(null);
+  imagePreviewUrl = signal<string | null>(null);
+  imageBusy       = signal(false);
+  imageError      = signal<string | null>(null);
   isActiveLocal = signal(true);
 
   // Deactivate dialog
@@ -495,6 +520,7 @@ export class MenuComponent implements OnInit {
   // ── Drawer ───────────────────────────────────────────────────
 
   openView(item: MenuItemResponse): void {
+    this.resetImageState();
     this.viewing.set(item);
     this.editing.set(null);
     this.readOnly.set(true);
@@ -505,6 +531,12 @@ export class MenuComponent implements OnInit {
     this.saveError.set(null);
     this.drawerOpen.set(true);
     void this.loadRecipe(item);
+  }
+
+  private resetImageState(): void {
+    this.revokePreview();
+    this.pendingImage.set(null);
+    this.imageError.set(null);
   }
 
   switchToEdit(): void {
@@ -523,6 +555,7 @@ export class MenuComponent implements OnInit {
   }
 
   openCreate(): void {
+    this.resetImageState();
     this.editing.set(null);
     this.viewing.set(null);
     this.readOnly.set(false);
@@ -537,6 +570,7 @@ export class MenuComponent implements OnInit {
   }
 
   openEdit(item: MenuItemResponse): void {
+    this.resetImageState();
     this.editing.set(item);
     this.viewing.set(null);
     this.readOnly.set(false);
@@ -579,7 +613,68 @@ export class MenuComponent implements OnInit {
   }
 
   closeDrawer(): void {
+    this.revokePreview();
     this.drawerOpen.set(false);
+  }
+
+  // ── Foto del plato ──────────────────────────────────────────────
+
+  async onImagePicked(event: Event): Promise<void> {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
+    input.value = ''; // permite volver a elegir el mismo archivo
+    if (!file) return;
+
+    this.imageError.set(null);
+    this.imageBusy.set(true);
+    try {
+      const resized = await resizeImage(file);
+      this.revokePreview();
+      this.pendingImage.set(resized);
+      this.imagePreviewUrl.set(URL.createObjectURL(resized));
+
+      // Si el plato ya existe, se sube ahora; si es nuevo, va al guardar (necesita id).
+      const id = this.editing()?.id;
+      if (id) await this.uploadPendingImage(id);
+    } catch {
+      this.imageError.set(this.t('menu.imageError'));
+    } finally {
+      this.imageBusy.set(false);
+    }
+  }
+
+  private async uploadPendingImage(menuItemId: string): Promise<void> {
+    const blob = this.pendingImage();
+    if (!blob) return;
+    await this.api.invoke(uploadMenuItemImage, { id: menuItemId, body: { file: blob } });
+    this.pendingImage.set(null);
+  }
+
+  async removeImage(): Promise<void> {
+    this.revokePreview();
+    this.pendingImage.set(null);
+
+    const id = this.editing()?.id ?? this.viewing()?.id;
+    if (!id) return;
+    this.imageBusy.set(true);
+    try {
+      await this.api.invoke(deleteMenuItemImage, { id });
+      await this.loadMenuItems();
+      const fresh = this.menuItems().find(i => i.id === id) ?? null;
+      if (this.editing()) this.editing.set(fresh);
+      if (this.viewing()) this.viewing.set(fresh);
+    } catch {
+      this.imageError.set(this.t('menu.imageError'));
+    } finally {
+      this.imageBusy.set(false);
+    }
+  }
+
+  /** El object URL del preview ocupa memoria hasta que se libera. */
+  private revokePreview(): void {
+    const url = this.imagePreviewUrl();
+    if (url) URL.revokeObjectURL(url);
+    this.imagePreviewUrl.set(null);
   }
 
   toggleActive(active: boolean): void {
@@ -635,6 +730,9 @@ export class MenuComponent implements OnInit {
         await this.api.invoke(activateMenuItem, { id: ed.id });
       }
 
+      if (this.pendingImage()) await this.uploadPendingImage(itemId);
+
+      this.revokePreview();
       this.drawerOpen.set(false);
       await this.loadMenuItems();
     } catch (e: any) {

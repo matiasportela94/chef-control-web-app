@@ -132,7 +132,13 @@
     "inCarta":                "On the menu",
     "addToCarta":             "Add",
     "selectAll":              "Select all",
-    "unselectAll":            "None"
+    "unselectAll":            "None",
+    "photo":                  "Photo",
+    "choosePhoto":            "Choose photo",
+    "removePhoto":            "Remove photo",
+    "photoHint":              "Optional. JPG, PNG, WEBP or GIF. It gets resized before uploading.",
+    "photoWorking":           "Working...",
+    "imageError":             "Could not save the photo"
   },
   "products": {
     "nextExpiry":       "Expires",

@@ -142,12 +142,16 @@
             <article class="dish-card" [class.dimmed]="!catalogMode() && !isInCarta(item)">
 
               <div class="dish-top" [style.background]="sectionColor(item)">
+                @if (imageUrl(item); as src) {
+                  <img [src]="src" [alt]="item.name" class="dish-photo" loading="lazy" />
+                } @else {
+                  <span class="dish-initial">{{ initial(item) }}</span>
+                }
                 @if (canSelect()) {
                   <label class="dish-pick">
                     <input type="checkbox" [checked]="isSelected(item.id)" (change)="toggleSelect(item.id)" />
                   </label>
                 }
-                <span class="dish-initial">{{ initial(item) }}</span>
                 @if (item.section?.name) {
                   <span class="dish-section">{{ item.section!.name }}</span>
                 }
@@ -232,6 +236,10 @@
   <!-- ══ VISTA READ-ONLY ══ -->
   @if (readOnly()) {
     <div style="display:flex;flex-direction:column;gap:12px;">
+
+      @if (currentImageUrl()) {
+        <img [src]="currentImageUrl()!" [alt]="viewing()?.name ?? ''" class="dish-photo-view" />
+      }
 
       <!-- Precio + descripción -->
       @if (viewing()?.price || viewing()?.description) {
@@ -343,6 +351,40 @@
         <label class="field-label">{{ t('menu.section') }} <span style="color:var(--text-3);font-weight:400;">(opcional)</span></label>
         <app-select formControlName="sectionId" [options]="sectionOptions()"
                     [placeholder]="t('menu.noSection')"></app-select>
+      </div>
+    </div>
+
+    <!-- Foto -->
+    <div class="sec-div">{{ t('menu.photo') }}</div>
+    <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+      @if (imagePreviewUrl()) {
+        <img [src]="imagePreviewUrl()!" alt="" class="dish-photo-preview" />
+      } @else if (currentImageUrl()) {
+        <img [src]="currentImageUrl()!" alt="" class="dish-photo-preview" />
+      } @else {
+        <div class="dish-photo-empty"><i class="ti ti-photo"></i></div>
+      }
+
+      <div style="display:flex;flex-direction:column;gap:6px;min-width:0;flex:1;">
+        <label class="btn-secondary btn-sm" style="justify-content:center;cursor:pointer;">
+          <i class="ti ti-upload"></i> {{ t('menu.choosePhoto') }}
+          <input type="file" accept="image/jpeg,image/png,image/webp,image/gif"
+                 (change)="onImagePicked($event)" [disabled]="imageBusy()" hidden />
+        </label>
+
+        @if (imagePreviewUrl() || (editing() && editing()!.imageUpdatedAt)) {
+          <button type="button" (click)="removeImage()" [disabled]="imageBusy()"
+                  class="btn-secondary btn-sm" style="justify-content:center;color:var(--red);">
+            <i class="ti ti-trash"></i> {{ t('menu.removePhoto') }}
+          </button>
+        }
+
+        <span style="font-size:11px;color:var(--text-3);">
+          @if (imageBusy()) { {{ t('menu.photoWorking') }} } @else { {{ t('menu.photoHint') }} }
+        </span>
+        @if (imageError()) {
+          <span style="font-size:11px;color:var(--red);">{{ imageError() }}</span>
+        }
       </div>
     </div>
 

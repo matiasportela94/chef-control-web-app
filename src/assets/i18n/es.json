@@ -132,7 +132,13 @@
     "inCarta":                "En la carta",
     "addToCarta":             "Agregar",
     "selectAll":              "Seleccionar todos",
-    "unselectAll":            "Ninguno"
+    "unselectAll":            "Ninguno",
+    "photo":                  "Foto",
+    "choosePhoto":            "Elegir foto",
+    "removePhoto":            "Sacar foto",
+    "photoHint":              "Opcional. JPG, PNG, WEBP o GIF. Se achica sola antes de subirse.",
+    "photoWorking":           "Procesando...",
+    "imageError":             "No se pudo guardar la foto"
   },
   "products": {
     "nextExpiry":       "Vence",
