@@ -173,7 +173,20 @@
     "yieldNotice": "Cost now includes each item's yield",
     "yieldNoticeBody": "If a recipe calls for 200 g of peeled potato, you're charged the 222 g you had to buy. Dishes using items with a yield set show a higher cost than before — nothing broke, that factor was missing.",
     "grossQuantity": "Bought",
-    "netQuantity": "In recipe"
+    "netQuantity": "In recipe",
+    "historyTab": "History",
+    "historySubtitle": "How the dish's price and food cost moved over time.",
+    "priceChart": "Menu price",
+    "foodCostChart": "Food cost",
+    "showTable": "Show table",
+    "showChart": "Show chart",
+    "colDate": "Date",
+    "colPrice": "Price",
+    "colCost": "Cost per serving",
+    "colFoodCost": "Food cost",
+    "noChanges": "No changes in this period",
+    "unreliableBefore": "Data before {date} isn't reliable",
+    "unreliableBody": "History started being recorded that day. For earlier dates you see the value at that moment, not what was actually in effect."
   },
   "stock": {
     "standardYieldWaste": "Standard yield waste"

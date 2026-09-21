@@ -1,20 +1,24 @@
-import { Component, OnInit, signal } from '@angular/core';
+import { Component, OnInit, computed, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Api } from '../../api/api';
 import { calculate } from '../../api/fn/food-cost-controller/calculate';
 import { listMenuItems } from '../../api/fn/menu-item-controller/list-menu-items';
 import { getRecipeCost } from '../../api/fn/menu-item-controller/get-recipe-cost';
 import { getFoodCost } from '../../api/fn/menu-item-controller/get-food-cost';
+import { getPriceEvolution } from '../../api/fn/menu-item-controller/get-price-evolution';
 import { FoodCostResponse } from '../../api/models/food-cost-response';
 import { MenuItemFoodCostResponse } from '../../api/models/menu-item-food-cost-response';
 import { MenuItemResponse } from '../../api/models/menu-item-response';
 import { PagedResponseMenuItemResponse } from '../../api/models/paged-response-menu-item-response';
 import { RecipeCostResponse } from '../../api/models/recipe-cost-response';
+import { PriceEvolutionResponse } from '../../api/models/price-evolution-response';
 import { IngredientCost } from '../../api/models/ingredient-cost';
 import { parseBlob } from '../../core/utils/parse-blob';
+import { extractApiError } from '../../core/utils/api-error';
 import { formatARS, formatDate, formatNum, formatPct } from '../../core/utils/format';
 import { todayISO, firstOfMonth, thisMonth, lastMonth, lastNDays } from '../../core/utils/date';
 import { SelectComponent, SelectOption } from '../../shared/components/select/select.component';
+import { StepLineChartComponent, StepPoint } from '../../shared/components/step-line-chart/step-line-chart.component';
 import { I18nService } from '../../core/services/i18n.service';
 
 interface Preset { label: string; from: string; to: string; }
@@ -22,12 +26,12 @@ interface Preset { label: string; from: string; to: string; }
 @Component({
   selector: 'app-food-cost',
   standalone: true,
-  imports: [FormsModule, SelectComponent],
+  imports: [FormsModule, SelectComponent, StepLineChartComponent],
   templateUrl: './food-cost.component.html',
   styleUrl: './food-cost.component.scss'
 })
 export class FoodCostComponent implements OnInit {
-  mode = signal<'global' | 'dish'>('global');
+  mode = signal<'global' | 'dish' | 'history'>('global');
 
   // ── Aviso del rendimiento ────────────────────────────────────────────────
   // Al cargar rendimientos el food cost teórico de todos los platos sube de golpe. Sin
@@ -77,6 +81,50 @@ export class FoodCostComponent implements OnInit {
   fcItem        = signal<MenuItemFoodCostResponse | null>(null);
   fcItemStale   = signal(false);
 
+  // ── Histórico ─────────────────────────────────────────────────────────────
+  evolution        = signal<PriceEvolutionResponse | null>(null);
+  evolutionLoading = signal(false);
+  evolutionError   = signal<string | null>(null);
+  /** La guía de dataviz pide que todo gráfico tenga su gemelo en tabla. */
+  showTable        = signal(false);
+
+  pricePoints = computed<StepPoint[]>(() =>
+    (this.evolution()?.points ?? []).map(p => ({ at: p.at!, value: p.menuPrice })));
+
+  foodCostPoints = computed<StepPoint[]>(() =>
+    (this.evolution()?.points ?? []).map(p => ({ at: p.at!, value: p.foodCostPercentage })));
+
+  /** Solo se avisa si el período pedido cae, aunque sea en parte, antes de que haya historial. */
+  showsUnreliableRange = computed(() => {
+    const reliableFrom = this.evolution()?.seriesReliableFrom;
+    return !!reliableFrom && Date.parse(this.from()) < Date.parse(reliableFrom);
+  });
+
+  reliableFromLabel = computed(() => {
+    const reliableFrom = this.evolution()?.seriesReliableFrom;
+    return reliableFrom ? formatDate(reliableFrom) : '';
+  });
+
+  async loadEvolution(): Promise<void> {
+    const id = this.selectedMenuItemId();
+    if (!id) { this.evolution.set(null); return; }
+    this.evolutionLoading.set(true);
+    this.evolutionError.set(null);
+    try {
+      const raw = await this.api.invoke(getPriceEvolution, {
+        id,
+        from: `${this.from()}T00:00:00Z`,
+        to:   `${this.to()}T23:59:59Z`,
+      }) as unknown;
+      this.evolution.set(await parseBlob<PriceEvolutionResponse>(raw));
+    } catch (e: any) {
+      this.evolution.set(null);
+      this.evolutionError.set(extractApiError(e, 'No se pudo cargar el histórico del plato.'));
+    } finally {
+      this.evolutionLoading.set(false);
+    }
+  }
+
   readonly presets: Preset[] = [
     { label: 'Este mes',       ...thisMonth()   },
     { label: 'Mes anterior',   ...lastMonth()   },
@@ -114,7 +162,7 @@ export class FoodCostComponent implements OnInit {
       this.fcItemStale.set(false);
       return;
     }
-    await Promise.all([this.loadRecipeCost(id), this.loadFcItem(id)]);
+    await Promise.all([this.loadRecipeCost(id), this.loadFcItem(id), this.loadEvolution()]);
   }
 
   async loadRecipeCost(id: string): Promise<void> {

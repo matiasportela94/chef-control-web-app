@@ -6,6 +6,7 @@
       <h1 class="page-title">Food Cost</h1>
       <p class="page-subtitle">
         @if (mode() === 'global') { Porcentaje de costo de alimentos sobre la facturación del restaurante. }
+        @else if (mode() === 'history') { {{ t('foodCost.historySubtitle') }} }
         @else { Análisis de costo teórico vs. realizado por plato. }
       </p>
     </div>
@@ -19,6 +20,11 @@
               [class.active]="mode() === 'dish'"
               (click)="mode.set('dish')">
         Por plato
+      </button>
+      <button class="status-btn"
+              [class.active]="mode() === 'history'"
+              (click)="mode.set('history')">
+        {{ t('foodCost.historyTab') }}
       </button>
     </div>
   </div>
@@ -38,6 +44,128 @@
         <i class="ti ti-x"></i>
       </button>
     </div>
+  }
+
+
+  <!-- HISTORICO -->
+  @if (mode() === 'history') {
+
+    <!-- Una sola fila de filtros arriba de todo lo que alcanza: nunca dentro de la tarjeta
+         del gráfico. -->
+    <div class="data-card" style="padding:20px;margin-bottom:20px;">
+      <div style="display:flex;flex-wrap:wrap;gap:12px;align-items:flex-end;">
+        <div style="flex:1 1 220px;min-width:0;">
+          <label class="field-label">Plato</label>
+          <app-select [ngModel]="selectedMenuItemId()"
+                      (ngModelChange)="selectedMenuItemId.set($event); onDishSelect()"
+                      [options]="menuItemOptions()"
+                      placeholder="— Seleccioná un plato —">
+          </app-select>
+        </div>
+        <div>
+          <label class="field-label">Desde</label>
+          <input type="date" [ngModel]="from()" (ngModelChange)="from.set($event); loadEvolution()"
+                 class="field-input" style="width:auto;">
+        </div>
+        <div>
+          <label class="field-label">Hasta</label>
+          <input type="date" [ngModel]="to()" (ngModelChange)="to.set($event); loadEvolution()"
+                 class="field-input" style="width:auto;">
+        </div>
+      </div>
+      <div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:12px;">
+        @for (p of presets; track p.label) {
+          <button (click)="applyPreset(p); loadEvolution()"
+                  style="font-size:11px;padding:5px 10px;"
+                  [class.btn-primary]="from() === p.from && to() === p.to"
+                  [class.btn-secondary]="from() !== p.from || to() !== p.to">
+            {{ p.label }}
+          </button>
+        }
+      </div>
+    </div>
+
+    @if (!selectedMenuItemId()) {
+      <div class="data-card" style="padding:40px;text-align:center;">
+        <p style="font-size:12px;color:var(--text-3);">Seleccioná un plato para ver su histórico</p>
+      </div>
+    } @else {
+
+      @if (showsUnreliableRange()) {
+        <div style="display:flex;align-items:flex-start;gap:10px;background:var(--bg-card);border:1.5px solid var(--border-strong);border-radius:12px;padding:12px 14px;margin-bottom:16px;">
+          <i class="ti ti-alert-triangle" style="color:var(--text-2);font-size:18px;flex-shrink:0;line-height:1.2;"></i>
+          <div style="min-width:0;">
+            <p style="font-size:13px;font-weight:600;color:var(--text-1);margin:0 0 4px;">
+              {{ t('foodCost.unreliableBefore', { date: reliableFromLabel() }) }}
+            </p>
+            <p style="font-size:12px;color:var(--text-2);margin:0;line-height:1.5;">
+              {{ t('foodCost.unreliableBody') }}
+            </p>
+          </div>
+        </div>
+      }
+
+      @if (evolutionError()) {
+        <div class="data-card" style="padding:20px;">
+          <p style="font-size:12px;color:var(--red);">{{ evolutionError() }}</p>
+        </div>
+      } @else {
+        <div class="data-card" style="padding:20px;" [style.opacity]="evolutionLoading() ? .5 : 1">
+
+          <div style="display:flex;justify-content:flex-end;margin-bottom:8px;">
+            <button class="btn-secondary" style="font-size:11px;padding:5px 10px;"
+                    (click)="showTable.set(!showTable())">
+              <i class="ti" [class.ti-table]="!showTable()" [class.ti-chart-line]="showTable()"></i>
+              {{ showTable() ? t('foodCost.showChart') : t('foodCost.showTable') }}
+            </button>
+          </div>
+
+          @if (showTable()) {
+            <div style="overflow-x:auto;">
+              <table style="width:100%;border-collapse:collapse;font-size:12px;">
+                <thead>
+                  <tr>
+                    <th style="font-size:9px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:var(--text-2);padding:6px 8px;white-space:nowrap;text-align:left;">{{ t('foodCost.colDate') }}</th>
+                    <th style="font-size:9px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:var(--text-2);padding:6px 8px;white-space:nowrap;text-align:right;">{{ t('foodCost.colPrice') }}</th>
+                    <th style="font-size:9px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:var(--text-2);padding:6px 8px;white-space:nowrap;text-align:right;">{{ t('foodCost.colCost') }}</th>
+                    <th style="font-size:9px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:var(--text-2);padding:6px 8px;white-space:nowrap;text-align:right;">{{ t('foodCost.colFoodCost') }}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (p of evolution()?.points ?? []; track p.at) {
+                    <tr style="border-top:1px solid var(--border);">
+                      <td style="padding:7px 8px;color:var(--text-2);">{{ formatDate(p.at) }}</td>
+                      <td style="padding:7px 8px;text-align:right;font-variant-numeric:tabular-nums;">{{ p.menuPrice != null ? formatARS(p.menuPrice) : '—' }}</td>
+                      <td style="padding:7px 8px;text-align:right;font-variant-numeric:tabular-nums;">{{ p.costPerServing != null ? formatARS(p.costPerServing) : '—' }}</td>
+                      <td style="padding:7px 8px;text-align:right;font-variant-numeric:tabular-nums;">{{ p.foodCostPercentage != null ? (p.foodCostPercentage + '%') : '—' }}</td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+          } @else {
+            <!-- Dos gráficos apilados y no uno con dos ejes Y: la alineación entre dos escalas
+                 distintas es arbitraria e inventa una correlación que no está en los datos. -->
+            <div style="display:flex;flex-direction:column;gap:20px;">
+              <app-step-line-chart
+                  [points]="pricePoints()"
+                  [title]="t('foodCost.priceChart')"
+                  color="var(--chart-1)"
+                  format="currency"
+                  [emptyLabel]="t('foodCost.noChanges')">
+              </app-step-line-chart>
+              <app-step-line-chart
+                  [points]="foodCostPoints()"
+                  [title]="t('foodCost.foodCostChart')"
+                  color="var(--chart-2)"
+                  format="percent"
+                  [emptyLabel]="t('foodCost.noChanges')">
+              </app-step-line-chart>
+            </div>
+          }
+        </div>
+      }
+    }
   }
 
   <!-- GLOBAL MODE -->

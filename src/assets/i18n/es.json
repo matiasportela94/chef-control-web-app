@@ -173,7 +173,20 @@
     "yieldNotice": "El costo ahora incluye el rendimiento de cada insumo",
     "yieldNoticeBody": "Si la receta pide 200 g de papa pelada, se cobran los 222 g que hay que comprar. Los platos con insumos que tienen rendimiento cargado muestran un costo más alto que antes — no se rompió nada, faltaba ese factor.",
     "grossQuantity": "Se compra",
-    "netQuantity": "En la receta"
+    "netQuantity": "En la receta",
+    "historyTab": "Histórico",
+    "historySubtitle": "Cómo se movieron el precio y el food cost del plato.",
+    "priceChart": "Precio de venta",
+    "foodCostChart": "Food cost",
+    "showTable": "Ver tabla",
+    "showChart": "Ver gráfico",
+    "colDate": "Fecha",
+    "colPrice": "Precio",
+    "colCost": "Costo por porción",
+    "colFoodCost": "Food cost",
+    "noChanges": "Sin cambios en el período",
+    "unreliableBefore": "Los datos anteriores al {date} no son confiables",
+    "unreliableBody": "El historial empezó a registrarse ese día. Para fechas anteriores se muestra el valor que había al arrancar, no el que realmente regía."
   },
   "stock": {
     "standardYieldWaste": "Merma estándar"

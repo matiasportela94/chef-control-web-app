@@ -37,6 +37,13 @@
 
   --spark:           #EDE8E4;
 
+  /* Colores de gráfico. Validados con el validador de la guía de dataviz contra su propia
+     superficie: banda de luminosidad, piso de croma, separación bajo daltonismo y contraste.
+     El modo oscuro tiene sus propios pasos — no es un flip automático del claro. */
+  --chart-1:         #F36525;
+  --chart-2:         #2F6F9F;
+  --chart-grid:      #EDE8E4;
+
   --card-hover-border: #C04A0A;
   --card-hover-bg:     #FFF5F0;
   --card-hover-shadow: 0 8px 28px rgba(122,40,0,0.1);
@@ -56,6 +63,10 @@
 
   --border:          #2A2D34;
   --border-strong:   #3A3D44;
+
+  --chart-1:         #E8672B;
+  --chart-2:         #5292CC;
+  --chart-grid:      #2A2D34;
 
   --text-1:          #FFFFFF;
   --text-2:          rgba(255,255,255,0.75);
