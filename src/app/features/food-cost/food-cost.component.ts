@@ -10,10 +10,12 @@ import { MenuItemFoodCostResponse } from '../../api/models/menu-item-food-cost-r
 import { MenuItemResponse } from '../../api/models/menu-item-response';
 import { PagedResponseMenuItemResponse } from '../../api/models/paged-response-menu-item-response';
 import { RecipeCostResponse } from '../../api/models/recipe-cost-response';
+import { IngredientCost } from '../../api/models/ingredient-cost';
 import { parseBlob } from '../../core/utils/parse-blob';
 import { formatARS, formatDate, formatNum, formatPct } from '../../core/utils/format';
 import { todayISO, firstOfMonth, thisMonth, lastMonth, lastNDays } from '../../core/utils/date';
 import { SelectComponent, SelectOption } from '../../shared/components/select/select.component';
+import { I18nService } from '../../core/services/i18n.service';
 
 interface Preset { label: string; from: string; to: string; }
 
@@ -26,6 +28,33 @@ interface Preset { label: string; from: string; to: string; }
 })
 export class FoodCostComponent implements OnInit {
   mode = signal<'global' | 'dish'>('global');
+
+  // ── Aviso del rendimiento ────────────────────────────────────────────────
+  // Al cargar rendimientos el food cost teórico de todos los platos sube de golpe. Sin
+  // explicación el dueño piensa que se rompió el cálculo, así que se avisa una vez.
+  // Es una conveniencia por navegador: si se borra el storage vuelve a aparecer, y está bien.
+  private static readonly YIELD_NOTICE_KEY = 'chefcontrol.foodCost.yieldNoticeDismissed';
+  showYieldNotice = signal(this.readYieldNoticeFlag());
+
+  private readYieldNoticeFlag(): boolean {
+    try {
+      return localStorage.getItem(FoodCostComponent.YIELD_NOTICE_KEY) !== '1';
+    } catch {
+      return true; // modo privado o storage bloqueado: mostrarlo es el default seguro
+    }
+  }
+
+  dismissYieldNotice(): void {
+    this.showYieldNotice.set(false);
+    try { localStorage.setItem(FoodCostComponent.YIELD_NOTICE_KEY, '1'); } catch { /* no pasa nada */ }
+  }
+
+  /** Solo se muestran las dos cantidades cuando el rendimiento cambia algo. */
+  hasYield(ing: IngredientCost): boolean {
+    return ing.yieldPercentage != null && ing.yieldPercentage !== 100 && ing.grossQuantity != null;
+  }
+
+  t = (key: string, params?: Record<string, string | number>) => this.i18n.t(key, params);
 
   from = signal(firstOfMonth());
   to   = signal(todayISO());
@@ -57,7 +86,7 @@ export class FoodCostComponent implements OnInit {
 
   readonly Math = Math;
 
-  constructor(private api: Api) {}
+  constructor(private api: Api, private i18n: I18nService) {}
 
   menuItemOptions(): SelectOption[] {
     return this.menuItems().map(m => ({ value: m.id!, label: m.name! }));

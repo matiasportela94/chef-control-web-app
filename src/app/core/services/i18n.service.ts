@@ -16,12 +16,19 @@ export class I18nService {
     this.locale.set(locale);
   }
 
-  t(key: string): string {
+  /**
+   * Traduce una clave. Los `{placeholder}` del texto se reemplazan con `params`:
+   * `t('products.yieldPreview', { net: 1, unit: 'kg' })`.
+   */
+  t(key: string, params?: Record<string, string | number>): string {
     const parts = key.split('.');
     let node: any = TRANSLATIONS[this.locale()];
     for (const part of parts) {
       node = node?.[part];
     }
-    return typeof node === 'string' ? node : key;
+    if (typeof node !== 'string') return key;
+    if (!params) return node;
+    return node.replace(/\{(\w+)\}/g, (match, name) =>
+      params[name] !== undefined ? String(params[name]) : match);
   }
 }

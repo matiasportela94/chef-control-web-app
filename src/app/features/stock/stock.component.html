@@ -157,7 +157,7 @@
                   <div style="min-width:0;">
                     <p style="color:var(--text-2);font-size:11px;">{{ formatDate(m.createdAt) }}</p>
                     <p style="color:var(--text-2);font-size:12px;">
-                      {{ typeLabel(m.type) }}
+                      {{ typeLabel(m) }}
                       @if (m.reversedBy) {
                         <span style="margin-left:4px;font-size:11px;color:var(--text-3);">(revertido)</span>
                       }
@@ -201,7 +201,7 @@
                     <tr [style.opacity]="m.reversedBy ? '0.4' : '1'">
                       <td style="color:var(--text-2);font-size:11px;">{{ formatDate(m.createdAt) }}</td>
                       <td class="hidden md:table-cell" style="color:var(--text-2);">
-                        {{ typeLabel(m.type) }}
+                        {{ typeLabel(m) }}
                         @if (m.reversedBy) {
                           <span style="margin-left:4px;font-size:11px;color:var(--text-3);">(revertido)</span>
                         }

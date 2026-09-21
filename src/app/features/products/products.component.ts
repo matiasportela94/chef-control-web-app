@@ -110,6 +110,8 @@ export class ProductsComponent implements OnInit {
       categoryId:    [''],
       minStock:      [null as number | null],
       maxStock:      [null as number | null],
+      yieldPercentage: [null as number | null],
+      yieldLoss:       [null as number | null],
     });
   }
 
@@ -145,7 +147,10 @@ export class ProductsComponent implements OnInit {
   openCreate(): void {
     this.editingProduct.set(null);
     this.form.get('name')?.enable();
-    this.form.reset({ name: '', sku: '', defaultUnitId: '', categoryId: '', minStock: null, maxStock: null });
+    this.form.reset({ name: '', sku: '', defaultUnitId: '', categoryId: '', minStock: null, maxStock: null,
+                      yieldPercentage: null, yieldLoss: null });
+    this.yieldMode.set('percent');
+    this.advancedOpen.set(false);
     this.saveError.set(null);
     this.drawerOpen.set(true);
   }
@@ -160,7 +165,13 @@ export class ProductsComponent implements OnInit {
       categoryId:    p.category?.id  ?? '',
       minStock:      p.minStock      ?? null,
       maxStock:      p.maxStock      ?? null,
+      yieldPercentage: this.isDefaultYield(p.yieldPercentage) ? null : p.yieldPercentage!,
+      yieldLoss:       null,
     });
+    this.yieldMode.set('percent');
+    this.syncLossFromPercent();
+    // Si el insumo ya tiene rendimiento cargado, la sección no puede quedar escondida.
+    this.advancedOpen.set(!this.isDefaultYield(p.yieldPercentage) || p.minStock != null || p.maxStock != null);
     this.saveError.set(null);
     this.drawerOpen.set(true);
   }
@@ -186,6 +197,9 @@ export class ProductsComponent implements OnInit {
       ...(v.categoryId ? { categoryId: v.categoryId } : {}),
       ...(v.minStock != null ? { minStock: +v.minStock } : {}),
       ...(v.maxStock != null ? { maxStock: +v.maxStock } : {}),
+      // Siempre se guarda el porcentaje: dos representaciones del mismo dato en la base
+      // serían dos fuentes de verdad. El modo "pierdo X por unidad" convierte al escribir.
+      ...(v.yieldPercentage != null ? { yieldPercentage: +v.yieldPercentage } : {}),
     };
     try {
       const editing = this.editingProduct();
@@ -260,11 +274,88 @@ export class ProductsComponent implements OnInit {
     this.page.set(1);
   }
 
-  t(key: string): string {
-    return this.i18n.t(key);
+  t(key: string, params?: Record<string, string | number>): string {
+    return this.i18n.t(key, params);
   }
 
   readonly formatDateOnly = formatDateOnly;
 
   isInvalid = (field: string) => isFormFieldInvalid(this.form, field);
+
+  // ── Rendimiento ───────────────────────────────────────────────────────────
+  // Se guarda siempre como porcentaje. El modo "pierdo X por unidad" existe porque es
+  // como lo piensa la cocina ("pierdo 100 g por kilo"), pero convierte al escribir.
+
+  advancedOpen = signal(false);
+  yieldMode    = signal<'percent' | 'loss'>('percent');
+
+  /** La unidad del producto elegido en el form. */
+  private selectedUnit = computed(() =>
+    this.units().find(u => u.id === this.form?.get('defaultUnitId')?.value));
+
+  /**
+   * Cargar la merma como cantidad solo tiene sentido si la unidad se subdivide: en kg se
+   * piensa "pierdo 100 g por kilo", en "unidad" no hay nada más chico que una lechuga y la
+   * conversión sería imposible sin saber cuánto pesa cada una.
+   */
+  lossModeAvailable = computed(() => (this.selectedUnitFactor() ?? 1) > 1);
+
+  private selectedUnitFactor = computed(() => this.selectedUnit()?.toBaseFactor);
+
+  /** Abreviatura de la unidad chica (g para kg), para el label del modo cantidad. */
+  lossUnitAbbrev = computed(() => {
+    const baseId = this.selectedUnit()?.baseUnitId;
+    return this.units().find(u => u.id === baseId)?.abbreviation ?? '';
+  });
+
+  unitAbbrev = computed(() => this.selectedUnit()?.abbreviation ?? '');
+
+  private isDefaultYield(value: number | null | undefined): boolean {
+    return value == null || value === 100;
+  }
+
+  setYieldMode(mode: 'percent' | 'loss'): void {
+    this.yieldMode.set(mode);
+    if (mode === 'loss') this.syncLossFromPercent();
+  }
+
+  /** Modo cantidad → porcentaje. Pierdo 100 g de 1000 g = rinde 90%. */
+  onYieldLossInput(): void {
+    const loss   = this.form.get('yieldLoss')?.value;
+    const factor = this.selectedUnitFactor();
+    if (loss == null || loss === '' || !factor) {
+      this.form.get('yieldPercentage')?.setValue(null, { emitEvent: false });
+      return;
+    }
+    const percentage = Math.round((1 - (+loss / factor)) * 100 * 100) / 100;
+    this.form.get('yieldPercentage')?.setValue(percentage, { emitEvent: false });
+  }
+
+  /** Porcentaje → modo cantidad, para que los dos campos digan lo mismo. */
+  syncLossFromPercent(): void {
+    const percentage = this.form.get('yieldPercentage')?.value;
+    const factor     = this.selectedUnitFactor();
+    if (percentage == null || percentage === '' || !factor) {
+      this.form.get('yieldLoss')?.setValue(null, { emitEvent: false });
+      return;
+    }
+    const loss = Math.round((1 - (+percentage / 100)) * factor * 100) / 100;
+    this.form.get('yieldLoss')?.setValue(loss, { emitEvent: false });
+  }
+
+  yieldValue = computed(() => this.form?.get('yieldPercentage')?.value as number | null);
+
+  /** "Para 1 kg en la receta se descuentan 1,111 kg" — el número que va a cambiar el food cost. */
+  yieldPreview(): string | null {
+    const percentage = this.form.get('yieldPercentage')?.value;
+    if (percentage == null || percentage === '' || +percentage <= 0 || +percentage === 100) return null;
+    const gross = (1 / (+percentage / 100)).toFixed(3).replace('.', ',');
+    return this.i18n.t('products.yieldPreview', { net: 1, gross, unit: this.unitAbbrev() });
+  }
+
+  yieldAbove100(): boolean {
+    const percentage = this.form.get('yieldPercentage')?.value;
+    return percentage != null && percentage !== '' && +percentage > 100;
+  }
+
 }

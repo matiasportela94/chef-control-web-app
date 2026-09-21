@@ -23,6 +23,23 @@
     </div>
   </div>
 
+  <!-- Aviso de una sola vez: al cargar rendimientos el teórico sube de golpe y sin
+       explicación parece que se rompió el cálculo. Se descarta y no vuelve. -->
+  @if (showYieldNotice()) {
+    <div style="display:flex;align-items:flex-start;gap:10px;background:var(--bg-card);border:1.5px solid var(--accent);border-radius:12px;padding:12px 14px;margin-bottom:16px;">
+      <i class="ti ti-info-circle" style="color:var(--accent);font-size:18px;flex-shrink:0;line-height:1.2;"></i>
+      <div style="flex:1;min-width:0;">
+        <p style="font-size:13px;font-weight:600;color:var(--text-1);margin:0 0 4px;">{{ t('foodCost.yieldNotice') }}</p>
+        <p style="font-size:12px;color:var(--text-2);margin:0;line-height:1.5;">{{ t('foodCost.yieldNoticeBody') }}</p>
+      </div>
+      <button type="button" class="yield-notice-close" (click)="dismissYieldNotice()"
+              [attr.aria-label]="t('common.close')"
+              style="background:none;border:none;color:var(--text-3);cursor:pointer;padding:2px;flex-shrink:0;line-height:1;">
+        <i class="ti ti-x"></i>
+      </button>
+    </div>
+  }
+
   <!-- GLOBAL MODE -->
   @if (mode() === 'global') {
 
@@ -210,16 +227,23 @@
             @if (rc.ingredients?.length) {
               <div style="flex:1;">
                 <div style="display:flex;align-items:center;gap:10px;padding:0 10px;margin-bottom:4px;">
-                  <span class="field-label" style="flex:1;">Insumo</span>
+                  <span class="field-label" style="flex:1;min-width:0;">Insumo</span>
                   <span class="field-label" style="width:90px;text-align:right;">Cantidad</span>
                   <span class="field-label" style="width:90px;text-align:right;">Subtotal</span>
                 </div>
                 <div>
                   @for (ing of rc.ingredients; track ing.productId) {
                     <div class="ing-row" style="display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:10px;">
-                      <span style="flex:1;font-size:12px;color:var(--text-1);">{{ ing.productName }}</span>
+                      <span style="flex:1;min-width:0;font-size:12px;color:var(--text-1);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{ ing.productName }}</span>
                       <span style="font-size:11px;color:var(--text-2);width:90px;text-align:right;">
-                        {{ formatNum(ing.quantity) }} {{ ing.unitName }}
+                        @if (hasYield(ing)) {
+                          <!-- El subtotal se cobra sobre el bruto: sin las dos cantidades el número no cierra. -->
+                          <span style="text-decoration:line-through;opacity:.55;">{{ formatNum(ing.quantity) }}</span>
+                          <span> {{ formatNum(ing.grossQuantity) }} {{ ing.unitName }}</span>
+                          <span style="display:block;font-size:10px;color:var(--text-3);">rinde {{ formatNum(ing.yieldPercentage) }}%</span>
+                        } @else {
+                          {{ formatNum(ing.quantity) }} {{ ing.unitName }}
+                        }
                       </span>
                       <span style="font-size:12px;color:var(--text-1);font-weight:500;width:90px;text-align:right;">
                         {{ formatARS(ing.totalCost) }}

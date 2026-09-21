@@ -312,19 +312,68 @@
       </p>
     }
 
-    <!-- Límites de stock -->
-    <div class="sec-div">Límites de stock</div>
+    <!-- Avanzado: límites de stock y rendimiento. Plegado porque la mayoría de las altas
+         no los usa, pero se abre solo al editar un producto que ya los tiene cargados. -->
+    <button type="button" class="sec-toggle" (click)="advancedOpen.set(!advancedOpen())"
+            [attr.aria-expanded]="advancedOpen()">
+      <i class="ti" [class.ti-chevron-right]="!advancedOpen()" [class.ti-chevron-down]="advancedOpen()"></i>
+      Avanzado
+      <span class="sec-toggle-hint">límites de stock y rendimiento</span>
+    </button>
 
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
-      <div>
-        <label class="field-label">Mínimo <span style="color:var(--text-3);font-weight:400;">(opc.)</span></label>
-        <input formControlName="minStock" type="number" min="0" step="0.01" placeholder="0" class="field-input">
+    @if (advancedOpen()) {
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+        <div>
+          <label class="field-label">Stock mínimo <span style="color:var(--text-3);font-weight:400;">(opc.)</span></label>
+          <input formControlName="minStock" type="number" min="0" step="0.01" placeholder="0" class="field-input">
+        </div>
+        <div>
+          <label class="field-label">Stock máximo <span style="color:var(--text-3);font-weight:400;">(opc.)</span></label>
+          <input formControlName="maxStock" type="number" min="0" step="0.01" placeholder="0" class="field-input">
+        </div>
       </div>
-      <div>
-        <label class="field-label">Máximo <span style="color:var(--text-3);font-weight:400;">(opc.)</span></label>
-        <input formControlName="maxStock" type="number" min="0" step="0.01" placeholder="0" class="field-input">
+
+      <div style="margin-top:14px;">
+        <label class="field-label">
+          {{ t('products.yield') }} <span style="color:var(--text-3);font-weight:400;">(opc.)</span>
+        </label>
+        <p class="field-hint">{{ t('products.yieldHint') }}</p>
+
+        @if (lossModeAvailable()) {
+          <div class="yield-modes">
+            <button type="button" class="yield-mode-btn" [class.on]="yieldMode() === 'percent'"
+                    (click)="setYieldMode('percent')">{{ t('products.yieldModePercent') }}</button>
+            <button type="button" class="yield-mode-btn" [class.on]="yieldMode() === 'loss'"
+                    (click)="setYieldMode('loss')">{{ t('products.yieldModeLoss') }}</button>
+          </div>
+        } @else {
+          <p class="field-hint">{{ t('products.yieldOnlyPercentHint') }}</p>
+        }
+
+        @if (yieldMode() === 'percent' || !lossModeAvailable()) {
+          <div class="yield-row">
+            <input formControlName="yieldPercentage" type="number" min="0" max="1000" step="0.01"
+                   placeholder="100" class="field-input yield-input" (input)="syncLossFromPercent()">
+            <span class="yield-suffix">%</span>
+          </div>
+        } @else {
+          <div class="yield-row">
+            <span class="yield-suffix">{{ t('products.yieldLossLabel') }}</span>
+            <input formControlName="yieldLoss" type="number" min="0" step="0.01"
+                   placeholder="0" class="field-input yield-input" (input)="onYieldLossInput()">
+            <span class="yield-suffix">{{ lossUnitAbbrev() }}</span>
+            <span class="yield-suffix">{{ t('products.yieldLossPer') }} 1 {{ unitAbbrev() }}</span>
+          </div>
+        }
+
+        @if (yieldPreview(); as preview) {
+          <p class="yield-preview"><i class="ti ti-arrow-narrow-right"></i> {{ preview }}</p>
+        }
+        @if (yieldAbove100()) {
+          <p class="yield-preview"><i class="ti ti-info-circle"></i> {{ t('products.yieldAbove100') }}</p>
+        }
       </div>
-    </div>
+    }
 
     @if (saveError()) {
       <div style="background:var(--red-bg);border:1.5px solid var(--red);border-radius:10px;padding:12px 16px;font-size:12px;color:var(--red);margin-top:4px;">
