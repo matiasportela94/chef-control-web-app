@@ -107,6 +107,7 @@ export class AlertsComponent implements OnInit {
       OVERSTOCK:      'Sobrestock',
       EXPIRATION:     'Vencimiento',
       PRICE_INCREASE: 'Aumento de precio',
+      WASTE_ABOVE_STANDARD: 'Merma alta',
     };
     return t ? (map[t] ?? t.replace(/_/g, ' ')) : '—';
   }
