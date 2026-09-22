@@ -150,7 +150,7 @@
           </div>
         } @else {
           <!-- Mobile: cards -->
-          <div class="md:hidden" style="display:flex;flex-direction:column;gap:8px;">
+          <div class="flex md:hidden" style="flex-direction:column;gap:8px;">
             @for (m of movements(); track m.id) {
               <div class="data-card" style="padding:12px 14px;" [style.opacity]="m.reversedBy ? '0.4' : '1'">
                 <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:8px;">

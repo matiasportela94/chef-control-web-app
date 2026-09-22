@@ -69,7 +69,7 @@
         </div>
       } @else {
         <!-- Mobile: cards -->
-        <div class="md:hidden" style="display:flex;flex-direction:column;gap:8px;">
+        <div class="flex md:hidden" style="flex-direction:column;gap:8px;">
           @for (p of pagedProducts(); track p.id) {
             <div class="data-card" style="padding:12px 14px;">
               <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:8px;">
