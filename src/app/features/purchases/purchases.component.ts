@@ -169,7 +169,9 @@ export class PurchasesComponent implements OnInit {
           unitId:       [{ value: item.unitId    ?? '', disabled: true }],
           quantity:     [{ value: item.quantity  ?? 0,  disabled: true }],
           pricePerUnit: [item.pricePerUnit ?? null, [Validators.required, Validators.min(0.01)]],
-          expirationDate: [{ value: null, disabled: true }],
+          // Solo lectura: la corrección de una compra cambia el precio, no el lote. Se muestra
+          // para que se vea qué vence mientras se corrige, no para editarlo.
+          expirationDate: [{ value: item.expirationDate ?? null, disabled: true }],
           // display helpers
           _productName: [item.productName ?? ''],
           _unitAbbr:    [item.unitAbbreviation ?? ''],
@@ -366,7 +368,9 @@ export class PurchasesComponent implements OnInit {
           unitId:         [item.unitId    ?? '', Validators.required],
           quantity:       [item.quantity  ?? null, [Validators.required, Validators.min(0.001)]],
           pricePerUnit:   [item.pricePerUnit ?? null, [Validators.required, Validators.min(0.01)]],
-          expirationDate: [null],
+          // Se copia del ítem original: corregir una compra no puede perder el vencimiento.
+          // Sin esto el lote nuevo nacía sin fecha y desaparecía del control de vencimientos.
+          expirationDate: [item.expirationDate ?? null],
           _productName:   [item.productName ?? ''],
           _unitAbbr:      [item.unitAbbreviation ?? ''],
         }));
