@@ -190,11 +190,21 @@ export class StepLineChartComponent implements AfterViewInit, OnDestroy {
 
   clearHover(): void { this.hoverIndex.set(null); }
 
-  formatValue(v: number | null | undefined): string {
+  /**
+   * Los ticks del eje van sin centavos —son referencias, y con decimales se amontonan— pero el
+   * tooltip sí los lleva: es donde se compara un valor contra otro.
+   */
+  formatValue(v: number | null | undefined, withDecimals = false): string {
     if (v == null) return '—';
-    return this.format === 'percent'
-      ? `${v.toLocaleString('es-AR', { maximumFractionDigits: 1 })}%`
-      : v.toLocaleString('es-AR', { style: 'currency', currency: 'ARS', maximumFractionDigits: 0 });
+    if (this.format === 'percent') {
+      return `${v.toLocaleString('es-AR', { maximumFractionDigits: 1 })}%`;
+    }
+    return v.toLocaleString('es-AR', {
+      style: 'currency',
+      currency: 'ARS',
+      minimumFractionDigits: withDecimals ? 2 : 0,
+      maximumFractionDigits: withDecimals ? 2 : 0,
+    });
   }
 
   formatDate(iso: string): string {

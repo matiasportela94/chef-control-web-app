@@ -428,7 +428,10 @@ export class ProductsComponent implements OnInit {
   yieldPreview(): string | null {
     const percentage = this.form.get('yieldPercentage')?.value;
     if (percentage == null || percentage === '' || +percentage <= 0 || +percentage === 100) return null;
-    const gross = (1 / (+percentage / 100)).toFixed(3).replace('.', ',');
+    // toLocaleString y no toFixed().replace(): el replace a mano arregla el decimal pero deja
+    // los miles sin separar, y se rompe solo cuando aparece un número grande.
+    const gross = (1 / (+percentage / 100)).toLocaleString('es-AR',
+      { minimumFractionDigits: 3, maximumFractionDigits: 3 });
     return this.i18n.t('products.yieldPreview', { net: 1, gross, unit: this.unitAbbrev() });
   }
 

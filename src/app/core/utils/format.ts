@@ -33,5 +33,6 @@ export function formatNum(n?: number | null): string {
 
 export function formatPct(n?: number | null): string {
   if (n == null) return '—';
-  return n.toFixed(1) + '%';
+  // toFixed() escribe el decimal con punto siempre, sin mirar el locale: daba "34.2%".
+  return n.toLocaleString('es-AR', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + '%';
 }

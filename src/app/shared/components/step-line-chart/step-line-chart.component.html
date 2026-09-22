@@ -64,7 +64,7 @@
               @if (showLegend()) {
                 <span class="chart-legend-key" [style.background]="p.color"></span>
               }
-              {{ formatValue(p.value) }}
+              {{ formatValue(p.value, true) }}
             </span>
           }
         </div>
