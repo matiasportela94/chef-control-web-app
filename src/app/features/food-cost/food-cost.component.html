@@ -148,16 +148,14 @@
                  distintas es arbitraria e inventa una correlación que no está en los datos. -->
             <div style="display:flex;flex-direction:column;gap:20px;">
               <app-step-line-chart
-                  [points]="pricePoints()"
+                  [series]="priceSeries()"
                   [title]="t('foodCost.priceChart')"
-                  color="var(--chart-1)"
                   format="currency"
                   [emptyLabel]="t('foodCost.noChanges')">
               </app-step-line-chart>
               <app-step-line-chart
-                  [points]="foodCostPoints()"
+                  [series]="foodCostSeries()"
                   [title]="t('foodCost.foodCostChart')"
-                  color="var(--chart-2)"
                   format="percent"
                   [emptyLabel]="t('foodCost.noChanges')">
               </app-step-line-chart>

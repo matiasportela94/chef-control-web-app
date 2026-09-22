@@ -160,7 +160,20 @@
     "yieldPreview": "{net} {unit} in the recipe deducts {gross} {unit}",
     "yieldAbove100": "Yields more than it takes in: no waste generated.",
     "yieldOnlyPercentHint": "This item isn't measured by weight, so yield goes in percent.",
-    "yieldInvalid": "Yield must be between 0 and 1000%."
+    "yieldInvalid": "Yield must be between 0 and 1000%.",
+    "costHistory": "Cost history",
+    "costHistoryFor": "{name} cost over time",
+    "purchaseCost": "Cost per unit purchased",
+    "usableCost": "Cost per usable unit",
+    "costChartTitle": "Cost per {unit}",
+    "yieldNote": "The gap between the two lines is what trim waste costs you.",
+    "noCostChanges": "No purchases or yield changes in this period",
+    "colDate": "Date",
+    "colPurchase": "Purchased",
+    "colYield": "Yield",
+    "colUsable": "Usable",
+    "yieldUnreliable": "Yield before {date} isn't reliable",
+    "yieldUnreliableBody": "Purchase cost is exact all the way back: it comes from the movement ledger, which is immutable. What started being recorded that day is the yield."
   },
   "maintenance": {
     "title": "No connection to the system",

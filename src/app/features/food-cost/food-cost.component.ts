@@ -18,7 +18,7 @@ import { extractApiError } from '../../core/utils/api-error';
 import { formatARS, formatDate, formatNum, formatPct } from '../../core/utils/format';
 import { todayISO, firstOfMonth, thisMonth, lastMonth, lastNDays } from '../../core/utils/date';
 import { SelectComponent, SelectOption } from '../../shared/components/select/select.component';
-import { StepLineChartComponent, StepPoint } from '../../shared/components/step-line-chart/step-line-chart.component';
+import { ChartSeries, StepLineChartComponent } from '../../shared/components/step-line-chart/step-line-chart.component';
 import { I18nService } from '../../core/services/i18n.service';
 
 interface Preset { label: string; from: string; to: string; }
@@ -88,11 +88,17 @@ export class FoodCostComponent implements OnInit {
   /** La guía de dataviz pide que todo gráfico tenga su gemelo en tabla. */
   showTable        = signal(false);
 
-  pricePoints = computed<StepPoint[]>(() =>
-    (this.evolution()?.points ?? []).map(p => ({ at: p.at!, value: p.menuPrice })));
+  priceSeries = computed<ChartSeries[]>(() => [{
+    label: this.t('foodCost.priceChart'),
+    color: 'var(--chart-1)',
+    points: (this.evolution()?.points ?? []).map(p => ({ at: p.at!, value: p.menuPrice })),
+  }]);
 
-  foodCostPoints = computed<StepPoint[]>(() =>
-    (this.evolution()?.points ?? []).map(p => ({ at: p.at!, value: p.foodCostPercentage })));
+  foodCostSeries = computed<ChartSeries[]>(() => [{
+    label: this.t('foodCost.foodCostChart'),
+    color: 'var(--chart-2)',
+    points: (this.evolution()?.points ?? []).map(p => ({ at: p.at!, value: p.foodCostPercentage })),
+  }]);
 
   /** Solo se avisa si el período pedido cae, aunque sea en parte, antes de que haya historial. */
   showsUnreliableRange = computed(() => {

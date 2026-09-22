@@ -160,7 +160,20 @@
     "yieldPreview": "Para {net} {unit} en la receta se descuentan {gross} {unit}",
     "yieldAbove100": "Rinde más de lo que entra: no genera merma.",
     "yieldOnlyPercentHint": "Este insumo no se mide por peso, así que el rendimiento va en porcentaje.",
-    "yieldInvalid": "El rendimiento tiene que estar entre 0 y 1000%."
+    "yieldInvalid": "El rendimiento tiene que estar entre 0 y 1000%.",
+    "costHistory": "Historial de costos",
+    "costHistoryFor": "Costo de {name} en el tiempo",
+    "purchaseCost": "Costo por unidad comprada",
+    "usableCost": "Costo por unidad utilizable",
+    "costChartTitle": "Costo por {unit}",
+    "yieldNote": "La diferencia entre las dos líneas es lo que te cuesta la merma de limpieza.",
+    "noCostChanges": "Sin compras ni cambios de rendimiento en el período",
+    "colDate": "Fecha",
+    "colPurchase": "Compra",
+    "colYield": "Rinde",
+    "colUsable": "Utilizable",
+    "yieldUnreliable": "El rendimiento anterior al {date} no es confiable",
+    "yieldUnreliableBody": "El costo de compra sí es exacto desde siempre: sale del historial de movimientos, que es inmutable. Lo que empezó a registrarse ese día es el rendimiento."
   },
   "maintenance": {
     "title": "Sin conexión con el sistema",

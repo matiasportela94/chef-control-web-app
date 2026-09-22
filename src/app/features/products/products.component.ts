@@ -1,8 +1,10 @@
 import { Component, HostListener, OnInit, computed, signal } from '@angular/core';
-import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { DecimalPipe } from '@angular/common';
 import { Api } from '../../api/api';
 import { listProducts } from '../../api/fn/product-controller/list-products';
+import { getProductCostEvolution } from '../../api/fn/product-controller/get-product-cost-evolution';
+import { ProductCostEvolutionResponse } from '../../api/models/product-cost-evolution-response';
 import { createProduct } from '../../api/fn/product-controller/create-product';
 import { updateProduct } from '../../api/fn/product-controller/update-product';
 import { deactivateProduct } from '../../api/fn/product-controller/deactivate-product';
@@ -15,11 +17,13 @@ import { PagedResponseProductResponse } from '../../api/models/paged-response-pr
 import { PaginatorComponent } from '../../shared/components/paginator/paginator.component';
 import { ActionDialogComponent } from '../../shared/components/action-dialog/action-dialog.component';
 import { DrawerComponent } from '../../shared/components/drawer/drawer.component';
+import { ChartSeries, StepLineChartComponent } from '../../shared/components/step-line-chart/step-line-chart.component';
 import { SpinnerComponent } from '../../shared/components/spinner/spinner.component';
 import { SearchFilterBarComponent, FilterBarState } from '../../shared/components/search-filter-bar/search-filter-bar.component';
 import { SelectComponent, SelectOption } from '../../shared/components/select/select.component';
 import { parseBlob } from '../../core/utils/parse-blob';
 import { formatDateOnly } from '../../core/utils/format';
+import { todayISO, firstOfMonth } from '../../core/utils/date';
 import { I18nService } from '../../core/services/i18n.service';
 import { extractApiError } from '../../core/utils/api-error';
 import { isFormFieldInvalid } from '../../core/utils/form';
@@ -27,7 +31,7 @@ import { isFormFieldInvalid } from '../../core/utils/form';
 @Component({
   selector: 'app-products',
   standalone: true,
-  imports: [ReactiveFormsModule, DecimalPipe, PaginatorComponent, ActionDialogComponent, DrawerComponent, SpinnerComponent, SearchFilterBarComponent, SelectComponent],
+  imports: [ReactiveFormsModule, FormsModule, DecimalPipe, PaginatorComponent, ActionDialogComponent, DrawerComponent, SpinnerComponent, SearchFilterBarComponent, SelectComponent, StepLineChartComponent],
   templateUrl: './products.component.html',
   styleUrl: './products.component.scss'
 })
@@ -279,6 +283,81 @@ export class ProductsComponent implements OnInit {
   }
 
   readonly formatDateOnly = formatDateOnly;
+
+  // ── Historial de costos ───────────────────────────────────────────────────
+  // El costo de compra ya vivía completo en stock_movements desde el día uno; lo que faltaba
+  // era una puerta para mirarlo. El rendimiento lo suma V22, y por eso solo esa mitad arranca
+  // el 2026-09-21.
+
+  costHistoryFor   = signal<ProductResponse | null>(null);
+  costEvolution    = signal<ProductCostEvolutionResponse | null>(null);
+  costLoading      = signal(false);
+  costError        = signal<string | null>(null);
+  costFrom         = signal(firstOfMonth());
+  costTo           = signal(todayISO());
+
+  costSeries = computed<ChartSeries[]>(() => {
+    const points = this.costEvolution()?.points ?? [];
+    // Las dos series comparten unidad y escala, así que van en un solo gráfico: la brecha
+    // entre ellas es exactamente lo que cuesta la merma de limpieza. Escalas distintas
+    // habrían necesitado dos gráficos, nunca dos ejes Y en el mismo.
+    return [
+      {
+        label: this.t('products.purchaseCost'),
+        color: 'var(--chart-1)',
+        points: points.map(p => ({ at: p.at!, value: p.purchaseCost })),
+      },
+      {
+        label: this.t('products.usableCost'),
+        color: 'var(--chart-2)',
+        points: points.map(p => ({ at: p.at!, value: p.usableCost })),
+      },
+    ];
+  });
+
+  costChartTitle = computed(() =>
+    this.t('products.costChartTitle', { unit: this.costEvolution()?.unitAbbreviation ?? '' }));
+
+  showsUnreliableYield = computed(() => {
+    const reliableFrom = this.costEvolution()?.yieldReliableFrom;
+    return !!reliableFrom && Date.parse(this.costFrom()) < Date.parse(reliableFrom);
+  });
+
+  yieldReliableFromLabel = computed(() => {
+    const reliableFrom = this.costEvolution()?.yieldReliableFrom;
+    return reliableFrom ? formatDateOnly(reliableFrom.substring(0, 10)) : '';
+  });
+
+  openCostHistory(product: ProductResponse): void {
+    this.costHistoryFor.set(product);
+    this.costEvolution.set(null);
+    this.costError.set(null);
+    void this.loadCostEvolution();
+  }
+
+  closeCostHistory(): void {
+    this.costHistoryFor.set(null);
+  }
+
+  async loadCostEvolution(): Promise<void> {
+    const product = this.costHistoryFor();
+    if (!product?.id) return;
+    this.costLoading.set(true);
+    this.costError.set(null);
+    try {
+      const raw = await this.api.invoke(getProductCostEvolution, {
+        id: product.id,
+        from: `${this.costFrom()}T00:00:00Z`,
+        to:   `${this.costTo()}T23:59:59Z`,
+      }) as unknown;
+      this.costEvolution.set(await parseBlob<ProductCostEvolutionResponse>(raw));
+    } catch (e: any) {
+      this.costEvolution.set(null);
+      this.costError.set(extractApiError(e, 'No se pudo cargar el historial de costos.'));
+    } finally {
+      this.costLoading.set(false);
+    }
+  }
 
   isInvalid = (field: string) => isFormFieldInvalid(this.form, field);
 

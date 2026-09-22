@@ -5,6 +5,12 @@ export interface StepPoint {
   value: number | null | undefined;
 }
 
+export interface ChartSeries {
+  label: string;
+  color: string;
+  points: StepPoint[];
+}
+
 /**
  * Línea escalonada de una sola serie, en SVG inline.
  *
@@ -24,14 +30,19 @@ export interface StepPoint {
   styleUrl: './step-line-chart.component.scss'
 })
 export class StepLineChartComponent implements AfterViewInit, OnDestroy {
-  @Input({ required: true }) set points(value: StepPoint[]) { this._points.set(value ?? []); }
-  /** Nombra la serie: con una sola serie el título reemplaza a la leyenda. */
+  /**
+   * Varias series solo si comparten escala y unidad. Dos medidas de escalas distintas van en dos
+   * gráficos apilados, nunca en uno con dos ejes Y.
+   */
+  @Input({ required: true }) set series(value: ChartSeries[]) { this._series.set(value ?? []); }
+  /** Con una sola serie el título reemplaza a la leyenda; con dos o más, la leyenda es obligatoria. */
   @Input({ required: true }) title = '';
-  @Input() color = 'var(--chart-1)';
   @Input() format: 'currency' | 'percent' = 'currency';
   @Input() emptyLabel = 'Sin datos en el período';
 
-  private _points = signal<StepPoint[]>([]);
+  private _series = signal<ChartSeries[]>([]);
+
+  showLegend = computed(() => this._series().length > 1);
 
   // El viewBox se ata al ancho real del contenedor en vez de ser fijo. Con un viewBox fijo y
   // height:auto el alto crece con el ancho: 460px en una tarjeta de escritorio y 70px en un
@@ -67,16 +78,21 @@ export class StepLineChartComponent implements AfterViewInit, OnDestroy {
 
   hoverIndex = signal<number | null>(null);
 
-  /** Los puntos con valor, que son los únicos que se pueden dibujar. */
-  private plotted = computed(() =>
-    this._points()
-      .map((p, i) => ({ ...p, i, t: Date.parse(p.at) }))
-      .filter(p => p.value != null && !Number.isNaN(p.t)));
+  /** Los puntos con valor de cada serie, que son los únicos que se pueden dibujar. */
+  private plottedBySeries = computed(() =>
+    this._series().map(serie => ({
+      ...serie,
+      pts: serie.points
+        .map((p, i) => ({ ...p, i, t: Date.parse(p.at) }))
+        .filter(p => p.value != null && !Number.isNaN(p.t)),
+    })));
 
-  hasData = computed(() => this.plotted().length > 0);
+  private allPlotted = computed(() => this.plottedBySeries().flatMap(serie => serie.pts));
+
+  hasData = computed(() => this.allPlotted().length > 0);
 
   private bounds = computed(() => {
-    const pts = this.plotted();
+    const pts = this.allPlotted();
     const values = pts.map(p => p.value as number);
     const times = pts.map(p => p.t);
     const min = Math.min(...values);
@@ -104,23 +120,33 @@ export class StepLineChartComponent implements AfterViewInit, OnDestroy {
   }
 
   /** M x0,y0 H x1 V y1 H x2 V y2 … — el valor se sostiene hasta el cambio siguiente. */
-  path = computed(() => {
-    const pts = this.plotted();
-    if (!pts.length) return '';
+  paths = computed(() => this.plottedBySeries().map(serie => {
+    const pts = serie.pts;
+    if (!pts.length) return { d: '', color: serie.color, label: serie.label };
     let d = `M ${this.x(pts[0].t)},${this.y(pts[0].value as number)}`;
     for (let i = 1; i < pts.length; i++) {
       d += ` H ${this.x(pts[i].t)} V ${this.y(pts[i].value as number)}`;
     }
-    return d;
-  });
+    return { d, color: serie.color, label: serie.label };
+  }));
 
-  markers = computed(() => this.plotted().map(p => ({
+  markers = computed(() => this.plottedBySeries().flatMap((serie, s) => serie.pts.map(p => ({
     cx: this.x(p.t),
     cy: this.y(p.value as number),
+    key: `${s}-${p.i}`,
     index: p.i,
+    color: serie.color,
+    label: serie.label,
     at: p.at,
     value: p.value as number,
-  })));
+  }))));
+
+  /** Todos los puntos del mismo instante: el tooltip muestra las dos series juntas. */
+  hoveredPoints = computed(() => {
+    const index = this.hoverIndex();
+    if (index == null) return [];
+    return this.markers().filter(m => m.index === index);
+  });
 
   /** Cuatro líneas de referencia: suficientes para leer la escala, pocas para no hacer ruido. */
   gridLines = computed(() => {
@@ -134,7 +160,7 @@ export class StepLineChartComponent implements AfterViewInit, OnDestroy {
 
   /** Solo los extremos en el eje X: con más, las fechas se pisan en pantalla angosta. */
   xLabels = computed(() => {
-    const pts = this.plotted();
+    const pts = this.allPlotted();
     if (!pts.length) return [];
     const first = pts[0];
     const last = pts[pts.length - 1];
@@ -145,11 +171,9 @@ export class StepLineChartComponent implements AfterViewInit, OnDestroy {
     ];
   });
 
-  hovered = computed(() => {
-    const index = this.hoverIndex();
-    if (index == null) return null;
-    return this.markers().find(m => m.index === index) ?? null;
-  });
+  hovered = computed(() => this.hoveredPoints()[0] ?? null);
+
+  legend = computed(() => this.plottedBySeries().map(s => ({ label: s.label, color: s.color })));
 
   /** El punto más cercano al cursor: obliga a menos puntería que apuntarle al marcador. */
   onMove(event: MouseEvent): void {
