@@ -1,0 +1,92 @@
+/* Sin esto el host es inline y el ResizeObserver mide un ancho que no es el del contenedor:
+   el viewBox queda más ancho que el elemento y el SVG se dibuja chico y centrado. En un
+   contenedor flex no se notaba porque el ítem se blockifica solo. */
+:host { display: block; }
+
+.chart { margin: 0; }
+
+.chart-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+
+.chart-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.chart-legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11px;
+  color: var(--text-2);
+}
+
+/* El texto nunca lleva el color del dato: la identidad la da la llave al lado. */
+.chart-legend-key {
+  width: 10px;
+  height: 3px;
+  border-radius: 2px;
+  display: inline-block;
+  flex-shrink: 0;
+}
+
+.chart-title {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-2);
+}
+
+.chart-empty {
+  font-size: 12px;
+  color: var(--text-3);
+  padding: 24px 0;
+  text-align: center;
+}
+
+.chart-plot { position: relative; }
+
+.chart-svg {
+  width: 100%;
+  display: block;
+  overflow: visible;
+}
+
+/* tabular-nums acá sí: los ticks del eje se alinean verticalmente. */
+.chart-tick {
+  font-family: 'Poppins', sans-serif;
+  font-size: 10px;
+  fill: var(--text-3);
+  font-variant-numeric: tabular-nums;
+}
+
+.chart-tooltip {
+  position: absolute;
+  transform: translate(-50%, -140%);
+  background: var(--bg-card);
+  border: 1px solid var(--border-strong);
+  border-radius: 8px;
+  padding: 5px 9px;
+  pointer-events: none;
+  white-space: nowrap;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, .12);
+}
+
+.chart-tooltip-date { font-size: 10px; color: var(--text-3); }
+.chart-tooltip-value {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-1);
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}

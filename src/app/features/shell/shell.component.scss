@@ -1,5 +1,5 @@
 .side-link {
-  @apply flex items-center gap-3 text-sm text-surface-400 hover:text-white hover:bg-white/5
+  @apply flex items-center gap-3 text-sm text-surface-400 hover:text-black hover:bg-white/5
          px-3 py-2.5 rounded-xl transition-colors w-full;
 }
 
@@ -8,5 +8,41 @@
 }
 
 .side-section-label {
-  @apply text-xs font-semibold uppercase tracking-wider text-surface-600 px-3 py-2;
+  @apply flex items-center justify-between w-full text-xs font-semibold uppercase tracking-wider
+         text-surface-600 px-3 py-2 rounded-lg cursor-pointer select-none
+         hover:text-surface-400 hover:bg-white/5 transition-colors;
+  background: none;
+  border: none;
+  font-family: inherit;
+}
+
+.side-section-chevron {
+  @apply text-[13px] transition-transform duration-150;
+}
+
+.side-section-chevron-collapsed {
+  transform: rotate(-90deg);
+}
+
+// Mobile: sidebar is an off-canvas drawer. Desktop (lg+): always visible, no margin needed on content.
+.sidebar {
+  transform: translateX(-120%);
+}
+
+.sidebar-open {
+  transform: translateX(0);
+}
+
+.shell-content {
+  margin-left: 0;
+}
+
+@media (min-width: 1024px) {
+  .sidebar {
+    transform: translateX(0);
+  }
+
+  .shell-content {
+    margin-left: 230px;
+  }
 }

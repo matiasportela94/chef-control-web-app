@@ -17,6 +17,8 @@ const USER_KEY = 'cc_user';
 export interface CurrentUser {
   name: string;
   email: string;
+  role: string;
+  permissions: string[];
   restaurantId: string;
   restaurantName: string;
   restaurants: RestaurantSummary[];
@@ -75,6 +77,8 @@ export class AuthService {
     const user: CurrentUser = {
       name:           r.name                ?? '',
       email:          r.email               ?? '',
+      role:           r.role                ?? '',
+      permissions:    r.permissions          ?? [],
       restaurantId:   r.activeRestaurantId  ?? '',
       restaurantName: r.activeRestaurantName ?? '',
       restaurants:    r.restaurants          ?? [],
@@ -82,6 +86,11 @@ export class AuthService {
     };
     sessionStorage.setItem(USER_KEY, JSON.stringify(user));
     this.currentUser.set(user);
+  }
+
+  /** Permiso efectivo (rol + overrides), ya resuelto por el backend y guardado en el login. */
+  hasPermission(permission: string): boolean {
+    return this.currentUser()?.permissions.includes(permission) ?? false;
   }
 
   private loadUser(): CurrentUser | null {

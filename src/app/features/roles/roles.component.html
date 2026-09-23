@@ -1,0 +1,137 @@
+<div class="page-wrap">
+
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">Roles</h1>
+      <p class="page-subtitle">
+        @if (!loading()) { {{ roles().length }} roles — los comparten todos tus restaurantes }
+      </p>
+    </div>
+    <button (click)="openCreate()" class="btn-primary btn-sm">
+      <i class="ti ti-plus"></i> Nuevo rol
+    </button>
+  </div>
+
+  @if (loading()) { <app-spinner /> }
+
+  @if (!loading() && error()) {
+    <div style="background:var(--red-bg);border:1.5px solid var(--red);border-radius:14px;padding:20px;text-align:center;">
+      <p style="font-size:12px;color:var(--red);margin-bottom:12px;">{{ error() }}</p>
+      <button (click)="load()" class="btn-secondary btn-sm">Reintentar</button>
+    </div>
+  }
+
+  @if (!loading() && !error()) {
+    <div style="display:flex;flex-direction:column;gap:8px;">
+      @for (r of roles(); track r.id) {
+        <div class="data-card" style="padding:14px 16px;">
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;">
+            <div style="display:flex;align-items:center;gap:8px;min-width:0;">
+              <p style="color:var(--text-1);font-weight:600;font-size:13px;">{{ r.name }}</p>
+              @if (r.isSystem) {
+                <span class="badge badge-owner">Dueño de cuenta</span>
+              }
+              <span style="font-size:11px;color:var(--text-3);">{{ (r.permissions ?? []).length }} permisos</span>
+            </div>
+            <div style="display:flex;align-items:center;gap:6px;">
+              @if (!r.isSystem) {
+                <button (click)="openEdit(r)" class="btn-secondary btn-sm">
+                  <i class="ti ti-edit"></i> Editar
+                </button>
+                <button (click)="deleting.set(r); deleteError.set(null)" class="btn-danger btn-sm">
+                  <i class="ti ti-trash"></i>
+                </button>
+              } @else {
+                <span style="font-size:11px;color:var(--text-3);">Siempre tiene todos los permisos — no editable</span>
+              }
+            </div>
+          </div>
+        </div>
+      }
+    </div>
+  }
+
+</div>
+
+<app-drawer [isOpen]="drawerOpen()" [title]="editing() ? 'Editar rol' : 'Nuevo rol'" (closed)="closeDrawer()">
+  <form id="role-form" [formGroup]="form" (ngSubmit)="save()" style="display:flex;flex-direction:column;gap:16px;">
+
+    <div style="margin-bottom:0;">
+      <label class="field-label">Nombre <span style="color:var(--red);">*</span></label>
+      <input formControlName="name" type="text" placeholder="Ej: Encargado de compras"
+             class="field-input" [class.input-error]="isInvalid('name')">
+      @if (isInvalid('name')) { <p style="font-size:11px;color:var(--red);margin-top:4px;">Campo requerido</p> }
+    </div>
+
+    <div class="sec-div" style="margin-top:0;">Permisos</div>
+
+    <div style="display:flex;flex-direction:column;gap:2px;">
+      @for (m of permissionModules; track m.label) {
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;padding:7px 4px;border-bottom:1px solid var(--border);flex-wrap:wrap;">
+          <span style="font-size:12px;color:var(--text-2);min-width:110px;">{{ m.label }}</span>
+          <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+            @if (m.single) {
+              <label style="display:flex;align-items:center;gap:5px;font-size:11px;color:var(--text-3);cursor:pointer;">
+                <input type="checkbox" [checked]="isChecked(m.single.key)" (change)="toggle(m.single.key)" style="width:14px;height:14px;" />
+                {{ m.single.label }}
+              </label>
+            }
+            @if (m.view) {
+              <label style="display:flex;align-items:center;gap:5px;font-size:11px;color:var(--text-3);cursor:pointer;">
+                <input type="checkbox" [checked]="isChecked(m.view)" (change)="toggle(m.view)" style="width:14px;height:14px;" />
+                Ver
+              </label>
+            }
+            @if (m.create) {
+              <label style="display:flex;align-items:center;gap:5px;font-size:11px;color:var(--text-3);cursor:pointer;">
+                <input type="checkbox" [checked]="isChecked(m.create)" (change)="toggle(m.create)" style="width:14px;height:14px;" />
+                Crear
+              </label>
+            }
+            @if (m.update) {
+              <label style="display:flex;align-items:center;gap:5px;font-size:11px;color:var(--text-3);cursor:pointer;">
+                <input type="checkbox" [checked]="isChecked(m.update)" (change)="toggle(m.update)" style="width:14px;height:14px;" />
+                Editar
+              </label>
+            }
+            @if (m.delete) {
+              <label style="display:flex;align-items:center;gap:5px;font-size:11px;color:var(--text-3);cursor:pointer;">
+                <input type="checkbox" [checked]="isChecked(m.delete)" (change)="toggle(m.delete)" style="width:14px;height:14px;" />
+                Borrar
+              </label>
+            }
+          </div>
+        </div>
+      }
+    </div>
+
+    @if (saveError()) {
+      <div style="background:var(--red-bg);border:1.5px solid var(--red);border-radius:10px;padding:12px 16px;font-size:12px;color:var(--red);">
+        {{ saveError() }}
+      </div>
+    }
+
+  </form>
+
+  <div drawer-footer style="padding:14px 20px;border-top:1px solid var(--border);display:flex;gap:8px;background:var(--bg-card);">
+    <button type="button" (click)="closeDrawer()" class="btn-secondary btn-sm">Cancelar</button>
+    <button type="submit" form="role-form" [disabled]="saving()" class="btn-primary btn-sm" style="flex:1;justify-content:center;">
+      @if (saving()) { <span class="loader"></span> }
+      {{ editing() ? 'Guardar cambios' : 'Crear rol' }}
+    </button>
+  </div>
+</app-drawer>
+
+<app-action-dialog
+  [visible]="!!deleting()"
+  title="Eliminar rol"
+  icon="⚠️"
+  tone="danger"
+  [message]="deleteError() ?? 'Esta acción no se puede deshacer.'"
+  [itemTitle]="deleting()?.name ?? ''"
+  confirmLabel="Eliminar"
+  cancelLabel="Cancelar"
+  [confirmDisabled]="deleteLoading()"
+  (confirm)="confirmDelete()"
+  (cancel)="deleting.set(null)">
+</app-action-dialog>

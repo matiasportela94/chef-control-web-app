@@ -1,40 +1,49 @@
 <!-- Backdrop -->
-<div class="fixed inset-0 bg-black/50 backdrop-blur-sm z-[90]"
-     [class.transition-opacity]="ready"
-     [class.duration-300]="ready"
-     [class.opacity-100]="isOpen"
-     [class.opacity-0]="!isOpen"
-     [class.pointer-events-none]="!isOpen"
-     (click)="close()">
+<div style="
+  position:fixed; inset:0;
+  background:rgba(0,0,0,0.6);
+  z-index:200;
+  transition:opacity .25s;
+"
+  [style.opacity]="isOpen ? '1' : '0'"
+  [style.pointerEvents]="isOpen ? 'auto' : 'none'"
+  (click)="close()">
 </div>
 
 <!-- Panel -->
-<aside class="fixed inset-y-0 right-0 w-full bg-surface-900 border-l border-white/10 z-[100] flex flex-col"
-       [class.transition-transform]="ready"
-       [class.duration-300]="ready"
-       [class.ease-in-out]="ready"
-       [class.max-w-md]="size === 'sm'"
-       [class.max-w-lg]="size === 'md'"
-       [class.max-w-2xl]="size === 'lg'"
-       [class.max-w-3xl]="size === 'xl'"
-       [class.max-w-4xl]="size === '2xl'"
-       [class.translate-x-0]="isOpen"
-       [class.translate-x-full]="!isOpen">
+<aside style="
+  position:fixed; top:0; right:0; bottom:0;
+  width:min(92vw, 420px);
+  z-index:300;
+  display:flex; flex-direction:column;
+  overflow:hidden;
+  background:var(--bg-card);
+  border-left:1px solid var(--border);
+  transition:transform .28s cubic-bezier(.4,0,.2,1);
+"
+  [style.transform]="isOpen ? 'translateX(0)' : 'translateX(100%)'">
 
   <!-- Header -->
-  <div class="flex items-center justify-between px-6 py-5 border-b border-white/5 shrink-0">
+  <div class="drawer-header"
+       [style.background]="accentHeader ? 'var(--accent)' : ''"
+       [style.border-bottom]="accentHeader ? '1px solid rgba(0,0,0,.1)' : ''">
     <div>
-      <h2 class="text-white font-semibold font-display">{{ title }}</h2>
+      <div class="drawer-title" [style.color]="accentHeader ? '#000' : ''">
+        @if (titleIcon) { <i [class]="'ti ti-' + titleIcon" style="margin-right:5px;vertical-align:middle;"></i> }{{ title }}
+      </div>
       @if (subtitle) {
-        <p class="text-surface-500 text-xs mt-0.5">{{ subtitle }}</p>
+        <div class="drawer-subtitle" [style.color]="accentHeader ? 'rgba(0,0,0,.5)' : ''">{{ subtitle }}</div>
       }
     </div>
-    <button type="button" (click)="close()"
-            class="text-surface-400 hover:text-white transition-colors text-xl leading-none">✕</button>
+    <button type="button" (click)="close()" class="drawer-close"
+            [style.background]="accentHeader ? 'rgba(0,0,0,.15)' : ''"
+            [style.color]="accentHeader ? 'rgba(0,0,0,.6)' : ''">
+      <i class="ti ti-x"></i>
+    </button>
   </div>
 
   <!-- Body -->
-  <div class="flex-1 overflow-y-auto px-6 py-6">
+  <div style="flex:1; overflow-y:auto; padding:20px;">
     <ng-content></ng-content>
   </div>
 

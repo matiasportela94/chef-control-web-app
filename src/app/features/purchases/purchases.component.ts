@@ -1,8 +1,9 @@
-import { Component, HostListener, OnInit, DestroyRef, inject, signal } from '@angular/core';
+import { Component, HostListener, OnInit, DestroyRef, computed, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormArray, FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Api } from '../../api/api';
 import { AiRefreshService } from '../../core/services/ai-refresh.service';
+import { AlertNotificationService } from '../../core/services/alert-notification.service';
 import { listPurchases }  from '../../api/fn/purchase-controller/list-purchases';
 import { createPurchase } from '../../api/fn/purchase-controller/create-purchase';
 import { updatePurchase }  from '../../api/fn/purchase-controller/update-purchase';
@@ -26,11 +27,12 @@ import { extractApiError } from '../../core/utils/api-error';
 import { PaginatorComponent } from '../../shared/components/paginator/paginator.component';
 import { DrawerComponent } from '../../shared/components/drawer/drawer.component';
 import { SpinnerComponent } from '../../shared/components/spinner/spinner.component';
+import { SelectComponent, SelectOption } from '../../shared/components/select/select.component';
 
 @Component({
   selector: 'app-purchases',
   standalone: true,
-  imports: [ReactiveFormsModule, DecimalPipe, NgClass, PaginatorComponent, DrawerComponent, SpinnerComponent],
+  imports: [ReactiveFormsModule, DecimalPipe, NgClass, PaginatorComponent, DrawerComponent, SpinnerComponent, SelectComponent],
   templateUrl: './purchases.component.html',
   styleUrl: './purchases.component.scss'
 })
@@ -47,6 +49,16 @@ export class PurchasesComponent implements OnInit {
   products  = signal<ProductResponse[]>([]);
   suppliers = signal<SupplierResponse[]>([]);
   units     = signal<UnitResponse[]>([]);
+
+  productOptions = computed<SelectOption[]>(() =>
+    this.products().map(p => ({ value: p.id ?? '', label: p.sku ? `${p.name} · ${p.sku}` : (p.name ?? '') }))
+  );
+  supplierOptions = computed<SelectOption[]>(() =>
+    this.suppliers().map(s => ({ value: s.id ?? '', label: s.name ?? '' }))
+  );
+  unitOptions = computed<SelectOption[]>(() =>
+    this.units().map(u => ({ value: u.id ?? '', label: u.abbreviation ?? '' }))
+  );
 
   createOpen = signal(false);
   editMode   = signal(false);
@@ -67,7 +79,7 @@ export class PurchasesComponent implements OnInit {
 
   form: FormGroup;
 
-  constructor(private api: Api, private fb: FormBuilder, private aiRefresh: AiRefreshService) {
+  constructor(private api: Api, private fb: FormBuilder, private aiRefresh: AiRefreshService, private alertNotification: AlertNotificationService) {
     this.form = this.fb.group({
       purchasedAt: [todayISO()],
       supplierId:  [''],
@@ -88,7 +100,7 @@ export class PurchasesComponent implements OnInit {
   }
 
   async loadPurchases(): Promise<void> {
-    this.loading.set(true);
+    if (this.purchases().length === 0) this.loading.set(true); // evita el flash de spinner (y el salto de scroll) en recargas tras crear/editar/borrar
     this.error.set(null);
     try {
       const raw = await this.api.invoke(listPurchases, { page: this.page() - 1, size: this.pageSize }) as unknown;
@@ -157,7 +169,9 @@ export class PurchasesComponent implements OnInit {
           unitId:       [{ value: item.unitId    ?? '', disabled: true }],
           quantity:     [{ value: item.quantity  ?? 0,  disabled: true }],
           pricePerUnit: [item.pricePerUnit ?? null, [Validators.required, Validators.min(0.01)]],
-          expirationDate: [{ value: null, disabled: true }],
+          // Solo lectura: la corrección de una compra cambia el precio, no el lote. Se muestra
+          // para que se vea qué vence mientras se corrige, no para editarlo.
+          expirationDate: [{ value: item.expirationDate ?? null, disabled: true }],
           // display helpers
           _productName: [item.productName ?? ''],
           _unitAbbr:    [item.unitAbbreviation ?? ''],
@@ -246,6 +260,7 @@ export class PurchasesComponent implements OnInit {
       await this.api.invoke(createPurchase, { body });
       this.createOpen.set(false);
       await this.loadPurchases();
+      void this.alertNotification.refresh();
     } catch (e: any) {
       this.saveError.set(extractApiError(e, 'Error al registrar la compra'));
     } finally {
@@ -318,6 +333,7 @@ export class PurchasesComponent implements OnInit {
       await this.api.invoke(reversePurchase, { id });
       this.closeReverseModal();
       await this.loadPurchases();
+      void this.alertNotification.refresh();
       // Pre-fill the create form with the original data for correction
       const target = this.reverseTarget();
       if (target) this.openCreatePrefilled(target);
@@ -352,7 +368,9 @@ export class PurchasesComponent implements OnInit {
           unitId:         [item.unitId    ?? '', Validators.required],
           quantity:       [item.quantity  ?? null, [Validators.required, Validators.min(0.001)]],
           pricePerUnit:   [item.pricePerUnit ?? null, [Validators.required, Validators.min(0.01)]],
-          expirationDate: [null],
+          // Se copia del ítem original: corregir una compra no puede perder el vencimiento.
+          // Sin esto el lote nuevo nacía sin fecha y desaparecía del control de vencimientos.
+          expirationDate: [item.expirationDate ?? null],
           _productName:   [item.productName ?? ''],
           _unitAbbr:      [item.unitAbbreviation ?? ''],
         }));

@@ -1,31 +1,31 @@
-import { Component, HostListener, OnInit, DestroyRef, inject, signal } from '@angular/core';
-import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { Component, HostListener, OnInit, DestroyRef, computed, inject, signal } from '@angular/core';
+import { takeUntilDestroyed }      from '@angular/core/rxjs-interop';
 import { FormArray, FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
-import { Api } from '../../api/api';
-import { AiRefreshService } from '../../core/services/ai-refresh.service';
+import { Api }                     from '../../api/api';
+import { AiRefreshService }        from '../../core/services/ai-refresh.service';
 import { AlertNotificationService } from '../../core/services/alert-notification.service';
-import { list1 as listSales }      from '../../api/fn/sale-controller/list-1';
-import { create1 as createSale }   from '../../api/fn/sale-controller/create-1';
-import { get2 as getSale }         from '../../api/fn/sale-controller/get-2';
+import { listSales }               from '../../api/fn/sale-controller/list-sales';
+import { createSale }              from '../../api/fn/sale-controller/create-sale';
+import { getSale }                 from '../../api/fn/sale-controller/get-sale';
 import { reverseSale }             from '../../api/fn/sale-controller/reverse-sale';
-import { list2 as listMenuItems }  from '../../api/fn/menu-item-controller/list-2';
+import { listMenuItems }           from '../../api/fn/menu-item-controller/list-menu-items';
 import { SaleResponse }            from '../../api/models/sale-response';
 import { MenuItemResponse }        from '../../api/models/menu-item-response';
-import { PagedResponseSaleResponse }     from '../../api/models/paged-response-sale-response';
+import { PagedResponseSaleResponse } from '../../api/models/paged-response-sale-response';
 import { PagedResponseMenuItemResponse } from '../../api/models/paged-response-menu-item-response';
-import { parseBlob } from '../../core/utils/parse-blob';
-import { formatARS, formatDate } from '../../core/utils/format';
+import { parseBlob }               from '../../core/utils/parse-blob';
+import { formatARS, formatDate }   from '../../core/utils/format';
 import { todayISO, dateToInstant } from '../../core/utils/date';
-import { extractApiError } from '../../core/utils/api-error';
-import { NgClass } from '@angular/common';
-import { PaginatorComponent } from '../../shared/components/paginator/paginator.component';
-import { DrawerComponent } from '../../shared/components/drawer/drawer.component';
-import { SpinnerComponent } from '../../shared/components/spinner/spinner.component';
+import { extractApiError }         from '../../core/utils/api-error';
+import { PaginatorComponent }      from '../../shared/components/paginator/paginator.component';
+import { DrawerComponent }         from '../../shared/components/drawer/drawer.component';
+import { SpinnerComponent }        from '../../shared/components/spinner/spinner.component';
+import { SelectComponent, SelectOption } from '../../shared/components/select/select.component';
 
 @Component({
   selector: 'app-sales',
   standalone: true,
-  imports: [ReactiveFormsModule, NgClass, PaginatorComponent, DrawerComponent, SpinnerComponent],
+  imports: [ReactiveFormsModule, PaginatorComponent, DrawerComponent, SpinnerComponent, SelectComponent],
   templateUrl: './sales.component.html',
   styleUrl: './sales.component.scss'
 })
@@ -40,6 +40,10 @@ export class SalesComponent implements OnInit {
   total    = signal(0);
 
   menuItems = signal<MenuItemResponse[]>([]);
+
+  menuItemOptions = computed<SelectOption[]>(() =>
+    this.menuItems().map(m => ({ value: m.id ?? '', label: m.price ? `${m.name} · ${formatARS(m.price)}` : (m.name ?? '') }))
+  );
 
   createOpen = signal(false);
   saving     = signal(false);
@@ -78,7 +82,7 @@ export class SalesComponent implements OnInit {
   }
 
   async loadSales(): Promise<void> {
-    this.loading.set(true);
+    if (this.sales().length === 0) this.loading.set(true); // evita el flash de spinner (y el salto de scroll) en recargas tras crear/editar/borrar
     this.error.set(null);
     try {
       const raw = await this.api.invoke(listSales, { page: this.page() - 1, size: this.pageSize }) as unknown;

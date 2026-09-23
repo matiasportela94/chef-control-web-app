@@ -1,20 +1,21 @@
 import { Component, EventEmitter, Input, Output, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Api } from '../../../api/api';
-import { interpretText } from '../../../api/fn/ai-controller/interpret-text';
-import { executeIntent } from '../../../api/fn/ai-controller/execute-intent';
-import { InterpretTextResponse } from '../../../api/models/interpret-text-response';
-import { ExecuteIntentResponse } from '../../../api/models/execute-intent-response';
+import { interpret as interpretText } from '../../../api/fn/ai-controller/interpret';
+import { execute as executeIntent } from '../../../api/fn/ai-controller/execute';
+import { InterpretResponse as InterpretTextResponse } from '../../../api/models/interpret-response';
+import { ExecuteResponse as ExecuteIntentResponse } from '../../../api/models/execute-response';
 import { parseBlob } from '../../../core/utils/parse-blob';
 import { extractApiError } from '../../../core/utils/api-error';
 import { AiRefreshService } from '../../../core/services/ai-refresh.service';
+import { DrawerComponent } from '../drawer/drawer.component';
 
 const EXECUTABLE_INTENTS = new Set(['purchase', 'waste', 'sale', 'stock_adjustment']);
 
 @Component({
   selector: 'app-ai-input',
   standalone: true,
-  imports: [FormsModule],
+  imports: [FormsModule, DrawerComponent],
   templateUrl: './ai-input.component.html',
 })
 export class AiInputComponent {
@@ -29,7 +30,18 @@ export class AiInputComponent {
   result         = signal<InterpretTextResponse | null>(null);
   executeResult  = signal<ExecuteIntentResponse | null>(null);
 
+  readonly shortcuts = [
+    { icon: 'ti-shopping-cart',   label: 'Registrar compra de insumo', prompt: 'Compramos 5kg de pollo a $8000 al proveedor El Campo' },
+    { icon: 'ti-chart-bar',       label: 'Registrar ventas del día',    prompt: 'Vendimos 3 Caesar Tradicional y 2 American Burger' },
+    { icon: 'ti-trash',           label: 'Cargar merma o pérdida',      prompt: 'Se rompieron 2 botellas de aceite de oliva 500ml' },
+    { icon: 'ti-clipboard-check', label: 'Actualizar stock / conteo',   prompt: 'Hicimos conteo: tenemos 12kg de papa, 8kg de pollo' },
+  ] as const;
+
   constructor(private api: Api, private aiRefresh: AiRefreshService) {}
+
+  fillShortcut(text: string): void {
+    this.message = text;
+  }
 
   onKeydown(e: KeyboardEvent): void {
     if (e.ctrlKey && e.key === 'Enter') void this.interpret();
@@ -79,7 +91,7 @@ export class AiInputComponent {
     this.error.set(null);
     try {
       const raw = await this.api.invoke(executeIntent, {
-        body: { intent: r.intent, data: r.data as Record<string, unknown> ?? {} }
+        body: { intent: r.intent, data: r.data as Record<string, object> ?? {} }
       }) as unknown;
       this.executeResult.set(await parseBlob<ExecuteIntentResponse>(raw));
       this.aiRefresh.notify();

@@ -1,0 +1,74 @@
+<figure class="chart">
+  <div class="chart-head">
+    <figcaption class="chart-title">{{ title }}</figcaption>
+    <!-- Con dos o más series la leyenda es obligatoria: la identidad no puede depender solo
+         del color. Con una, el título ya la nombra. -->
+    @if (showLegend()) {
+      <div class="chart-legend">
+        @for (item of legend(); track item.label) {
+          <span class="chart-legend-item">
+            <span class="chart-legend-key" [style.background]="item.color"></span>{{ item.label }}
+          </span>
+        }
+      </div>
+    }
+  </div>
+
+  @if (!hasData()) {
+    <p class="chart-empty">{{ emptyLabel }}</p>
+  } @else {
+    <div class="chart-plot">
+      <svg [attr.viewBox]="'0 0 ' + W + ' ' + H" [attr.height]="H" class="chart-svg"
+           role="img" [attr.aria-label]="title"
+           (mousemove)="onMove($event)" (mouseleave)="clearHover()">
+
+        <!-- Grilla: hairline sólida, un tono por encima de la superficie. Nunca punteada:
+             el punteado se lee como "proyección" cuando es solo una referencia. -->
+        @for (line of gridLines(); track line.y) {
+          <line [attr.x1]="padL" [attr.x2]="W - padR" [attr.y1]="line.y" [attr.y2]="line.y"
+                stroke="var(--chart-grid)" stroke-width="1"></line>
+          <text [attr.x]="padL - 8" [attr.y]="line.y + 3" text-anchor="end"
+                class="chart-tick">{{ line.label }}</text>
+        }
+
+        @for (label of xLabels(); track label.x) {
+          <text [attr.x]="label.x" [attr.y]="H - 12" text-anchor="middle"
+                class="chart-tick">{{ label.label }}</text>
+        }
+
+        @for (serie of paths(); track serie.label) {
+          <path [attr.d]="serie.d" fill="none" [attr.stroke]="serie.color"
+                stroke-width="2" stroke-linejoin="round" stroke-linecap="round"></path>
+        }
+
+        @if (hovered(); as h) {
+          <line [attr.x1]="h.cx" [attr.x2]="h.cx" [attr.y1]="padT" [attr.y2]="H - padB"
+                stroke="var(--chart-grid)" stroke-width="1"></line>
+        }
+
+        <!-- Anillo del color de la superficie: separa el marcador de la línea y de los de la
+             otra serie sin dibujarle un borde encima. -->
+        @for (m of markers(); track m.key) {
+          <circle [attr.cx]="m.cx" [attr.cy]="m.cy" [attr.r]="hoverIndex() === m.index ? 6 : 4"
+                  [attr.fill]="m.color" stroke="var(--bg-card)" stroke-width="2"></circle>
+        }
+      </svg>
+
+      @if (hovered(); as h) {
+        <div class="chart-tooltip"
+             [style.left.%]="(h.cx / W) * 100"
+             [style.top.%]="(h.cy / H) * 100">
+          <span class="chart-tooltip-date">{{ formatDate(h.at) }}</span>
+          @for (p of hoveredPoints(); track p.key) {
+            <span class="chart-tooltip-value">
+              @if (showLegend()) {
+                <span class="chart-legend-key" [style.background]="p.color"></span>
+              }
+              {{ formatValue(p.value, true) }}
+            </span>
+          }
+        </div>
+      }
+    </div>
+  }
+</figure>

@@ -1,6 +1,6 @@
 import { Component, OnInit, signal } from '@angular/core';
 import { Api } from '../../api/api';
-import { list4 } from '../../api/fn/alert-controller/list-4';
+import { listAlerts } from '../../api/fn/alert-controller/list-alerts';
 import { markRead } from '../../api/fn/alert-controller/mark-read';
 import { resolve } from '../../api/fn/alert-controller/resolve';
 import { AlertResponse } from '../../api/models/alert-response';
@@ -38,10 +38,10 @@ export class AlertsComponent implements OnInit {
   }
 
   async load(): Promise<void> {
-    this.loading.set(true);
+    if (this.alerts().length === 0) this.loading.set(true); // evita el flash de spinner (y el salto de scroll) en recargas tras marcar leída/resolver
     this.error.set(null);
     try {
-      const raw = await this.api.invoke(list4, { page: this.page() - 1, size: this.pageSize }) as unknown;
+      const raw = await this.api.invoke(listAlerts, { page: this.page() - 1, size: this.pageSize }) as unknown;
       const res = await parseBlob<PagedResponseAlertResponse>(raw);
       const all = res.content ?? [];
       this.total.set(res.totalElements ?? 0);
@@ -89,24 +89,25 @@ export class AlertsComponent implements OnInit {
   severityClass(s?: string): string {
     if (!s) return 'badge-neutral';
     const upper = s.toUpperCase();
-    if (upper === 'CRITICAL' || upper === 'HIGH') return 'badge-danger';
-    if (upper === 'MEDIUM')                        return 'badge-warning';
-    return 'badge-brand';
+    if (upper === 'CRITICAL')  return 'badge-danger';
+    if (upper === 'WARNING')   return 'badge-warning';
+    return 'badge-neutral';
   }
 
   severityLabel(s?: string): string {
     const map: Record<string, string> = {
-      CRITICAL: 'Crítica', HIGH: 'Alta', MEDIUM: 'Media', LOW: 'Baja',
+      CRITICAL: 'Crítica', WARNING: 'Advertencia', INFO: 'Info',
     };
     return s ? (map[s.toUpperCase()] ?? s) : '—';
   }
 
   typeLabel(t?: string): string {
     const map: Record<string, string> = {
-      LOW_STOCK:    'Bajo stock',
-      OVERSTOCK:    'Sobrestock',
-      EXPIRY:       'Vencimiento',
-      WASTE_SPIKE:  'Pico de merma',
+      LOW_STOCK:      'Bajo stock',
+      OVERSTOCK:      'Sobrestock',
+      EXPIRATION:     'Vencimiento',
+      PRICE_INCREASE: 'Aumento de precio',
+      WASTE_ABOVE_STANDARD: 'Merma alta',
     };
     return t ? (map[t] ?? t.replace(/_/g, ' ')) : '—';
   }

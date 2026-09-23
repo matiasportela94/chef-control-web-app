@@ -36,3 +36,10 @@
 button .rotate-180 {
   transform: rotate(180deg);
 }
+
+// Fecha/Ítems/Ajustes/Notas summary row — 2x2 grid on mobile instead of 4 cramped columns
+.sc-summary-row {
+  @media (max-width: 767px) {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+}

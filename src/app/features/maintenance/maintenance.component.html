@@ -1,0 +1,37 @@
+<!-- Mobile-first: una columna centrada; en pantallas grandes solo se ensancha la caja. -->
+<div style="min-height:100dvh;display:flex;align-items:center;justify-content:center;padding:24px 16px;background:var(--bg-page);">
+  <div style="width:100%;max-width:420px;text-align:center;">
+
+    <div style="font-family:var(--font-display,inherit);font-size:24px;font-weight:700;margin-bottom:28px;">
+      <span style="color:var(--accent);">Chef</span><span style="color:var(--text-1);"> Control</span>
+    </div>
+
+    <div style="width:64px;height:64px;margin:0 auto 20px;border-radius:50%;
+                display:flex;align-items:center;justify-content:center;
+                background:var(--bg-input);border:1.5px solid var(--border);">
+      <i class="ti ti-plug-connected-x" style="font-size:30px;color:var(--accent);"></i>
+    </div>
+
+    <h1 style="font-size:18px;font-weight:700;color:var(--text-1);margin-bottom:8px;">
+      {{ t('maintenance.title') }}
+    </h1>
+    <p style="font-size:13px;color:var(--text-3);line-height:1.5;margin-bottom:22px;">
+      {{ t('maintenance.body') }}
+    </p>
+
+    <button (click)="maintenance.retryNow()" [disabled]="maintenance.checking()"
+            class="btn-primary" style="width:100%;justify-content:center;">
+      @if (maintenance.checking()) {
+        <span class="loader"></span> {{ t('maintenance.checking') }}
+      } @else {
+        <i class="ti ti-refresh"></i> {{ t('maintenance.retry') }}
+      }
+    </button>
+
+    @if (!maintenance.checking()) {
+      <p style="font-size:11px;color:var(--text-3);margin-top:12px;">
+        {{ t('maintenance.autoRetry') }} {{ maintenance.secondsLeft() }}s
+      </p>
+    }
+  </div>
+</div>

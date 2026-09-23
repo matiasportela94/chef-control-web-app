@@ -9,6 +9,10 @@ import { RouterLink } from '@angular/router';
   styleUrl: './landing.component.scss'
 })
 export class LandingComponent {
+  readonly today = new Intl.DateTimeFormat('es-AR', {
+    weekday: 'long', day: 'numeric', month: 'long'
+  }).format(new Date());
+
   scrollToTop(): void {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }

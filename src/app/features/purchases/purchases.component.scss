@@ -48,3 +48,29 @@
     grid-template-columns: 1fr 80px 70px 90px 130px 90px 28px;
   }
 }
+
+// Below tablet, columns no longer fit side by side — stack fields vertically.
+@media (max-width: 639px) {
+  .items-row {
+    grid-template-columns: 1fr;
+    gap: 6px;
+  }
+}
+
+// Fecha/Proveedor/Notas form row — stack on mobile, drawer is too narrow for 3 inputs side by side
+.pc-form-row {
+  @media (max-width: 767px) {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+// Fecha/Proveedor/Total meta row (detail drawer) — 2 cols on mobile, 3rd spans full width
+.pc-meta-row {
+  @media (max-width: 767px) {
+    grid-template-columns: repeat(2, 1fr) !important;
+
+    > *:last-child {
+      grid-column: span 2;
+    }
+  }
+}

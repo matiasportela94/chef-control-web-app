@@ -1,17 +1,21 @@
 import { Component, HostListener, OnInit, signal } from '@angular/core';
 import { FormArray, FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
-import { Api } from '../../api/api';
-import { list as listStockCounts } from '../../api/fn/stock-count-controller/list';
-import { create as createStockCount } from '../../api/fn/stock-count-controller/create';
+import { Api }          from '../../api/api';
+import { listStockCounts } from '../../api/fn/stock-count-controller/list-stock-counts';
+import { getStockCount } from '../../api/fn/stock-count-controller/get-stock-count';
+import { createStockCount } from '../../api/fn/stock-count-controller/create-stock-count';
 import { listProducts } from '../../api/fn/product-controller/list-products';
+import { listUnits }    from '../../api/fn/unit-controller/list-units';
 import { StockCountResponse } from '../../api/models/stock-count-response';
 import { ProductResponse } from '../../api/models/product-response';
+import { UnitResponse } from '../../api/models/unit-response';
 import { PagedResponseStockCountResponse } from '../../api/models/paged-response-stock-count-response';
 import { PagedResponseProductResponse } from '../../api/models/paged-response-product-response';
-import { DecimalPipe } from '@angular/common';
-import { parseBlob } from '../../core/utils/parse-blob';
+import { DecimalPipe }  from '@angular/common';
+import { parseBlob }    from '../../core/utils/parse-blob';
 import { formatDatetime } from '../../core/utils/format';
 import { extractApiError } from '../../core/utils/api-error';
+import { AlertNotificationService } from '../../core/services/alert-notification.service';
 import { PaginatorComponent } from '../../shared/components/paginator/paginator.component';
 import { DrawerComponent } from '../../shared/components/drawer/drawer.component';
 import { SpinnerComponent } from '../../shared/components/spinner/spinner.component';
@@ -37,7 +41,10 @@ export class StockCountsComponent implements OnInit {
   pageSize = 20;
   total    = signal(0);
 
-  expanded = signal<string | null>(null);
+  expanded      = signal<string | null>(null);
+  loadingDetail = signal<string | null>(null);
+  products      = signal<ProductResponse[]>([]);
+  units         = signal<UnitResponse[]>([]);
 
   drawerOpen    = signal(false);
   loadingForm   = signal(false);
@@ -47,7 +54,7 @@ export class StockCountsComponent implements OnInit {
   productMeta: ProductMeta[] = [];
   form: FormGroup;
 
-  constructor(private api: Api, private fb: FormBuilder) {
+  constructor(private api: Api, private fb: FormBuilder, private alertNotification: AlertNotificationService) {
     this.form = this.fb.group({
       items: this.fb.array([]),
       notes: [''],
@@ -55,7 +62,30 @@ export class StockCountsComponent implements OnInit {
   }
 
   async ngOnInit(): Promise<void> {
-    await this.loadCounts();
+    await Promise.all([this.loadCounts(), this.loadProducts(), this.loadUnits()]);
+  }
+
+  async loadProducts(): Promise<void> {
+    try {
+      const raw = await this.api.invoke(listProducts, { page: 0, size: 999 }) as unknown;
+      const res = await parseBlob<PagedResponseProductResponse>(raw);
+      this.products.set(res.content ?? []);
+    } catch { /* non-critical */ }
+  }
+
+  async loadUnits(): Promise<void> {
+    try {
+      const raw = await this.api.invoke(listUnits) as unknown;
+      this.units.set(await parseBlob<UnitResponse[]>(raw));
+    } catch { /* non-critical */ }
+  }
+
+  productName(id?: string): string {
+    return this.products().find(p => p.id === id)?.name ?? '—';
+  }
+
+  unitAbbr(id?: string): string {
+    return this.units().find(u => u.id === id)?.abbreviation ?? '';
   }
 
   get items(): FormArray {
@@ -63,7 +93,7 @@ export class StockCountsComponent implements OnInit {
   }
 
   async loadCounts(): Promise<void> {
-    this.loading.set(true);
+    if (this.counts().length === 0) this.loading.set(true); // evita el flash de spinner (y el salto de scroll) en recargas tras crear/editar/borrar
     this.error.set(null);
     try {
       const raw = await this.api.invoke(listStockCounts, { page: this.page() - 1, size: this.pageSize }) as unknown;
@@ -116,9 +146,19 @@ export class StockCountsComponent implements OnInit {
     if (this.drawerOpen()) this.closeDrawer();
   }
 
-  toggleExpand(id?: string): void {
+  async toggleExpand(id?: string): Promise<void> {
     if (!id) return;
-    this.expanded.set(this.expanded() === id ? null : id);
+    if (this.expanded() === id) { this.expanded.set(null); return; }
+    this.expanded.set(id);
+    const count = this.counts().find(c => c.id === id);
+    if (!count || count.adjustments != null) return; // already loaded
+    this.loadingDetail.set(id);
+    try {
+      const raw = await this.api.invoke(getStockCount, { id }) as unknown;
+      const detail = await parseBlob<typeof count>(raw);
+      this.counts.update(list => list.map(c => c.id === id ? { ...c, adjustments: detail.adjustments ?? [] } : c));
+    } catch { /* silencioso — el expandido queda sin ajustes */ }
+    finally { this.loadingDetail.set(null); }
   }
 
   async save(): Promise<void> {
@@ -145,6 +185,7 @@ export class StockCountsComponent implements OnInit {
       await this.api.invoke(createStockCount, { body });
       this.drawerOpen.set(false);
       await this.loadCounts();
+      void this.alertNotification.refresh();
     } catch (e: any) {
       this.saveError.set(extractApiError(e, 'Error al guardar el conteo'));
     } finally {

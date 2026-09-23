@@ -1,0 +1,797 @@
+<!DOCTYPE html>
+<html lang="es" id="app" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Chef Control</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+html,body{height:100%;font-family:'Poppins',sans-serif;}
+
+/* ══════════════════════════════════
+   TOKENS
+══════════════════════════════════ */
+html{
+  --bg:#F5F2EE;
+  --bg-card:#FFFFFF;
+  --bg-input:#F5F3F0;
+  --bg-sidebar:#FFFFFF;
+  --border:#EDE8E2;
+  --topbar-bg:#FFFFFF;
+  --topbar-border:#EDE8E2;
+  --sidebar-border:#EDE8E2;
+  --text-1:#1A1210;
+  --text-2:#3D3530;
+  --text-3:#9A9390;
+  --text-nav:#6B6560;
+  --nav-label:#F36525;
+  --accent:#F36525;
+  --accent-dark:#C04A0A;
+  --accent-text:#FFFFFF;
+  --pop-bg:#F36525;
+  --pop-text:#FFFFFF;
+  --pop-sub:rgba(255,255,255,.55);
+  --red:#E74C3C;
+  --red-bg:#FFF0F0;
+  --spark:#EDE8E4;
+  --green-pct-bg:#FEF0E8;
+  --green-pct-text:#C04A0A;
+  --nav-bg:#FFFFFF;
+  --nav-border:#EDE8E2;
+  --nav-text:#9A9390;
+  --card-hover-border:#C04A0A;
+  --card-hover-bg:#FFF5F0;
+}
+html[data-theme="dark"]{
+  --bg:#111214;
+  --bg-card:#212226;
+  --bg-input:#16191E;
+  --bg-sidebar:#212226;
+  --border:#2A2D34;
+  --topbar-bg:#111214;
+  --topbar-border:#1A1D22;
+  --sidebar-border:#2A2D34;
+  --text-1:#FFFFFF;
+  --text-2:rgba(255,255,255,.75);
+  --text-3:rgba(255,255,255,.75);
+  --text-nav:#FFFFFF;
+  --nav-label:#F36525;
+  --accent:#F36525;
+  --accent-dark:#F36525;
+  --accent-text:#FFFFFF;
+  --pop-bg:#F36525;
+  --pop-text:#000000;
+  --pop-sub:rgba(0,0,0,.45);
+  --red:#E74C3C;
+  --red-bg:#2A0F0F;
+  --spark:#2A2D34;
+  --green-pct-bg:#2A1200;
+  --green-pct-text:#F36525;
+  --nav-bg:#212226;
+  --nav-border:#2A2D34;
+  --nav-text:#555555;
+  --card-hover-border:#F36525;
+  --card-hover-bg:#22262D;
+}
+
+body{background:var(--bg);color:var(--text-1);transition:background .25s,color .25s;}
+
+/* ══════════════════════════════════
+   TOPBAR
+══════════════════════════════════ */
+.topbar{
+  position:fixed;top:0;left:0;right:0;z-index:100;
+  background:var(--topbar-bg);
+  border-bottom:1px solid var(--topbar-border);
+  height:56px;
+  display:flex;align-items:center;justify-content:space-between;
+  padding:0 20px;
+}
+.logo{display:flex;align-items:center;gap:8px;}
+.logo-icon{width:30px;height:30px;background:var(--accent);border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:#000;flex-shrink:0;}
+.logo-text{font-size:14px;font-weight:700;color:var(--text-1);}
+.logo-text em{color:var(--accent);font-style:normal;}
+.logo-badge{font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--text-3);background:var(--border);padding:2px 7px;border-radius:20px;}
+.topbar-right{display:flex;align-items:center;gap:10px;}
+.btn-entrada{display:flex;align-items:center;gap:5px;background:var(--accent);color:var(--accent-text);font-family:'Poppins',sans-serif;font-size:12px;font-weight:700;padding:7px 14px;border-radius:9px;border:none;cursor:pointer;}
+.topbar-user{display:flex;align-items:center;gap:7px;font-size:12px;color:var(--text-2);font-weight:500;}
+.user-avatar{width:28px;height:28px;border-radius:50%;background:var(--accent);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:#000;}
+.btn-salir{font-size:11px;color:var(--text-3);cursor:pointer;background:none;border:1px solid var(--border);padding:5px 10px;border-radius:7px;font-family:'Poppins',sans-serif;}
+.theme-toggle{display:flex;align-items:center;gap:5px;cursor:pointer;background:var(--bg-input);border:1px solid var(--border);border-radius:20px;padding:3px 8px;}
+.toggle-pill{width:26px;height:15px;background:var(--accent);border-radius:10px;position:relative;border:none;cursor:pointer;flex-shrink:0;}
+.toggle-pill::after{content:'';position:absolute;top:2px;left:2px;width:11px;height:11px;background:#000;border-radius:50%;transition:transform .2s;}
+html[data-theme="dark"] .toggle-pill::after{transform:translateX(11px);}
+.ti-tog{font-size:12px;color:var(--text-3);}
+/* hide some topbar items on mobile */
+.hide-mobile{display:flex;}
+
+/* ══════════════════════════════════
+   LAYOUT SHELL
+══════════════════════════════════ */
+.shell{
+  display:flex;
+  padding-top:56px;
+  min-height:100vh;
+}
+
+/* ══════════════════════════════════
+   SIDEBAR — DESKTOP
+══════════════════════════════════ */
+.sidebar{
+  width:210px;flex-shrink:0;
+  background:var(--bg-sidebar);
+  border:1px solid var(--sidebar-border);
+  border-radius:16px;
+  padding:10px 8px;
+  position:fixed;top:66px;left:10px;bottom:10px;
+  overflow-y:auto;z-index:50;
+  transition:transform .25s;
+}
+.sidebar::-webkit-scrollbar{width:3px;}
+.sidebar::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px;}
+.nav-section{font-size:9px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;color:var(--nav-label);padding:10px 8px 3px;}
+.nav-item{display:flex;align-items:center;gap:9px;padding:8px 10px;font-size:12px;font-weight:500;color:var(--text-nav);cursor:pointer;border-radius:9px;position:relative;transition:background .15s,color .15s;margin-bottom:1px;}
+.nav-item i{font-size:14px;transition:color .15s;flex-shrink:0;}
+.nav-item:hover{background:var(--accent-dark);color:#fff;}
+.nav-item:hover i{color:#fff;}
+html[data-theme="dark"] .nav-item:hover{background:#F3652522;color:#F36525;}
+html[data-theme="dark"] .nav-item:hover i{color:#F36525;}
+.nav-item:hover::after{content:'';width:5px;height:5px;border-radius:50%;background:var(--accent);position:absolute;right:10px;top:50%;transform:translateY(-50%);}
+.nav-item.active{background:var(--accent);color:#000;font-weight:600;}
+.nav-item.active i{color:#000;}
+.nav-item.active::after{display:none!important;}
+
+/* ══════════════════════════════════
+   MAIN CONTENT
+══════════════════════════════════ */
+.main{
+  flex:1;
+  margin-left:230px;
+  padding:20px 24px 80px;
+  min-height:calc(100vh - 56px);
+}
+
+/* ══════════════════════════════════
+   PAGE HEADER
+══════════════════════════════════ */
+.page-header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:20px;}
+.page-title{font-size:20px;font-weight:700;color:var(--text-1);}
+.page-meta{display:flex;align-items:center;gap:10px;margin-top:3px;}
+.page-date{font-size:11px;color:var(--text-3);}
+.live-badge{display:flex;align-items:center;gap:4px;font-size:11px;color:var(--accent);font-weight:600;}
+.live-dot{width:6px;height:6px;border-radius:50%;background:var(--accent);box-shadow:0 0 6px var(--accent);}
+.btn-update{display:flex;align-items:center;gap:5px;background:var(--bg-card);border:1px solid var(--border);color:var(--text-2);font-family:'Poppins',sans-serif;font-size:11px;font-weight:500;padding:7px 13px;border-radius:9px;cursor:pointer;transition:border-color .15s,color .15s;}
+.btn-update:hover{border-color:var(--accent);color:var(--accent);}
+
+/* ══════════════════════════════════
+   GREETING (mobile only)
+══════════════════════════════════ */
+.greeting{display:none;margin-bottom:16px;}
+.greeting-hello{font-size:18px;font-weight:700;color:var(--text-1);}
+.greeting-hello em{color:var(--accent);font-style:normal;}
+.greeting-sub{font-size:11px;color:var(--text-3);margin-top:2px;}
+
+/* ══════════════════════════════════
+   HERO CARD (mobile only)
+══════════════════════════════════ */
+.hero-card{
+  display:none;
+  background:var(--pop-bg);border-radius:20px;
+  padding:18px;margin-bottom:16px;position:relative;overflow:hidden;
+}
+.hero-tag{display:inline-flex;align-items:center;gap:5px;background:rgba(243,101,37,.18);color:var(--accent);font-size:10px;font-weight:700;padding:3px 9px;border-radius:20px;margin-bottom:10px;}
+html[data-theme="dark"] .hero-tag{background:rgba(0,0,0,.2);color:#000;}
+.hero-date{font-size:10px;color:var(--pop-sub);margin-bottom:6px;}
+.hero-title{font-size:16px;font-weight:700;color:var(--pop-text);line-height:1.35;margin-bottom:12px;}
+.hero-title span{color:var(--accent);}
+html[data-theme="dark"] .hero-title span{color:#000;font-style:italic;}
+.hero-link{font-size:11px;font-weight:600;color:var(--accent);display:flex;align-items:center;gap:4px;}
+html[data-theme="dark"] .hero-link{color:#000;}
+
+/* ══════════════════════════════════
+   KPI GRID
+══════════════════════════════════ */
+.kpi-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:12px;}
+.kpi-card{background:var(--bg-card);border:1.5px solid var(--border);border-radius:18px;padding:16px;display:flex;flex-direction:column;gap:5px;transition:border-color .2s,background .2s,transform .15s,box-shadow .15s;cursor:default;position:relative;overflow:hidden;}
+.kpi-card:hover{border-color:var(--card-hover-border);background:var(--card-hover-bg);transform:translateY(-2px);}
+html[data-theme="light"] .kpi-card:hover{box-shadow:0 8px 28px rgba(122,40,0,.1);}
+html[data-theme="dark"] .kpi-card:hover{box-shadow:0 6px 24px rgba(243,101,37,.07);}
+.kpi-card.pop{background:var(--pop-bg);border-color:transparent;}
+.kpi-card.pop:hover{border-color:transparent;}
+.kpi-card.pop .kpi-label{color:var(--pop-sub);}
+.kpi-card.pop .kpi-value{color:var(--pop-text);}
+.kpi-card.pop .kpi-sub-inline span{color:var(--pop-sub);}
+.kpi-card.pop .kpi-icon-badge{background:rgba(255,255,255,.12);color:var(--accent);}
+html[data-theme="dark"] .kpi-card.pop .kpi-icon-badge{background:rgba(0,0,0,.18);color:#000;}
+.kpi-card.pop .kpi-pct{background:rgba(255,255,255,.18);color:var(--pop-text);}
+html[data-theme="dark"] .kpi-card.pop .kpi-pct{background:rgba(0,0,0,.2);color:#000;}
+.kpi-card.pop .spark-bar{background:rgba(255,255,255,.2);}
+.kpi-card.pop .spark-bar.hi{background:rgba(255,255,255,.6);}
+html[data-theme="dark"] .kpi-card.pop .spark-bar{background:rgba(0,0,0,.2);}
+html[data-theme="dark"] .kpi-card.pop .spark-bar.hi{background:rgba(0,0,0,.6);}
+.kpi-icon-badge{position:absolute;top:14px;right:14px;width:34px;height:34px;border-radius:11px;background:var(--bg-input);display:flex;align-items:center;justify-content:center;font-size:16px;color:var(--text-3);transition:background .2s,color .2s;}
+.kpi-card:not(.pop):hover .kpi-icon-badge{background:var(--accent);color:#000;}
+.kpi-pct{display:inline-flex;align-items:center;gap:3px;font-size:10px;font-weight:700;background:var(--green-pct-bg);color:var(--green-pct-text);padding:3px 8px;border-radius:20px;width:fit-content;}
+.kpi-pct.red{background:var(--red-bg);color:var(--red);}
+.kpi-label{font-size:11px;font-weight:500;color:var(--text-2);}
+.kpi-value{font-size:20px;font-weight:700;letter-spacing:-.5px;line-height:1.1;color:var(--text-1);}
+.kpi-value.zero{color:var(--spark);}
+.kpi-value.merma{color:var(--red);}
+html[data-theme="dark"] .kpi-value.merma{color:var(--text-1);}
+.kpi-sub{font-size:10px;color:var(--text-3);}
+.kpi-sub-inline{display:flex;align-items:baseline;gap:5px;margin-top:1px;}
+.kpi-sub-inline .kpi-value{font-size:20px;}
+.kpi-sub-inline span{font-size:10px;color:var(--text-3);line-height:1.3;}
+.stock-val{font-size:26px;font-weight:700;color:var(--spark);line-height:1;}
+.sparkline{height:26px;display:flex;align-items:flex-end;gap:3px;margin:5px 0 2px;}
+.spark-bar{width:6px;border-radius:3px 3px 0 0;background:var(--spark);transition:background .2s;}
+.kpi-card:not(.pop):hover .spark-bar{background:rgba(243,101,37,.2);}
+.kpi-card:not(.pop):hover .spark-bar.hi{background:var(--accent);}
+.fc-bar{height:4px;background:var(--spark);border-radius:3px;margin:7px 0 4px;overflow:hidden;}
+.fc-fill{height:100%;width:0;background:var(--accent);border-radius:3px;}
+
+/* ══════════════════════════════════
+   ALERTS
+══════════════════════════════════ */
+.alerts-panel{background:var(--bg-card);border:1.5px solid var(--border);border-radius:18px;padding:14px 16px;margin-bottom:12px;}
+.alerts-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;}
+.alerts-title{font-size:9px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:var(--text-3);}
+.alerts-link{font-size:11px;color:var(--accent);font-weight:600;cursor:pointer;}
+.alerts-empty{text-align:center;padding:12px 0;font-size:12px;color:var(--text-3);}
+.alerts-empty i{display:block;font-size:22px;color:var(--accent);margin-bottom:4px;opacity:.5;}
+
+/* ══════════════════════════════════
+   TRANSACTION LIST (mobile)
+══════════════════════════════════ */
+.tx-section{display:none;}
+.section-hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;}
+.section-title-sm{font-size:14px;font-weight:700;color:var(--text-1);}
+.section-link{font-size:11px;font-weight:600;color:var(--accent);}
+.tx-list{display:flex;flex-direction:column;gap:8px;}
+.tx-item{background:var(--bg-card);border:1.5px solid var(--border);border-radius:14px;padding:12px 14px;display:flex;align-items:center;gap:12px;}
+.tx-icon{width:36px;height:36px;border-radius:10px;background:var(--bg-input);display:flex;align-items:center;justify-content:center;font-size:16px;color:var(--text-3);flex-shrink:0;}
+.tx-info{flex:1;}
+.tx-name{font-size:12px;font-weight:600;color:var(--text-1);}
+.tx-date{font-size:10px;color:var(--text-3);margin-top:1px;}
+.tx-right{text-align:right;}
+.tx-status.done{font-size:10px;font-weight:700;color:var(--accent);}
+.tx-status.pend{font-size:10px;font-weight:700;color:var(--text-3);}
+.tx-code{font-size:9px;color:var(--text-3);}
+
+/* ══════════════════════════════════
+   BOTTOM NAV (mobile only)
+══════════════════════════════════ */
+.bottom-nav{
+  display:none;
+  position:fixed;bottom:0;left:0;right:0;
+  height:72px;
+  background:var(--nav-bg);border-top:1px solid var(--nav-border);
+  z-index:100;
+  align-items:center;justify-content:space-around;
+  padding:0 4px 8px;
+}
+.nav-btn-mob{display:flex;flex-direction:column;align-items:center;gap:3px;flex:1;padding:8px 4px;background:none;border:none;font-family:'Poppins',sans-serif;cursor:pointer;}
+.nav-btn-mob i{font-size:20px;color:var(--nav-text);transition:color .15s;}
+.nav-btn-mob span{font-size:9px;font-weight:600;color:var(--nav-text);transition:color .15s;}
+.nav-btn-mob.active i,.nav-btn-mob.active span{color:var(--accent);}
+.fab-wrap-mob{display:flex;flex-direction:column;align-items:center;position:relative;top:-14px;flex:1;}
+.fab{width:52px;height:52px;border-radius:50%;background:var(--accent);border:3px solid var(--bg);display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 4px 16px rgba(243,101,37,.4);}
+.fab i{font-size:22px;color:#000;}
+.fab-label{font-size:8px;font-weight:700;color:var(--nav-text);margin-top:2px;text-align:center;}
+
+/* ══════════════════════════════════
+   OVERLAY
+══════════════════════════════════ */
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:200;opacity:0;pointer-events:none;transition:opacity .25s;}
+.overlay.open{opacity:1;pointer-events:all;}
+
+/* ══════════════════════════════════
+   DRAWER (desktop)
+══════════════════════════════════ */
+.drawer{position:fixed;top:0;right:0;bottom:0;width:330px;background:var(--bg-card);border-left:1px solid var(--border);z-index:300;transform:translateX(100%);transition:transform .28s cubic-bezier(.4,0,.2,1);display:flex;flex-direction:column;overflow:hidden;}
+.drawer.open{transform:translateX(0);}
+
+/* ══════════════════════════════════
+   BOTTOM SHEET (mobile)
+══════════════════════════════════ */
+.sheet{position:fixed;bottom:0;left:0;right:0;background:var(--bg-card);border-radius:24px 24px 0 0;z-index:300;transform:translateY(100%);transition:transform .3s cubic-bezier(.4,0,.2,1);max-height:90vh;display:flex;flex-direction:column;overflow:hidden;}
+.sheet.open{transform:translateY(0);}
+.sheet-handle{width:40px;height:4px;background:var(--border);border-radius:2px;margin:12px auto 0;flex-shrink:0;}
+
+/* ══════════════════════════════════
+   SHARED PANEL STYLES
+══════════════════════════════════ */
+.panel-head{display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-bottom:1px solid var(--border);flex-shrink:0;background:var(--pop-bg);}
+html[data-theme="dark"] .panel-head{background:#2A1200;}
+.panel-title{font-size:13px;font-weight:700;color:#fff;}
+.panel-sub{font-size:10px;color:rgba(255,255,255,.4);margin-top:2px;}
+.btn-close{background:none;border:1px solid rgba(255,255,255,.15);border-radius:7px;padding:4px 8px;cursor:pointer;color:rgba(255,255,255,.5);font-size:14px;}
+.btn-close:hover{border-color:var(--accent);color:var(--accent);}
+.panel-body{flex:1;overflow-y:auto;padding:18px 20px;}
+.panel-body::-webkit-scrollbar{width:3px;}
+.panel-body::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px;}
+.panel-footer{padding:12px 20px;border-top:1px solid var(--border);display:flex;gap:8px;flex-shrink:0;}
+
+/* form fields */
+.field{margin-bottom:12px;}
+.field label{display:block;font-size:9px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:var(--text-2);margin-bottom:4px;}
+.field label span{font-weight:400;color:var(--text-3);text-transform:none;letter-spacing:0;}
+.field input,.field select,.field textarea{width:100%;background:var(--bg-input);border:1.5px solid var(--border);border-radius:10px;padding:9px 12px;font-family:'Poppins',sans-serif;font-size:12px;color:var(--text-1);outline:none;transition:border-color .15s;}
+.field input:focus,.field select:focus,.field textarea:focus{border-color:var(--accent);}
+.field textarea{resize:vertical;min-height:72px;}
+.field-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.sec-div{font-size:9px;font-weight:700;letter-spacing:.9px;text-transform:uppercase;color:var(--text-3);margin:14px 0 8px;padding-bottom:5px;border-bottom:1px solid var(--border);}
+.status-toggle{display:flex;gap:6px;}
+.status-btn{flex:1;padding:8px;border-radius:10px;border:1.5px solid var(--border);background:none;font-family:'Poppins',sans-serif;font-size:12px;font-weight:600;cursor:pointer;color:var(--text-3);}
+.status-btn.on{background:var(--accent);color:#000;border-color:var(--accent);}
+.ing-row{display:flex;align-items:center;gap:8px;background:var(--bg-input);border:1.5px solid var(--border);border-radius:10px;padding:8px 12px;font-size:12px;color:var(--text-2);margin-bottom:6px;transition:border-color .15s;}
+.ing-row:hover{border-color:var(--accent);}
+.ing-row i{color:var(--accent);font-size:14px;}
+.ing-tag{flex:1;}
+.ing-qty{font-size:10px;color:var(--text-3);}
+.btn-add-ing{display:flex;align-items:center;gap:5px;width:100%;margin-top:6px;background:none;border:1.5px dashed var(--border);border-radius:10px;padding:8px 12px;cursor:pointer;font-family:'Poppins',sans-serif;font-size:12px;color:var(--text-3);}
+.btn-add-ing:hover{border-color:var(--accent);color:var(--accent);}
+.cost-box{display:flex;justify-content:space-between;align-items:center;background:var(--bg-input);border-radius:10px;padding:10px 13px;border:1.5px solid var(--border);}
+.shortcut-row{display:flex;align-items:center;gap:9px;padding:10px 12px;background:var(--bg-input);border:1.5px solid var(--border);border-radius:11px;cursor:pointer;font-size:12px;color:var(--text-2);margin-bottom:7px;transition:border-color .15s,color .15s;}
+.shortcut-row:hover{border-color:var(--accent);color:var(--accent);}
+.shortcut-row i{color:var(--accent);font-size:14px;flex-shrink:0;}
+.btn-save{flex:1;background:var(--accent);color:#000;font-family:'Poppins',sans-serif;font-size:12px;font-weight:700;padding:10px;border-radius:10px;border:none;cursor:pointer;}
+.btn-save:hover{opacity:.85;}
+.btn-cancel{background:none;border:1.5px solid var(--border);color:var(--text-3);font-family:'Poppins',sans-serif;font-size:12px;padding:10px 14px;border-radius:10px;cursor:pointer;}
+.btn-cancel:hover{border-color:var(--red);color:var(--red);}
+
+/* ══════════════════════════════════
+   BREAKPOINTS
+══════════════════════════════════ */
+
+/* TABLET: 768px–1024px */
+@media(max-width:1024px){
+  .sidebar{width:180px;left:10px;}
+  .main{margin-left:200px;padding:16px 18px 80px;}
+  .kpi-grid{gap:10px;}
+  .logo-badge{display:none;}
+  .btn-salir{display:none;}
+}
+
+/* MOBILE: <768px */
+@media(max-width:767px){
+  /* hide desktop sidebar */
+  .sidebar{display:none;}
+  /* topbar mobile */
+  .main{margin-left:0;padding:14px 14px 90px;}
+  .topbar{padding:0 16px;}
+  .hide-mobile{display:none;}
+  .logo-badge{display:none;}
+  /* show greeting + hero */
+  .greeting{display:block;}
+  .hero-card{display:block;}
+  /* 2-col kpi grid */
+  .kpi-grid{grid-template-columns:1fr 1fr;gap:10px;}
+  .kpi-icon-badge{width:28px;height:28px;font-size:14px;top:10px;right:10px;}
+  .kpi-value{font-size:17px;}
+  .kpi-sub-inline .kpi-value{font-size:17px;}
+  .stock-val{font-size:22px;}
+  .sparkline{height:20px;}
+  .spark-bar{width:5px;}
+  /* show transactions */
+  .tx-section{display:block;margin-top:4px;}
+  /* show bottom nav */
+  .bottom-nav{display:flex;}
+  /* hide desktop update btn */
+  .btn-update{display:none;}
+  /* page header adjustments */
+  .page-title{font-size:18px;}
+  /* drawer becomes sheet on mobile — handled by JS */
+}
+
+/* SMALL MOBILE: <420px */
+@media(max-width:420px){
+  .kpi-grid{grid-template-columns:1fr 1fr;gap:8px;}
+  .kpi-card{padding:12px;}
+  .kpi-value{font-size:15px;}
+  .main{padding:12px 12px 90px;}
+}
+</style>
+</head>
+<body>
+
+<!-- ══ TOPBAR ══ -->
+<header class="topbar">
+  <div class="logo">
+    <div class="logo-icon">C</div>
+    <span class="logo-text"><em>Chef</em> Control</span>
+    <span class="logo-badge">Bigua</span>
+  </div>
+  <div class="topbar-right">
+    <div class="theme-toggle" onclick="toggleTheme()">
+      <i class="ti ti-moon ti-tog"></i>
+      <button class="toggle-pill" aria-label="Modo"></button>
+      <i class="ti ti-sun ti-tog"></i>
+    </div>
+    <button class="btn-entrada hide-mobile" onclick="openPanel('entrada')">
+      <i class="ti ti-bolt"></i> Entrada rápida
+    </button>
+    <div class="topbar-user hide-mobile">
+      <div class="user-avatar">MP</div>
+      Matias Portela
+    </div>
+    <button class="btn-salir hide-mobile">Salir</button>
+  </div>
+</header>
+
+<div class="shell">
+
+  <!-- ══ SIDEBAR (desktop) ══ -->
+  <nav class="sidebar">
+    <div class="nav-section">General</div>
+    <div class="nav-item active"><i class="ti ti-layout-dashboard"></i> Panel</div>
+    <div class="nav-item"><i class="ti ti-bell"></i> Alertas</div>
+    <div class="nav-section">Menú y Ventas</div>
+    <div class="nav-item" onclick="openPanel('plato')"><i class="ti ti-clipboard-list"></i> Platos del menú</div>
+    <div class="nav-item"><i class="ti ti-chart-bar"></i> Ventas</div>
+    <div class="nav-section">Compras</div>
+    <div class="nav-item"><i class="ti ti-truck"></i> Proveedores</div>
+    <div class="nav-item"><i class="ti ti-shopping-cart"></i> Compras</div>
+    <div class="nav-section">Inventario</div>
+    <div class="nav-item"><i class="ti ti-package"></i> Insumos</div>
+    <div class="nav-item"><i class="ti ti-tag"></i> Categorías</div>
+    <div class="nav-item"><i class="ti ti-box"></i> Stock</div>
+    <div class="nav-item"><i class="ti ti-trash"></i> Merma</div>
+    <div class="nav-item"><i class="ti ti-clipboard-check"></i> Conteos</div>
+    <div class="nav-section">Reportes</div>
+    <div class="nav-item"><i class="ti ti-coin"></i> Food Cost</div>
+  </nav>
+
+  <!-- ══ MAIN ══ -->
+  <main class="main">
+
+    <!-- greeting mobile -->
+    <div class="greeting">
+      <div class="greeting-hello">Hola, <em>Matias!</em></div>
+      <div class="greeting-sub"><span style="width:6px;height:6px;border-radius:50%;background:var(--accent);display:inline-block;margin-right:4px;box-shadow:0 0 5px var(--accent);vertical-align:middle;"></span>En vivo · Sáb 13 jun 2026</div>
+    </div>
+
+    <!-- hero mobile -->
+    <div class="hero-card">
+      <div class="hero-tag"><i class="ti ti-bolt" style="font-size:10px;"></i> Novedad</div>
+      <div class="hero-date">13 de junio 2026</div>
+      <div class="hero-title">Registrá operaciones con <span>lenguaje natural</span></div>
+      <div class="hero-link" onclick="openPanel('entrada')">Usar entrada rápida <i class="ti ti-arrow-right" style="font-size:12px;"></i></div>
+    </div>
+
+    <!-- page header desktop -->
+    <div class="page-header">
+      <div>
+        <div class="page-title">Panel operativo</div>
+        <div class="page-meta">
+          <span class="page-date">Sábado, 13 de junio 2026</span>
+          <span class="live-badge"><span class="live-dot"></span> En vivo</span>
+        </div>
+      </div>
+      <button class="btn-update"><i class="ti ti-refresh"></i> Actualizar</button>
+    </div>
+
+    <!-- KPI ROW 1 -->
+    <div class="kpi-grid">
+      <div class="kpi-card pop">
+        <div class="kpi-icon-badge"><i class="ti ti-chart-line"></i></div>
+        <div class="kpi-pct"><i class="ti ti-arrow-up-right" style="font-size:9px"></i> +20.9%</div>
+        <div class="kpi-label">Ventas del mes</div>
+        <div class="kpi-sub-inline"><div class="kpi-value">$ 0,00</div><span>vs<br>mes ant.</span></div>
+        <div class="sparkline">
+          <div class="spark-bar" style="height:35%"></div><div class="spark-bar hi" style="height:62%"></div>
+          <div class="spark-bar" style="height:40%"></div><div class="spark-bar hi" style="height:78%"></div>
+          <div class="spark-bar" style="height:50%"></div><div class="spark-bar hi" style="height:88%"></div>
+        </div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-icon-badge"><i class="ti ti-shopping-cart"></i></div>
+        <div class="kpi-pct"><i class="ti ti-arrow-up-right" style="font-size:9px"></i> +10.9%</div>
+        <div class="kpi-label">Compras del mes</div>
+        <div class="kpi-sub-inline"><div class="kpi-value zero">$ 0,00</div><span>vs<br>mes ant.</span></div>
+        <div class="sparkline">
+          <div class="spark-bar hi" style="height:55%"></div><div class="spark-bar" style="height:30%"></div>
+          <div class="spark-bar" style="height:65%"></div><div class="spark-bar hi" style="height:80%"></div>
+          <div class="spark-bar" style="height:40%"></div><div class="spark-bar hi" style="height:70%"></div>
+        </div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-icon-badge"><i class="ti ti-coin"></i></div>
+        <div class="kpi-label">Food Cost</div>
+        <div class="kpi-value zero" style="font-size:24px;margin-top:4px;">0.0%</div>
+        <div class="fc-bar"><div class="fc-fill"></div></div>
+        <div class="kpi-sub">Sin ventas este mes</div>
+      </div>
+    </div>
+
+    <!-- KPI ROW 2 -->
+    <div class="kpi-grid">
+      <div class="kpi-card">
+        <div class="kpi-icon-badge"><i class="ti ti-trash"></i></div>
+        <div class="kpi-pct red"><i class="ti ti-arrow-down-right" style="font-size:9px"></i> -0%</div>
+        <div class="kpi-label">Merma del mes</div>
+        <div class="kpi-sub-inline"><div class="kpi-value merma">$ 0,00</div><span>eventos<br>registrados</span></div>
+        <div class="sparkline">
+          <div class="spark-bar" style="height:20%"></div><div class="spark-bar hi" style="height:35%"></div>
+          <div class="spark-bar" style="height:22%"></div><div class="spark-bar" style="height:38%"></div>
+          <div class="spark-bar" style="height:18%"></div><div class="spark-bar hi" style="height:28%"></div>
+        </div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-icon-badge"><i class="ti ti-alert-triangle"></i></div>
+        <div class="kpi-label">Bajo Stock</div>
+        <div class="stock-val">0</div>
+        <div style="height:28px;"></div>
+        <div class="kpi-sub">productos bajo su mínimo</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-icon-badge"><i class="ti ti-package"></i></div>
+        <div class="kpi-label">Sobrestock</div>
+        <div class="stock-val">0</div>
+        <div style="height:28px;"></div>
+        <div class="kpi-sub">productos sobre su máximo</div>
+      </div>
+    </div>
+
+    <!-- ALERTS -->
+    <div class="alerts-panel">
+      <div class="alerts-head">
+        <span class="alerts-title">Alertas activas</span>
+        <span class="alerts-link">Ver todas →</span>
+      </div>
+      <div class="alerts-empty">
+        <i class="ti ti-circle-check"></i>
+        Sin alertas activas. Todo en orden.
+      </div>
+    </div>
+
+    <!-- TRANSACTIONS (mobile only) -->
+    <div class="tx-section">
+      <div class="section-hd">
+        <div class="section-title-sm">Últimas operaciones</div>
+        <div class="section-link">Ver todas →</div>
+      </div>
+      <div class="tx-list">
+        <div class="tx-item">
+          <div class="tx-icon"><i class="ti ti-clipboard-list"></i></div>
+          <div class="tx-info"><div class="tx-name">Caesar Tradicional</div><div class="tx-date">Venta · 13 jun 2026</div></div>
+          <div class="tx-right"><div class="tx-status done">Completada</div><div class="tx-code">VNT-001</div></div>
+        </div>
+        <div class="tx-item">
+          <div class="tx-icon"><i class="ti ti-shopping-cart"></i></div>
+          <div class="tx-info"><div class="tx-name">Pollo — El Campo</div><div class="tx-date">Compra · 13 jun 2026</div></div>
+          <div class="tx-right"><div class="tx-status pend">Pendiente</div><div class="tx-code">CMP-002</div></div>
+        </div>
+        <div class="tx-item">
+          <div class="tx-icon"><i class="ti ti-trash"></i></div>
+          <div class="tx-info"><div class="tx-name">Aceite de oliva</div><div class="tx-date">Merma · 12 jun 2026</div></div>
+          <div class="tx-right"><div class="tx-status" style="font-size:10px;font-weight:700;color:var(--red);">Merma</div><div class="tx-code">MRM-001</div></div>
+        </div>
+      </div>
+    </div>
+
+  </main>
+</div><!-- shell -->
+
+<!-- ══ BOTTOM NAV (mobile) ══ -->
+<nav class="bottom-nav">
+  <button class="nav-btn-mob active" onclick="mobTab(this,'panel')">
+    <i class="ti ti-layout-dashboard"></i><span>Panel</span>
+  </button>
+  <button class="nav-btn-mob" onclick="mobTab(this,'alertas')">
+    <i class="ti ti-bell"></i><span>Alertas</span>
+  </button>
+  <div class="fab-wrap-mob">
+    <div class="fab" onclick="openPanel('entrada')"><i class="ti ti-plus"></i></div>
+    <span class="fab-label">Entrada rápida</span>
+  </div>
+  <button class="nav-btn-mob" onclick="mobTab(this,'ventas')">
+    <i class="ti ti-chart-bar"></i><span>Ventas</span>
+  </button>
+  <button class="nav-btn-mob" onclick="mobTab(this,'merma')">
+    <i class="ti ti-trash"></i><span>Merma</span>
+  </button>
+</nav>
+
+<!-- ══ OVERLAY ══ -->
+<div class="overlay" id="overlay" onclick="closePanel()"></div>
+
+<!-- ══ DRAWER / SHEET: ENTRADA RÁPIDA ══ -->
+<div class="drawer" id="panel-entrada">
+  <div class="sheet-handle" style="display:none;" id="sh-handle-entrada"></div>
+  <div class="panel-head">
+    <div><div class="panel-title"><i class="ti ti-bolt" style="color:var(--accent);margin-right:5px;"></i>Entrada rápida</div><div class="panel-sub">Describí una operación en lenguaje natural</div></div>
+    <button class="btn-close" onclick="closePanel()"><i class="ti ti-x"></i></button>
+  </div>
+  <div class="panel-body">
+    <div class="field"><textarea id="entrada-text" style="min-height:80px;" placeholder="Ej: compramos 10kg de tomate a $5000 / vendimos 8 milanesas..."></textarea><div style="font-size:10px;color:var(--text-3);margin-top:3px;">Ctrl+Enter para interpretar</div></div>
+    <div id="entrada-result" style="display:none;"><div class="sec-div">Interpretación</div><div id="result-cards"></div></div>
+    <div class="sec-div">Accesos directos</div>
+    <div class="shortcut-row" onclick="qf('Compramos 5kg de pollo a $8000 al proveedor El Campo')"><i class="ti ti-shopping-cart"></i> Registrar compra de insumo</div>
+    <div class="shortcut-row" onclick="qf('Vendimos 3 Caesar Tradicional y 2 American Burger')"><i class="ti ti-chart-bar"></i> Registrar ventas del día</div>
+    <div class="shortcut-row" onclick="qf('Se rompieron 2 botellas de aceite de oliva 500ml')"><i class="ti ti-trash"></i> Cargar merma o pérdida</div>
+    <div class="shortcut-row" onclick="qf('Hicimos conteo: tenemos 12kg de papa, 8kg de pollo')"><i class="ti ti-clipboard-check"></i> Actualizar stock / conteo</div>
+  </div>
+  <div class="panel-footer">
+    <button class="btn-cancel" onclick="closePanel()">Cancelar</button>
+    <button class="btn-save" onclick="interpret()"><i class="ti ti-bolt" style="margin-right:4px;"></i>Interpretar</button>
+  </div>
+</div>
+
+<!-- ══ DRAWER / SHEET: NUEVO PLATO ══ -->
+<div class="drawer" id="panel-plato">
+  <div class="sheet-handle" style="display:none;" id="sh-handle-plato"></div>
+  <div class="panel-head">
+    <div><div class="panel-title">Nuevo plato</div><div class="panel-sub">Agregá un plato al menú</div></div>
+    <button class="btn-close" onclick="closePanel()"><i class="ti ti-x"></i></button>
+  </div>
+  <div class="panel-body">
+    <div class="field"><label>Nombre <span>*</span></label><input type="text" placeholder="Ej: Caesar Tradicional"></div>
+    <div class="field"><label>Descripción <span>(opcional)</span></label><textarea placeholder="Mix de verdes, queso parmesano..."></textarea></div>
+    <div class="field-row">
+      <div class="field"><label>Categoría</label><select><option>Entradas</option><option>Sopas</option><option>Ensaladas</option><option>Acompañamientos</option><option>Principales</option><option>Postres</option></select></div>
+      <div class="field"><label>Precio <span>*</span></label><input type="number" placeholder="0,00"></div>
+    </div>
+    <div class="sec-div">Estado</div>
+    <div class="status-toggle"><button class="status-btn on" onclick="setSt(this)">Activo</button><button class="status-btn" onclick="setSt(this)">Inactivo</button></div>
+    <div class="sec-div">Ingredientes</div>
+    <div id="ing-list">
+      <div class="ing-row"><i class="ti ti-leaf"></i><span class="ing-tag">Lechuga romana</span><span class="ing-qty">80 g</span></div>
+      <div class="ing-row"><i class="ti ti-leaf"></i><span class="ing-tag">Queso parmesano</span><span class="ing-qty">20 g</span></div>
+      <div class="ing-row"><i class="ti ti-droplet"></i><span class="ing-tag">Aderezo caesar</span><span class="ing-qty">30 ml</span></div>
+    </div>
+    <button class="btn-add-ing" onclick="addIng()"><i class="ti ti-plus"></i> Agregar ingrediente</button>
+    <div class="sec-div">Costo estimado</div>
+    <div class="cost-box"><span style="font-size:11px;color:var(--text-3);">Costo teórico</span><span style="font-size:15px;font-weight:700;color:var(--accent);">$ 1.240,00</span></div>
+  </div>
+  <div class="panel-footer">
+    <button class="btn-cancel" onclick="closePanel()">Cancelar</button>
+    <button class="btn-save"><i class="ti ti-device-floppy" style="margin-right:4px;"></i>Guardar plato</button>
+  </div>
+</div>
+
+<!-- ══ SHEET: ALERTAS (mobile) ══ -->
+<div class="drawer" id="panel-alertas">
+  <div class="sheet-handle" style="display:none;" id="sh-handle-alertas"></div>
+  <div class="panel-head">
+    <div><div class="panel-title"><i class="ti ti-bell" style="margin-right:5px;"></i>Alertas</div><div class="panel-sub">Notificaciones del sistema</div></div>
+    <button class="btn-close" onclick="closePanel()"><i class="ti ti-x"></i></button>
+  </div>
+  <div class="panel-body">
+    <div style="text-align:center;padding:30px 0;">
+      <i class="ti ti-circle-check" style="font-size:40px;color:var(--accent);opacity:.5;display:block;margin-bottom:8px;"></i>
+      <div style="font-size:13px;color:var(--text-3);">Sin alertas activas.</div>
+    </div>
+  </div>
+  <div class="panel-footer"><button class="btn-save" onclick="closePanel()">Cerrar</button></div>
+</div>
+
+<!-- ══ SHEET: VENTAS (mobile) ══ -->
+<div class="drawer" id="panel-ventas">
+  <div class="sheet-handle" style="display:none;" id="sh-handle-ventas"></div>
+  <div class="panel-head">
+    <div><div class="panel-title">Registrar venta</div><div class="panel-sub">Cargá las ventas del día</div></div>
+    <button class="btn-close" onclick="closePanel()"><i class="ti ti-x"></i></button>
+  </div>
+  <div class="panel-body">
+    <div class="field"><label>Plato *</label><select><option>Caesar Tradicional</option><option>American Burger</option><option>Boniato al Rescoldo</option><option>Arveja, Lima y Menta</option></select></div>
+    <div class="field-row">
+      <div class="field"><label>Cantidad *</label><input type="number" placeholder="1"></div>
+      <div class="field"><label>Precio unit.</label><input type="number" placeholder="18.000"></div>
+    </div>
+    <div class="field"><label>Fecha</label><input type="date"></div>
+    <div class="field"><label>Notas <span>(opcional)</span></label><input type="text" placeholder="Mesa 5, almuerzo..."></div>
+  </div>
+  <div class="panel-footer">
+    <button class="btn-cancel" onclick="closePanel()">Cancelar</button>
+    <button class="btn-save"><i class="ti ti-check" style="margin-right:4px;"></i>Guardar venta</button>
+  </div>
+</div>
+
+<!-- ══ SHEET: MERMA (mobile) ══ -->
+<div class="drawer" id="panel-merma">
+  <div class="sheet-handle" style="display:none;" id="sh-handle-merma"></div>
+  <div class="panel-head">
+    <div><div class="panel-title">Registrar merma</div><div class="panel-sub">Cargá pérdidas o desperdicios</div></div>
+    <button class="btn-close" onclick="closePanel()"><i class="ti ti-x"></i></button>
+  </div>
+  <div class="panel-body">
+    <div class="field"><label>Insumo *</label><select><option>Aceite de oliva</option><option>Pollo</option><option>Lechuga romana</option><option>Tomate</option></select></div>
+    <div class="field-row">
+      <div class="field"><label>Cantidad *</label><input type="number" placeholder="0"></div>
+      <div class="field"><label>Unidad</label><select><option>kg</option><option>g</option><option>L</option><option>ml</option><option>u</option></select></div>
+    </div>
+    <div class="field"><label>Motivo</label><select><option>Vencimiento</option><option>Rotura</option><option>Mal estado</option><option>Error de preparación</option><option>Otro</option></select></div>
+    <div class="field"><label>Notas <span>(opcional)</span></label><input type="text" placeholder="Descripción..."></div>
+  </div>
+  <div class="panel-footer">
+    <button class="btn-cancel" onclick="closePanel()">Cancelar</button>
+    <button class="btn-save" style="background:#E74C3C;"><i class="ti ti-trash" style="margin-right:4px;"></i>Registrar merma</button>
+  </div>
+</div>
+
+<script>
+/* ── THEME ── */
+function toggleTheme(){
+  const h=document.documentElement;
+  h.setAttribute('data-theme',h.getAttribute('data-theme')==='dark'?'light':'dark');
+}
+
+/* ── PANEL: drawer on desktop, sheet on mobile ── */
+const MOBILE = () => window.innerWidth < 768;
+let activePanel = null;
+
+function openPanel(id){
+  closePanel();
+  const el = document.getElementById('panel-'+id);
+  const handle = document.getElementById('sh-handle-'+id);
+  if(!el) return;
+  if(MOBILE()){
+    // convert to bottom sheet
+    el.classList.remove('drawer');
+    el.classList.add('sheet');
+    if(handle) handle.style.display='block';
+  } else {
+    el.classList.remove('sheet');
+    el.classList.add('drawer');
+    if(handle) handle.style.display='none';
+  }
+  el.classList.add('open');
+  document.getElementById('overlay').classList.add('open');
+  activePanel = id;
+}
+
+function closePanel(){
+  document.querySelectorAll('.drawer,.sheet').forEach(el=>{
+    el.classList.remove('open');
+  });
+  document.getElementById('overlay').classList.remove('open');
+  activePanel = null;
+}
+
+/* ── MOBILE TAB ── */
+function mobTab(btn, id){
+  document.querySelectorAll('.nav-btn-mob').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  if(id !== 'panel') openPanel(id);
+}
+
+/* ── FORM UTILS ── */
+function setSt(b){b.closest('.status-toggle').querySelectorAll('.status-btn').forEach(x=>x.classList.remove('on'));b.classList.add('on');}
+let ic=3;
+function addIng(){
+  const list=document.getElementById('ing-list');
+  const items=[['ti-droplet','Aceite de oliva','15 ml'],['ti-salt','Sal fina','5 g'],['ti-lemon','Limón','0.5 u'],['ti-leaf','Ajo','1 diente'],['ti-bread','Croutones','15 g']];
+  const it=items[ic%items.length];
+  const r=document.createElement('div');r.className='ing-row';
+  r.innerHTML=`<i class="ti ${it[0]}"></i><span class="ing-tag">${it[1]}</span><span class="ing-qty">${it[2]}</span>`;
+  list.appendChild(r);ic++;
+}
+function qf(t){document.getElementById('entrada-text').value=t;}
+function interpret(){
+  const t=document.getElementById('entrada-text').value.trim();if(!t)return;
+  const res=document.getElementById('entrada-result');const cards=document.getElementById('result-cards');
+  res.style.display='block';const l=t.toLowerCase();
+  let color='#F36525',label='Operación detectada',note='→ Revisando tipo de movimiento...';
+  if(l.includes('compra')||l.includes('compramos')){label='Compra detectada';note='→ Se registrará en Compras e impactará en Stock';}
+  else if(l.includes('vend')){label='Venta detectada';note='→ Se registrará en Ventas y descontará del Stock';}
+  else if(l.includes('merm')||l.includes('rompi')||l.includes('perdid')){label='Merma detectada';color='#e74c3c';note='→ Se registrará en Merma y afectará el Stock';}
+  else if(l.includes('stock')||l.includes('conteo')||l.includes('tenemos')){label='Conteo detectado';note='→ Se actualizará el inventario';}
+  cards.innerHTML=`<div style="background:var(--bg-input);border:1.5px solid ${color};border-radius:11px;padding:11px 13px;margin-bottom:7px;"><div style="font-size:9px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:${color};margin-bottom:4px;">${label}</div><div style="font-size:12px;color:var(--text-1);">${t}</div><div style="font-size:10px;color:var(--text-3);margin-top:4px;">${note}</div></div>`;
+}
+
+/* ── KEYBOARD ── */
+document.addEventListener('keydown',e=>{
+  if(e.key==='Escape') closePanel();
+  if((e.ctrlKey||e.metaKey)&&e.key==='Enter'&&activePanel==='entrada') interpret();
+});
+
+/* ── RE-INIT ON RESIZE ── */
+window.addEventListener('resize',()=>{
+  if(activePanel) openPanel(activePanel);
+});
+</script>
+</body>
+</html>

@@ -4,6 +4,7 @@ import { HttpClient, HttpContext, HttpResponse } from '@angular/common/http';
 import { filter, map } from 'rxjs/operators';
 import { Api } from '../../api/api';
 import { AiRefreshService } from '../../core/services/ai-refresh.service';
+import { I18nService } from '../../core/services/i18n.service';
 import { RequestBuilder } from '../../api/request-builder';
 import { StrictHttpResponse } from '../../api/strict-http-response';
 import { getStock } from '../../api/fn/product-controller/get-stock';
@@ -75,7 +76,7 @@ export class StockComponent implements OnInit {
 
   private readonly el = inject(ElementRef);
 
-  constructor(private api: Api, private aiRefresh: AiRefreshService) {}
+  constructor(private api: Api, private aiRefresh: AiRefreshService, private i18n: I18nService) {}
 
   async ngOnInit(): Promise<void> {
     this.aiRefresh.executed$
@@ -196,16 +197,24 @@ export class StockComponent implements OnInit {
     return this.units().find(u => u.id === unitId)?.abbreviation ?? '';
   }
 
-  typeLabel(type?: string): string {
+  /**
+   * La merma estándar de limpieza es un WASTE que cuelga del sale_item: no lo tiró nadie,
+   * es el rendimiento del producto. Sin distinguirla, el historial muestra "Merma" al lado
+   * de cada venta y parece que la cocina está tirando comida.
+   */
+  typeLabel(movement?: { type?: string; referenceType?: string }): string {
+    if (movement?.type === 'WASTE' && movement.referenceType === 'sale_item') {
+      return this.i18n.t('stock.standardYieldWaste');
+    }
     const map: Record<string, string> = {
       PURCHASE:    'Compra',
       SALE:        'Venta',
       WASTE:       'Merma',
-      STOCK_COUNT: 'Conteo',
+      COUNT:       'Conteo',
       ADJUSTMENT:  'Ajuste',
       REVERSAL:    'Reversión',
     };
-    return type ? (map[type] ?? type) : '—';
+    return movement?.type ? (map[movement.type] ?? movement.type) : '—';
   }
 
   readonly formatDate = formatDatetime;

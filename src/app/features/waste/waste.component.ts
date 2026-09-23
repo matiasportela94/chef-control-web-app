@@ -1,8 +1,9 @@
-import { Component, HostListener, OnInit, DestroyRef, inject, signal } from '@angular/core';
+import { Component, HostListener, OnInit, DestroyRef, computed, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Api } from '../../api/api';
 import { AiRefreshService } from '../../core/services/ai-refresh.service';
+import { AlertNotificationService } from '../../core/services/alert-notification.service';
 import { listWasteEvents } from '../../api/fn/waste-event-controller/list-waste-events';
 import { createWasteEvent } from '../../api/fn/waste-event-controller/create-waste-event';
 import { listProducts } from '../../api/fn/product-controller/list-products';
@@ -19,11 +20,12 @@ import { PaginatorComponent } from '../../shared/components/paginator/paginator.
 import { DrawerComponent } from '../../shared/components/drawer/drawer.component';
 import { SpinnerComponent } from '../../shared/components/spinner/spinner.component';
 import { isFormFieldInvalid } from '../../core/utils/form';
+import { SelectComponent, SelectOption } from '../../shared/components/select/select.component';
 
 @Component({
   selector: 'app-waste',
   standalone: true,
-  imports: [ReactiveFormsModule, PaginatorComponent, DrawerComponent, SpinnerComponent],
+  imports: [ReactiveFormsModule, PaginatorComponent, DrawerComponent, SpinnerComponent, SelectComponent],
   templateUrl: './waste.component.html',
   styleUrl: './waste.component.scss'
 })
@@ -41,6 +43,13 @@ export class WasteComponent implements OnInit {
   allUnits     = signal<UnitResponse[]>([]);
   filteredUnits = signal<UnitResponse[]>([]);
 
+  productOptions = computed<SelectOption[]>(() =>
+    this.products().map(p => ({ value: p.id ?? '', label: p.sku ? `${p.name} (${p.sku})` : (p.name ?? '') }))
+  );
+  filteredUnitOptions = computed<SelectOption[]>(() =>
+    this.filteredUnits().map(u => ({ value: u.id ?? '', label: `${u.abbreviation} — ${u.name}` }))
+  );
+
   drawerOpen = signal(false);
   saving     = signal(false);
   saveError  = signal<string | null>(null);
@@ -55,7 +64,7 @@ export class WasteComponent implements OnInit {
     { value: 'OTHER',          label: 'Otro'              },
   ];
 
-  constructor(private api: Api, private fb: FormBuilder, private aiRefresh: AiRefreshService) {
+  constructor(private api: Api, private fb: FormBuilder, private aiRefresh: AiRefreshService, private alertNotification: AlertNotificationService) {
     this.form = this.fb.group({
       productId: ['', Validators.required],
       unitId:    ['', Validators.required],
@@ -72,7 +81,7 @@ export class WasteComponent implements OnInit {
   }
 
   async loadEvents(): Promise<void> {
-    this.loading.set(true);
+    if (this.events().length === 0) this.loading.set(true); // evita el flash de spinner (y el salto de scroll) en recargas tras crear/editar/borrar
     this.error.set(null);
     try {
       const raw = await this.api.invoke(listWasteEvents, { page: this.page() - 1, size: this.pageSize }) as unknown;
@@ -147,6 +156,7 @@ export class WasteComponent implements OnInit {
       await this.api.invoke(createWasteEvent, { body });
       this.drawerOpen.set(false);
       await this.loadEvents();
+      void this.alertNotification.refresh();
     } catch (e: any) {
       this.saveError.set(extractApiError(e, 'Error al registrar la merma'));
     } finally {

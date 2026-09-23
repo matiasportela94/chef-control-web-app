@@ -3,6 +3,7 @@ import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angula
 import { Router, ActivatedRoute, RouterLink } from '@angular/router';
 import { take } from 'rxjs';
 import { AuthService } from '../../core/services/auth.service';
+import { extractApiError } from '../../core/utils/api-error';
 import { RestaurantSummary } from '../../api/models/restaurant-summary';
 
 export type AuthView = 'login' | 'register' | 'forgot' | 'restaurant-select';
@@ -73,7 +74,7 @@ export class LoginComponent implements OnInit {
         this.router.navigate(['/dashboard']);
       }
     } catch (e: any) {
-      const msg = e?.error?.message ?? 'Email o contraseña incorrectos';
+      const msg = extractApiError(e, 'Email o contraseña incorrectos');
       const ctrl = this.loginForm.get('password')!;
       ctrl.setErrors({ serverError: msg });
       ctrl.valueChanges.pipe(take(1)).subscribe(() => {
@@ -94,7 +95,7 @@ export class LoginComponent implements OnInit {
       await this.authService.register(this.registerForm.getRawValue());
       this.router.navigate(['/dashboard']);
     } catch (e: any) {
-      this.errorMsg.set(e?.error?.message ?? 'Error al crear la cuenta');
+      this.errorMsg.set(extractApiError(e, 'Error al crear la cuenta'));
     } finally {
       this.loading.set(false);
     }
@@ -108,7 +109,7 @@ export class LoginComponent implements OnInit {
       await this.authService.forgotPassword(this.forgotForm.getRawValue());
       this.forgotSent.set(true);
     } catch (e: any) {
-      this.errorMsg.set(e?.error?.message ?? 'Error al enviar el correo');
+      this.errorMsg.set(extractApiError(e, 'Error al enviar el correo'));
     } finally {
       this.loading.set(false);
     }
@@ -122,13 +123,13 @@ export class LoginComponent implements OnInit {
       await this.authService.switchToRestaurant(r.id);
       this.router.navigate(['/dashboard']);
     } catch (e: any) {
-      this.errorMsg.set(e?.error?.message ?? 'Error al conectar con el restaurante');
+      this.errorMsg.set(extractApiError(e, 'Error al conectar con el restaurante'));
     } finally {
       this.loading.set(false);
     }
   }
 
-  isInvalid(form: 'login' | 'register' | 'forgot', field: string): boolean {
+isInvalid(form: 'login' | 'register' | 'forgot', field: string): boolean {
     const map: Record<string, FormGroup> = {
       login:    this.loginForm,
       register: this.registerForm,
