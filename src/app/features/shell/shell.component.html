@@ -114,105 +114,145 @@
   ">
     <nav (click)="sidebarOpen.set(false)" style="flex:1;padding:10px 8px;overflow-y:auto;overflow-x:hidden;">
 
-      <p class="side-section-label">General</p>
+      <button type="button" class="side-section-label" (click)="toggleSection('general', $event)">
+        General
+        <i class="ti ti-chevron-down side-section-chevron"
+           [class.side-section-chevron-collapsed]="isSectionCollapsed('general')"></i>
+      </button>
 
-      <a routerLink="/dashboard" routerLinkActive="side-link-active" class="side-link">
-        <i class="ti ti-layout-dashboard"></i> Panel
-      </a>
+      @if (!isSectionCollapsed('general')) {
+        <a routerLink="/dashboard" routerLinkActive="side-link-active" class="side-link">
+          <i class="ti ti-layout-dashboard"></i> Panel
+        </a>
 
-      <a routerLink="/alerts" routerLinkActive="side-link-active" class="side-link">
-        <i class="ti ti-bell"></i> Alertas
-        @if (alertNotification.unreadCount() > 0) {
-          <span style="
-            margin-left:auto;
-            font-size:9px;font-weight:700;
-            background:var(--accent);color:#000;
-            padding:2px 7px;border-radius:20px;
-            line-height:1.4;
-          ">
-            {{ alertNotification.unreadCount() > 99 ? '99+' : alertNotification.unreadCount() }}
-          </span>
+        <a routerLink="/alerts" routerLinkActive="side-link-active" class="side-link">
+          <i class="ti ti-bell"></i> Alertas
+          @if (alertNotification.unreadCount() > 0) {
+            <span style="
+              margin-left:auto;
+              font-size:9px;font-weight:700;
+              background:var(--accent);color:#000;
+              padding:2px 7px;border-radius:20px;
+              line-height:1.4;
+            ">
+              {{ alertNotification.unreadCount() > 99 ? '99+' : alertNotification.unreadCount() }}
+            </span>
+          }
+        </a>
+      }
+
+      <button type="button" class="side-section-label" style="margin-top:8px;" (click)="toggleSection('menu', $event)">
+        Menú y Ventas
+        <i class="ti ti-chevron-down side-section-chevron"
+           [class.side-section-chevron-collapsed]="isSectionCollapsed('menu')"></i>
+      </button>
+
+      @if (!isSectionCollapsed('menu')) {
+        <a routerLink="/menu" routerLinkActive="side-link-active" class="side-link">
+          <i class="ti ti-clipboard-list"></i> Platos del menú
+        </a>
+
+        <a routerLink="/sales" routerLinkActive="side-link-active" class="side-link">
+          <i class="ti ti-chart-bar"></i> Ventas
+        </a>
+      }
+
+      <button type="button" class="side-section-label" style="margin-top:8px;" (click)="toggleSection('purchases', $event)">
+        Compras
+        <i class="ti ti-chevron-down side-section-chevron"
+           [class.side-section-chevron-collapsed]="isSectionCollapsed('purchases')"></i>
+      </button>
+
+      @if (!isSectionCollapsed('purchases')) {
+        <a routerLink="/suppliers" routerLinkActive="side-link-active" class="side-link">
+          <i class="ti ti-truck"></i> Proveedores
+        </a>
+
+        <a routerLink="/purchases" routerLinkActive="side-link-active" class="side-link">
+          <i class="ti ti-shopping-cart"></i> Compras
+        </a>
+      }
+
+      <button type="button" class="side-section-label" style="margin-top:8px;" (click)="toggleSection('inventory', $event)">
+        Inventario
+        <i class="ti ti-chevron-down side-section-chevron"
+           [class.side-section-chevron-collapsed]="isSectionCollapsed('inventory')"></i>
+      </button>
+
+      @if (!isSectionCollapsed('inventory')) {
+        <a routerLink="/products" routerLinkActive="side-link-active" class="side-link">
+          <i class="ti ti-package"></i> Insumos
+        </a>
+
+        <a routerLink="/categories" routerLinkActive="side-link-active" class="side-link">
+          <i class="ti ti-tag"></i> Categorías
+        </a>
+
+        <a routerLink="/stock" routerLinkActive="side-link-active" class="side-link">
+          <i class="ti ti-box"></i> Stock
+        </a>
+
+        <a routerLink="/waste" routerLinkActive="side-link-active" class="side-link">
+          <i class="ti ti-trash"></i> Merma
+        </a>
+
+        <a routerLink="/stock-counts" routerLinkActive="side-link-active" class="side-link">
+          <i class="ti ti-clipboard-check"></i> Conteos
+        </a>
+      }
+
+      <button type="button" class="side-section-label" style="margin-top:8px;" (click)="toggleSection('reports', $event)">
+        Reportes
+        <i class="ti ti-chevron-down side-section-chevron"
+           [class.side-section-chevron-collapsed]="isSectionCollapsed('reports')"></i>
+      </button>
+
+      @if (!isSectionCollapsed('reports')) {
+        <a routerLink="/food-cost" routerLinkActive="side-link-active" class="side-link">
+          <i class="ti ti-coin"></i> Food Cost
+        </a>
+      }
+
+      @if (authService.hasPermission('USERS_VIEW') || authService.hasPermission('ROLES_VIEW') ||
+           authService.hasPermission('RESTAURANTS_VIEW') || authService.hasPermission('ACCOUNT_VIEW') ||
+           authService.hasPermission('AUDIT_VIEW')) {
+        <button type="button" class="side-section-label" style="margin-top:8px;" (click)="toggleSection('config', $event)">
+          Configuración
+          <i class="ti ti-chevron-down side-section-chevron"
+             [class.side-section-chevron-collapsed]="isSectionCollapsed('config')"></i>
+        </button>
+      }
+
+      @if (!isSectionCollapsed('config')) {
+        @if (authService.hasPermission('USERS_VIEW')) {
+          <a routerLink="/users" routerLinkActive="side-link-active" class="side-link">
+            <i class="ti ti-users"></i> Usuarios
+          </a>
         }
-      </a>
 
-      <p class="side-section-label" style="margin-top:16px;">Menú y Ventas</p>
+        @if (authService.hasPermission('ROLES_VIEW')) {
+          <a routerLink="/roles" routerLinkActive="side-link-active" class="side-link">
+            <i class="ti ti-shield-lock"></i> Roles
+          </a>
+        }
 
-      <a routerLink="/menu" routerLinkActive="side-link-active" class="side-link">
-        <i class="ti ti-clipboard-list"></i> Platos del menú
-      </a>
+        @if (authService.hasPermission('RESTAURANTS_VIEW')) {
+          <a routerLink="/restaurants" routerLinkActive="side-link-active" class="side-link">
+            <i class="ti ti-building-store"></i> Restaurantes
+          </a>
+        }
 
-      <a routerLink="/sales" routerLinkActive="side-link-active" class="side-link">
-        <i class="ti ti-chart-bar"></i> Ventas
-      </a>
+        @if (authService.hasPermission('ACCOUNT_VIEW')) {
+          <a routerLink="/plan" routerLinkActive="side-link-active" class="side-link">
+            <i class="ti ti-credit-card"></i> Plan y cuenta
+          </a>
+        }
 
-      <p class="side-section-label" style="margin-top:16px;">Compras</p>
-
-      <a routerLink="/suppliers" routerLinkActive="side-link-active" class="side-link">
-        <i class="ti ti-truck"></i> Proveedores
-      </a>
-
-      <a routerLink="/purchases" routerLinkActive="side-link-active" class="side-link">
-        <i class="ti ti-shopping-cart"></i> Compras
-      </a>
-
-      <p class="side-section-label" style="margin-top:16px;">Inventario</p>
-
-      <a routerLink="/products" routerLinkActive="side-link-active" class="side-link">
-        <i class="ti ti-package"></i> Insumos
-      </a>
-
-      <a routerLink="/categories" routerLinkActive="side-link-active" class="side-link">
-        <i class="ti ti-tag"></i> Categorías
-      </a>
-
-      <a routerLink="/stock" routerLinkActive="side-link-active" class="side-link">
-        <i class="ti ti-box"></i> Stock
-      </a>
-
-      <a routerLink="/waste" routerLinkActive="side-link-active" class="side-link">
-        <i class="ti ti-trash"></i> Merma
-      </a>
-
-      <a routerLink="/stock-counts" routerLinkActive="side-link-active" class="side-link">
-        <i class="ti ti-clipboard-check"></i> Conteos
-      </a>
-
-      <p class="side-section-label" style="margin-top:16px;">Reportes</p>
-
-      <a routerLink="/food-cost" routerLinkActive="side-link-active" class="side-link">
-        <i class="ti ti-coin"></i> Food Cost
-      </a>
-
-      <p class="side-section-label" style="margin-top:16px;">Configuración</p>
-
-      @if (authService.hasPermission('USERS_VIEW')) {
-        <a routerLink="/users" routerLinkActive="side-link-active" class="side-link">
-          <i class="ti ti-users"></i> Usuarios
-        </a>
-      }
-
-      @if (authService.hasPermission('ROLES_VIEW')) {
-        <a routerLink="/roles" routerLinkActive="side-link-active" class="side-link">
-          <i class="ti ti-shield-lock"></i> Roles
-        </a>
-      }
-
-      @if (authService.hasPermission('RESTAURANTS_VIEW')) {
-        <a routerLink="/restaurants" routerLinkActive="side-link-active" class="side-link">
-          <i class="ti ti-building-store"></i> Restaurantes
-        </a>
-      }
-
-      @if (authService.hasPermission('ACCOUNT_VIEW')) {
-        <a routerLink="/plan" routerLinkActive="side-link-active" class="side-link">
-          <i class="ti ti-credit-card"></i> Plan y cuenta
-        </a>
-      }
-
-      @if (authService.hasPermission('AUDIT_VIEW')) {
-        <a routerLink="/audit" routerLinkActive="side-link-active" class="side-link">
-          <i class="ti ti-history"></i> Auditoría
-        </a>
+        @if (authService.hasPermission('AUDIT_VIEW')) {
+          <a routerLink="/audit" routerLinkActive="side-link-active" class="side-link">
+            <i class="ti ti-history"></i> Auditoría
+          </a>
+        }
       }
 
     </nav>
