@@ -9,9 +9,9 @@
       <a href="#como-funciona" class="hover:text-white transition-colors">Cómo funciona</a>
       <a href="#contacto" class="hover:text-white transition-colors">Contacto</a>
     </div>
-    <a routerLink="/login"
+    <a [routerLink]="auth.isAuthenticated ? '/dashboard' : '/login'"
        class="ml-auto shrink-0 bg-brand-600 hover:bg-brand-500 text-white text-sm font-semibold px-4 py-2 rounded-lg transition-colors">
-      Iniciar sesión
+      {{ i18n.t(auth.isAuthenticated ? 'landing.goToPanel' : 'landing.login') }}
     </a>
   </div>
 </nav>

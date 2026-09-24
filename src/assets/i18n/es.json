@@ -203,5 +203,9 @@
   },
   "stock": {
     "standardYieldWaste": "Merma estándar"
+  },
+  "landing": {
+    "login": "Iniciar sesión",
+    "goToPanel": "Ir al panel"
   }
 }

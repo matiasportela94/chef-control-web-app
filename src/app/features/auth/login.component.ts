@@ -51,6 +51,7 @@ export class LoginComponent implements OnInit {
   }
 
   ngOnInit(): void {
+    if (this.authService.isAuthenticated) { this.router.navigate(['/dashboard']); return; }
     const view = this.route.snapshot.queryParamMap.get('view') as AuthView | null;
     if (view === 'register' || view === 'forgot') this.view.set(view);
   }

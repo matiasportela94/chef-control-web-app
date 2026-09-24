@@ -203,5 +203,9 @@
   },
   "stock": {
     "standardYieldWaste": "Standard yield waste"
+  },
+  "landing": {
+    "login": "Log in",
+    "goToPanel": "Go to dashboard"
   }
 }
