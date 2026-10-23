@@ -81,7 +81,9 @@
     "SUBSCRIPTION_NOT_FOUND": "The account has no active subscription",
     "SUBSCRIPTION_ALREADY_ACTIVE": "The account already has an active subscription. Cancel it before choosing another plan",
     "INVALID_SUBSCRIPTION_PLAN": "That plan cannot be subscribed to",
-    "PAYMENT_PROVIDER_UNAVAILABLE": "We could not reach MercadoPago. Try again in a moment"
+    "PAYMENT_PROVIDER_UNAVAILABLE": "We could not reach MercadoPago. Try again in a moment",
+    "GOOGLE_TOKEN_INVALID": "We couldn't verify your Google account. Please try again.",
+    "GOOGLE_ACCOUNT_NOT_REGISTERED": "You don't have an account yet: enter your restaurant's name to create it."
   },
   "ai": {
     "title": "Quick entry",
@@ -367,6 +369,12 @@
       "changePlan": "Change",
       "checkoutNotice": "After creating the account we'll take you to Mercado Pago to pay. If you don't finish, the account stays on the free plan and you can pay later from Plan & account.",
       "checkoutError": "Your account was created, but we couldn't open the payment. You can try again from here."
+    },
+    "google": {
+      "orEmail": "or with your email",
+      "creatingAs": "You're creating the account with Google as",
+      "useEmail": "I'd rather sign up with email",
+      "error": "We couldn't sign you in with Google. Please try again."
     }
   }
 }

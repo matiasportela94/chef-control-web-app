@@ -81,7 +81,9 @@
     "SUBSCRIPTION_NOT_FOUND": "La cuenta no tiene una suscripción vigente",
     "SUBSCRIPTION_ALREADY_ACTIVE": "La cuenta ya tiene una suscripción activa. Cancelala antes de elegir otro plan",
     "INVALID_SUBSCRIPTION_PLAN": "Ese plan no se puede contratar",
-    "PAYMENT_PROVIDER_UNAVAILABLE": "No pudimos comunicarnos con MercadoPago. Probá de nuevo en un momento"
+    "PAYMENT_PROVIDER_UNAVAILABLE": "No pudimos comunicarnos con MercadoPago. Probá de nuevo en un momento",
+    "GOOGLE_TOKEN_INVALID": "No pudimos validar tu cuenta de Google. Probá de nuevo.",
+    "GOOGLE_ACCOUNT_NOT_REGISTERED": "Todavía no tenés cuenta: completá el nombre de tu restaurante para crearla."
   },
   "ai": {
     "title": "Entrada rápida",
@@ -367,6 +369,12 @@
       "changePlan": "Cambiar",
       "checkoutNotice": "Al crear la cuenta te llevamos a Mercado Pago para el pago. Si no lo terminás, la cuenta queda igual en el plan gratis y podés pagar después desde Plan y cuenta.",
       "checkoutError": "Tu cuenta quedó creada, pero no pudimos abrir el pago. Podés intentarlo de nuevo desde acá."
+    },
+    "google": {
+      "orEmail": "o con tu email",
+      "creatingAs": "Creás la cuenta con Google como",
+      "useEmail": "Prefiero registrarme con email",
+      "error": "No pudimos entrar con Google. Probá de nuevo."
     }
   }
 }

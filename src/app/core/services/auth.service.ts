@@ -2,6 +2,8 @@ import { Injectable, signal } from '@angular/core';
 import { Api } from '../../api/api';
 import { login } from '../../api/fn/auth-controller/login';
 import { register } from '../../api/fn/auth-controller/register';
+import { signInWithGoogle } from '../../api/fn/auth-controller/sign-in-with-google';
+import { GoogleSignInRequest } from '../../api/models/google-sign-in-request';
 import { forgotPassword } from '../../api/fn/auth-controller/forgot-password';
 import { switchRestaurant } from '../../api/fn/auth-controller/switch-restaurant';
 import { LoginRequest } from '../../api/models/login-request';
@@ -50,6 +52,13 @@ export class AuthService {
 
   async register(body: RegisterRequest): Promise<LoginResponse> {
     const response = await parseBlob<LoginResponse>(await this.api.invoke(register, { body }) as unknown);
+    this.persistUser(response);
+    return response;
+  }
+
+  /** Entra o da de alta con Google. Usuario nuevo sin restaurantName → 404 GOOGLE_ACCOUNT_NOT_REGISTERED. */
+  async googleSignIn(body: GoogleSignInRequest): Promise<LoginResponse> {
+    const response = await parseBlob<LoginResponse>(await this.api.invoke(signInWithGoogle, { body }) as unknown);
     this.persistUser(response);
     return response;
   }
