@@ -716,8 +716,8 @@ export class MenuComponent implements OnInit {
       ...(v.price != null       ? { price:       +v.price }             : {}),
       ...(v.sectionId           ? { sectionId:   v.sectionId }          : {}),
     };
+    const ed = this.editing();
     try {
-      const ed = this.editing();
       let itemId: string;
       if (ed?.id) {
         await this.api.invoke(updateMenuItem, { id: ed.id, body });
@@ -726,6 +726,9 @@ export class MenuComponent implements OnInit {
         const raw = await this.api.invoke(createMenuItem, { body }) as unknown;
         const created = await parseBlob<MenuItemResponse>(raw);
         itemId = created.id!;
+        // Si lo que sigue falla (la receta, con una unidad que no convierte), el plato ya existe: el drawer pasa a
+        // editarlo, o al reintentar se crearía otro con el mismo nombre.
+        this.editing.set(created);
       }
 
       // Save recipe if items exist
@@ -758,7 +761,8 @@ export class MenuComponent implements OnInit {
       this.drawerOpen.set(false);
       await this.loadMenuItems();
     } catch (e: any) {
-      this.saveError.set(extractApiError(e, 'Error al guardar el plato'));
+      this.saveError.set(extractApiError(e, this.t('menu.saveItemError')));
+      if (!ed && this.editing()) void this.loadMenuItems();  // se creó antes de fallar: que aparezca en la lista
     } finally {
       this.saving.set(false);
     }

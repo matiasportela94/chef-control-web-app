@@ -162,7 +162,8 @@
     "imageError": "Could not save the photo",
     "sectionColor": "Course color",
     "sectionIconPlaceholder": "salad, meat, cake, glass...",
-    "sectionIconHint": "Icon name, same as in Categories. Find it at"
+    "sectionIconHint": "Icon name, same as in Categories. Find it at",
+    "saveItemError": "Error saving the dish"
   },
   "products": {
     "nextExpiry": "Expires",

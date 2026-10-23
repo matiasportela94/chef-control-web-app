@@ -162,7 +162,8 @@
     "imageError": "No se pudo guardar la foto",
     "sectionColor": "Color del paso",
     "sectionIconPlaceholder": "salad, meat, cake, glass...",
-    "sectionIconHint": "Nombre del ícono, como en Categorías. Buscalo en"
+    "sectionIconHint": "Nombre del ícono, como en Categorías. Buscalo en",
+    "saveItemError": "Error al guardar el plato"
   },
   "products": {
     "nextExpiry": "Vence",
