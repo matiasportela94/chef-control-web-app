@@ -416,5 +416,8 @@
       "doneHint": "Desde ahora entrás con tu email y la contraseña nueva.",
       "error": "No pudimos desvincular tu cuenta de Google. Probá de nuevo."
     }
+  },
+  "dashboard": {
+    "live": "En vivo"
   }
 }

@@ -416,5 +416,8 @@
       "doneHint": "From now on you sign in with your email and the new password.",
       "error": "We couldn't unlink your Google account. Please try again."
     }
+  },
+  "dashboard": {
+    "live": "Live"
   }
 }

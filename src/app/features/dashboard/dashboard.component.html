@@ -6,7 +6,7 @@
       <h1 class="page-title">Panel operativo</h1>
       <p class="page-subtitle">
         <span class="live-dot"></span>
-        En vivo · {{ today | date:"EEEE d 'de' MMMM" : '' : 'es' }}
+        {{ t('dashboard.live') }} · {{ today | date:"EEEE d 'de' MMMM" }}
       </p>
     </div>
     <button (click)="load()" class="btn-secondary btn-sm">

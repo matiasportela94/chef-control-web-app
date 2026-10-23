@@ -12,6 +12,7 @@ import { PagedResponseAlertResponse } from '../../api/models/paged-response-aler
 import { parseBlob } from '../../core/utils/parse-blob';
 import { formatARS } from '../../core/utils/format';
 import { SpinnerComponent } from '../../shared/components/spinner/spinner.component';
+import { I18nService } from '../../core/services/i18n.service';
 
 @Component({
   selector: 'app-dashboard',
@@ -73,7 +74,11 @@ export class DashboardComponent implements OnInit {
     return (c - p) / Math.abs(p);
   }
 
-  constructor(private api: Api, private aiRefresh: AiRefreshService) {}
+  constructor(private api: Api, private aiRefresh: AiRefreshService, private i18n: I18nService) {}
+
+  t(key: string): string {
+    return this.i18n.t(key);
+  }
 
   async ngOnInit(): Promise<void> {
     this.aiRefresh.executed$
