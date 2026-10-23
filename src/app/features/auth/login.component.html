@@ -19,6 +19,23 @@
   <div class="relative z-10 flex justify-center px-4 pt-28 pb-16">
     <div class="w-full max-w-md">
 
+      <!-- Plan elegido en la landing: vale para el registro y para quien ya tiene cuenta -->
+      @if (chosenPlan(); as plan) {
+        @if (view() === 'login' || view() === 'register') {
+          <div class="mb-6 rounded-xl border border-brand-600/30 bg-brand-600/10 px-4 py-3">
+            <div class="flex items-center justify-between gap-3">
+              <p class="text-white text-sm font-semibold min-w-0 truncate">
+                {{ t('auth.register.chosenPlan', { plan: t('landing.pricing.tiers.' + plan.tier), period: t('auth.register.periods.' + plan.period) }) }}
+              </p>
+              <a routerLink="/" fragment="planes" class="text-brand-400 hover:text-brand-300 text-xs font-semibold shrink-0">
+                {{ t('auth.register.changePlan') }}
+              </a>
+            </div>
+            <p class="text-surface-400 text-xs leading-relaxed mt-1.5">{{ t('auth.register.checkoutNotice') }}</p>
+          </div>
+        }
+      }
+
       <!-- ── LOGIN ─────────────────────────────────────────────────── -->
       @if (view() === 'login') {
         <div class="view-enter">
@@ -28,6 +45,13 @@
             </h1>
             <p class="text-surface-400 text-sm">{{ t('auth.login.subtitle') }}</p>
           </div>
+
+          @if (googleEnabled) {
+            <app-google-button [text]="'signin_with'" (credential)="onGoogleCredential($event)" />
+            <div class="flex items-center gap-3 my-6 text-xs text-surface-500">
+              <span class="h-px flex-1 bg-white/10"></span>{{ t('auth.google.orEmail') }}<span class="h-px flex-1 bg-white/10"></span>
+            </div>
+          }
 
           <form [formGroup]="loginForm" (ngSubmit)="submitLogin()" class="space-y-4">
 
@@ -58,6 +82,12 @@
               }
             </div>
 
+            @if (errorMsg()) {
+              <div class="bg-danger-500/10 border border-danger-500/20 text-danger-400 text-sm rounded-xl px-4 py-3">
+                {{ errorMsg() }}
+              </div>
+            }
+
             <button type="submit" [disabled]="loading()"
                     class="btn-primary w-full mt-2">
               @if (loading()) { <span class="loader"></span> }
@@ -85,17 +115,42 @@
             <p class="text-surface-400 text-sm">{{ t('auth.register.subtitle') }}</p>
           </div>
 
-          @if (chosenPlan(); as plan) {
-            <div class="mb-6 rounded-xl border border-brand-600/30 bg-brand-600/10 px-4 py-3">
-              <div class="flex items-center justify-between gap-3">
-                <p class="text-white text-sm font-semibold min-w-0 truncate">
-                  {{ t('auth.register.chosenPlan', { plan: t('landing.pricing.tiers.' + plan.tier), period: t('auth.register.periods.' + plan.period) }) }}
-                </p>
-                <a routerLink="/" fragment="planes" class="text-brand-400 hover:text-brand-300 text-xs font-semibold shrink-0">
-                  {{ t('auth.register.changePlan') }}
-                </a>
+          @if (googleToken()) {
+            <!-- Alta con Google: nombre y email ya los dio Google, falta el restaurante -->
+            <form [formGroup]="registerForm" (ngSubmit)="submitGoogleRegister()" class="space-y-4">
+              <div class="rounded-xl bg-white/5 border border-white/10 px-4 py-3 text-sm text-surface-300 min-w-0">
+                {{ t('auth.google.creatingAs') }} <span class="text-white font-semibold break-all">{{ googleEmail() }}</span>
               </div>
-              <p class="text-surface-400 text-xs leading-relaxed mt-1.5">{{ t('auth.register.checkoutNotice') }}</p>
+
+              <div class="space-y-1.5">
+                <label class="text-surface-400 text-sm">{{ t('auth.register.restaurantName') }}</label>
+                <input formControlName="restaurantName" type="text" [placeholder]="t('auth.register.restaurantPlaceholder')"
+                       class="input-field" [class.input-error]="isInvalid('register', 'restaurantName')">
+                @if (isInvalid('register', 'restaurantName')) {
+                  <p class="text-danger-400 text-xs">{{ t('auth.required') }}</p>
+                }
+              </div>
+
+              @if (errorMsg()) {
+                <div class="bg-danger-500/10 border border-danger-500/20 text-danger-400 text-sm rounded-xl px-4 py-3">
+                  {{ errorMsg() }}
+                </div>
+              }
+
+              <button type="submit" [disabled]="loading()" class="btn-primary w-full mt-2">
+                @if (loading()) { <span class="loader"></span> }
+                @else { {{ t(chosenPlan() ? 'auth.register.submitAndPay' : 'auth.register.submit') }} }
+              </button>
+              <button type="button" (click)="cancelGoogle()" class="w-full text-center text-sm text-surface-500 hover:text-surface-300 transition-colors">
+                {{ t('auth.google.useEmail') }}
+              </button>
+            </form>
+          } @else {
+
+          @if (googleEnabled) {
+            <app-google-button [text]="'signup_with'" (credential)="onGoogleCredential($event)" />
+            <div class="flex items-center gap-3 my-6 text-xs text-surface-500">
+              <span class="h-px flex-1 bg-white/10"></span>{{ t('auth.google.orEmail') }}<span class="h-px flex-1 bg-white/10"></span>
             </div>
           }
 
@@ -159,6 +214,7 @@
             </button>
 
           </form>
+          }
 
           <p class="text-center text-sm text-surface-500 mt-6">
             {{ t('auth.register.haveAccount') }}

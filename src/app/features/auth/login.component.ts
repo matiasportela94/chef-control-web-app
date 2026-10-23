@@ -9,6 +9,10 @@ import { Api } from '../../api/api';
 import { extractApiError } from '../../core/utils/api-error';
 import { BillingPeriod, PlanTier, goToCheckout } from '../../core/utils/plans';
 import { RestaurantSummary } from '../../api/models/restaurant-summary';
+import { LoginResponse } from '../../api/models/login-response';
+import { decodeJwtPayload } from '../../core/utils/jwt';
+import { GoogleButtonComponent } from '../../shared/components/google-button/google-button.component';
+import { environment } from '../../../environments/environment';
 
 const PAID_TIERS: readonly string[] = ['STARTER', 'PRO', 'ENTERPRISE'];
 
@@ -17,7 +21,7 @@ export type AuthView = 'login' | 'register' | 'forgot' | 'restaurant-select';
 @Component({
   selector: 'app-login',
   standalone: true,
-  imports: [ReactiveFormsModule, RouterLink],
+  imports: [ReactiveFormsModule, RouterLink, GoogleButtonComponent],
   templateUrl: './login.component.html',
   styleUrl: './login.component.scss'
 })
@@ -29,6 +33,11 @@ export class LoginComponent implements OnInit {
   restaurants = signal<RestaurantSummary[]>([]);
   /** Plan elegido en la landing: después de crear la cuenta se va derecho al checkout. */
   chosenPlan = signal<{ tier: PlanTier; period: BillingPeriod } | null>(null);
+
+  readonly googleEnabled = !!environment.googleClientId;
+  /** Token de Google de alguien sin cuenta: el alta solo le pide el nombre del restaurante. */
+  googleToken = signal<string | null>(null);
+  googleEmail = signal<string | null>(null);
 
   loginForm: FormGroup;
   registerForm: FormGroup;
@@ -78,6 +87,7 @@ export class LoginComponent implements OnInit {
 
   setView(v: AuthView): void {
     this.errorMsg.set(null);
+    this.cancelGoogle();
     this.forgotSent.set(false);
     this.view.set(v);
   }
@@ -87,13 +97,7 @@ export class LoginComponent implements OnInit {
     this.loading.set(true);
     try {
       const response = await this.authService.login(this.loginForm.getRawValue());
-      const list = response.restaurants ?? [];
-      if (list.length > 1) {
-        this.restaurants.set(list);
-        this.view.set('restaurant-select');
-      } else {
-        this.router.navigate(['/dashboard']);
-      }
+      await this.afterAuth(response);
     } catch (e: any) {
       const msg = extractApiError(e, this.t('auth.login.error'));
       const ctrl = this.loginForm.get('password')!;
@@ -113,22 +117,67 @@ export class LoginComponent implements OnInit {
     this.loading.set(true);
     this.errorMsg.set(null);
     try {
-      await this.authService.register(this.registerForm.getRawValue());
+      const response = await this.authService.register(this.registerForm.getRawValue());
+      await this.afterAuth(response);
     } catch (e: any) {
       this.errorMsg.set(extractApiError(e, this.t('auth.register.error')));
       this.loading.set(false);
-      return;
     }
-    await this.afterRegister();
   }
 
   /**
-   * Con un plan pago elegido va derecho al checkout; si no, al panel. La cuenta ya existe (en el plan gratis)
-   * pase lo que pase con el pago: si no se puede abrir el checkout, /plan permite reintentarlo.
+   * Botón de Google, en login o en registro. Si el usuario no existe y no hay nombre de restaurante cargado,
+   * el backend responde GOOGLE_ACCOUNT_NOT_REGISTERED y se pasa al alta corta (solo el restaurante).
    */
-  private async afterRegister(): Promise<void> {
+  async onGoogleCredential(idToken: string): Promise<void> {
+    this.loading.set(true);
+    this.errorMsg.set(null);
+    const restaurantName = this.view() === 'register' ? (this.registerForm.value.restaurantName ?? '').trim() : '';
+    try {
+      const response = await this.authService.googleSignIn({ idToken, restaurantName: restaurantName || undefined });
+      await this.afterAuth(response);
+    } catch (e: any) {
+      if (e?.error?.errorCode === 'GOOGLE_ACCOUNT_NOT_REGISTERED') {
+        this.view.set('register');
+        this.googleToken.set(idToken);
+        this.googleEmail.set(String(decodeJwtPayload(idToken)?.['email'] ?? ''));
+      } else {
+        this.cancelGoogle();  // un token vencido (dura 1 h) no sirve para reintentar: hay que volver a tocar el botón
+        this.errorMsg.set(extractApiError(e, this.t('auth.google.error')));
+      }
+      this.loading.set(false);
+    }
+  }
+
+  async submitGoogleRegister(): Promise<void> {
+    const name = this.registerForm.get('restaurantName')!;
+    if (name.invalid) { name.markAsTouched(); return; }
+    await this.onGoogleCredential(this.googleToken()!);
+  }
+
+  cancelGoogle(): void {
+    this.googleToken.set(null);
+    this.googleEmail.set(null);
+  }
+
+  /**
+   * Después de entrar o registrarse. Con un plan pago elegido en la landing va derecho al checkout: la cuenta
+   * ya existe (si es nueva, en el plan gratis) pase lo que pase con el pago, y si el checkout no abre, /plan
+   * permite reintentarlo. Sin plan: a elegir local si tiene varios, o al panel.
+   */
+  private async afterAuth(response: LoginResponse): Promise<void> {
     const plan = this.chosenPlan();
-    if (!plan) { this.router.navigate(['/dashboard']); return; }
+    if (!plan) {
+      const list = response.restaurants ?? [];
+      if (list.length > 1) {
+        this.restaurants.set(list);
+        this.view.set('restaurant-select');
+        this.loading.set(false);
+      } else {
+        this.router.navigate(['/dashboard']);
+      }
+      return;
+    }
     try {
       await goToCheckout(this.api, plan.tier, plan.period);
     } catch (e: any) {
