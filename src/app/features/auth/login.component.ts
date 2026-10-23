@@ -3,8 +3,14 @@ import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angula
 import { Router, ActivatedRoute, RouterLink } from '@angular/router';
 import { take } from 'rxjs';
 import { AuthService } from '../../core/services/auth.service';
+import { I18nService } from '../../core/services/i18n.service';
+import { ToastService } from '../../core/services/toast.service';
+import { Api } from '../../api/api';
 import { extractApiError } from '../../core/utils/api-error';
+import { BillingPeriod, PlanTier, goToCheckout } from '../../core/utils/plans';
 import { RestaurantSummary } from '../../api/models/restaurant-summary';
+
+const PAID_TIERS: readonly string[] = ['STARTER', 'PRO', 'ENTERPRISE'];
 
 export type AuthView = 'login' | 'register' | 'forgot' | 'restaurant-select';
 
@@ -21,6 +27,8 @@ export class LoginComponent implements OnInit {
   errorMsg = signal<string | null>(null);
   forgotSent = signal(false);
   restaurants = signal<RestaurantSummary[]>([]);
+  /** Plan elegido en la landing: después de crear la cuenta se va derecho al checkout. */
+  chosenPlan = signal<{ tier: PlanTier; period: BillingPeriod } | null>(null);
 
   loginForm: FormGroup;
   registerForm: FormGroup;
@@ -30,7 +38,10 @@ export class LoginComponent implements OnInit {
     private fb: FormBuilder,
     private authService: AuthService,
     private router: Router,
-    private route: ActivatedRoute
+    private route: ActivatedRoute,
+    private api: Api,
+    private i18n: I18nService,
+    private toast: ToastService
   ) {
     this.loginForm = this.fb.group({
       email:    ['', [Validators.required, Validators.email]],
@@ -41,7 +52,7 @@ export class LoginComponent implements OnInit {
       restaurantName: ['', Validators.required],
       ownerName:      ['', Validators.required],
       ownerEmail:     ['', [Validators.required, Validators.email]],
-      ownerPassword:  ['', [Validators.required, Validators.minLength(6)]],
+      ownerPassword:  ['', [Validators.required, Validators.minLength(8)]],  // el backend exige 8
       ownerPhone:     ['']
     });
 
@@ -52,8 +63,17 @@ export class LoginComponent implements OnInit {
 
   ngOnInit(): void {
     if (this.authService.isAuthenticated) { this.router.navigate(['/dashboard']); return; }
-    const view = this.route.snapshot.queryParamMap.get('view') as AuthView | null;
+    const params = this.route.snapshot.queryParamMap;
+    const view = params.get('view') as AuthView | null;
     if (view === 'register' || view === 'forgot') this.view.set(view);
+    const tier = params.get('plan');
+    if (tier && PAID_TIERS.includes(tier)) {
+      this.chosenPlan.set({ tier: tier as PlanTier, period: params.get('period') === 'ANNUAL' ? 'ANNUAL' : 'MONTHLY' });
+    }
+  }
+
+  t(key: string, params?: Record<string, string | number>): string {
+    return this.i18n.t(key, params);
   }
 
   setView(v: AuthView): void {
@@ -75,7 +95,7 @@ export class LoginComponent implements OnInit {
         this.router.navigate(['/dashboard']);
       }
     } catch (e: any) {
-      const msg = extractApiError(e, 'Email o contraseña incorrectos');
+      const msg = extractApiError(e, this.t('auth.login.error'));
       const ctrl = this.loginForm.get('password')!;
       ctrl.setErrors({ serverError: msg });
       ctrl.valueChanges.pipe(take(1)).subscribe(() => {
@@ -94,11 +114,26 @@ export class LoginComponent implements OnInit {
     this.errorMsg.set(null);
     try {
       await this.authService.register(this.registerForm.getRawValue());
-      this.router.navigate(['/dashboard']);
     } catch (e: any) {
-      this.errorMsg.set(extractApiError(e, 'Error al crear la cuenta'));
-    } finally {
+      this.errorMsg.set(extractApiError(e, this.t('auth.register.error')));
       this.loading.set(false);
+      return;
+    }
+    await this.afterRegister();
+  }
+
+  /**
+   * Con un plan pago elegido va derecho al checkout; si no, al panel. La cuenta ya existe (en el plan gratis)
+   * pase lo que pase con el pago: si no se puede abrir el checkout, /plan permite reintentarlo.
+   */
+  private async afterRegister(): Promise<void> {
+    const plan = this.chosenPlan();
+    if (!plan) { this.router.navigate(['/dashboard']); return; }
+    try {
+      await goToCheckout(this.api, plan.tier, plan.period);
+    } catch (e: any) {
+      this.toast.error(this.t('auth.register.checkoutError'), extractApiError(e, ''));
+      this.router.navigate(['/plan']);
     }
   }
 

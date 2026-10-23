@@ -10,7 +10,7 @@
         <span class="text-brand-400">Chef</span><span class="text-white"> Control</span>
       </a>
       <a routerLink="/" class="ml-auto shrink-0 text-sm text-surface-400 hover:text-white transition-colors">
-        ← Volver al inicio
+        {{ t('auth.backHome') }}
       </a>
     </div>
   </nav>
@@ -24,28 +24,28 @@
         <div class="view-enter">
           <div class="mb-8">
             <h1 class="text-2xl font-bold text-white mb-2 font-display">
-              Iniciar sesión
+              {{ t('auth.login.title') }}
             </h1>
-            <p class="text-surface-400 text-sm">Accedé al panel de tu restaurante.</p>
+            <p class="text-surface-400 text-sm">{{ t('auth.login.subtitle') }}</p>
           </div>
 
           <form [formGroup]="loginForm" (ngSubmit)="submitLogin()" class="space-y-4">
 
             <div class="space-y-1.5">
-              <label class="text-surface-400 text-sm">Email</label>
-              <input formControlName="email" type="email" placeholder="hola@mirestaurante.com"
+              <label class="text-surface-400 text-sm">{{ t('auth.email') }}</label>
+              <input formControlName="email" type="email" [placeholder]="t('auth.emailPlaceholder')"
                      class="input-field" [class.input-error]="isInvalid('login', 'email')">
               @if (isInvalid('login', 'email')) {
-                <p class="text-danger-400 text-xs">Ingresá un email válido</p>
+                <p class="text-danger-400 text-xs">{{ t('auth.invalidEmail') }}</p>
               }
             </div>
 
             <div class="space-y-1.5">
               <div class="flex items-center justify-between">
-                <label class="text-surface-400 text-sm">Contraseña</label>
+                <label class="text-surface-400 text-sm">{{ t('auth.password') }}</label>
                 <button type="button" (click)="setView('forgot')"
                         class="text-xs text-brand-400 hover:text-brand-300 transition-colors">
-                  ¿Olvidaste tu contraseña?
+                  {{ t('auth.login.forgot') }}
                 </button>
               </div>
               <input formControlName="password" type="password" placeholder="••••••••"
@@ -54,22 +54,22 @@
               @if (loginForm.get('password')?.errors?.['serverError']) {
                 <p class="text-danger-400 text-xs">{{ loginForm.get('password')?.errors?.['serverError'] }}</p>
               } @else if (isInvalid('login', 'password')) {
-                <p class="text-danger-400 text-xs">Mínimo 6 caracteres</p>
+                <p class="text-danger-400 text-xs">{{ t('auth.minPassword', { n: 6 }) }}</p>
               }
             </div>
 
             <button type="submit" [disabled]="loading()"
                     class="btn-primary w-full mt-2">
               @if (loading()) { <span class="loader"></span> }
-              @else { Iniciar sesión }
+              @else { {{ t('auth.login.submit') }} }
             </button>
 
           </form>
 
           <p class="text-center text-sm text-surface-500 mt-6">
-            ¿No tenés cuenta?
+            {{ t('auth.login.noAccount') }}
             <button (click)="setView('register')" class="text-brand-400 hover:text-brand-300 transition-colors ml-1">
-              Registrate gratis
+              {{ t('auth.login.registerFree') }}
             </button>
           </p>
         </div>
@@ -80,53 +80,67 @@
         <div class="view-enter">
           <div class="mb-8">
             <h1 class="text-2xl font-bold text-white mb-2 font-display">
-              Crear cuenta
+              {{ t('auth.register.title') }}
             </h1>
-            <p class="text-surface-400 text-sm">Empezá a controlar tu operación hoy.</p>
+            <p class="text-surface-400 text-sm">{{ t('auth.register.subtitle') }}</p>
           </div>
+
+          @if (chosenPlan(); as plan) {
+            <div class="mb-6 rounded-xl border border-brand-600/30 bg-brand-600/10 px-4 py-3">
+              <div class="flex items-center justify-between gap-3">
+                <p class="text-white text-sm font-semibold min-w-0 truncate">
+                  {{ t('auth.register.chosenPlan', { plan: t('landing.pricing.tiers.' + plan.tier), period: t('auth.register.periods.' + plan.period) }) }}
+                </p>
+                <a routerLink="/" fragment="planes" class="text-brand-400 hover:text-brand-300 text-xs font-semibold shrink-0">
+                  {{ t('auth.register.changePlan') }}
+                </a>
+              </div>
+              <p class="text-surface-400 text-xs leading-relaxed mt-1.5">{{ t('auth.register.checkoutNotice') }}</p>
+            </div>
+          }
 
           <form [formGroup]="registerForm" (ngSubmit)="submitRegister()" class="space-y-4">
 
             <div class="space-y-1.5">
-              <label class="text-surface-400 text-sm">Nombre del restaurante</label>
-              <input formControlName="restaurantName" type="text" placeholder="La Parrilla de Juan"
+              <label class="text-surface-400 text-sm">{{ t('auth.register.restaurantName') }}</label>
+              <input formControlName="restaurantName" type="text" [placeholder]="t('auth.register.restaurantPlaceholder')"
                      class="input-field" [class.input-error]="isInvalid('register', 'restaurantName')">
               @if (isInvalid('register', 'restaurantName')) {
-                <p class="text-danger-400 text-xs">Campo requerido</p>
+                <p class="text-danger-400 text-xs">{{ t('auth.required') }}</p>
               }
             </div>
 
             <div class="space-y-1.5">
-              <label class="text-surface-400 text-sm">Tu nombre</label>
-              <input formControlName="ownerName" type="text" placeholder="Juan García"
+              <label class="text-surface-400 text-sm">{{ t('auth.register.ownerName') }}</label>
+              <input formControlName="ownerName" type="text" [placeholder]="t('auth.register.ownerPlaceholder')"
                      class="input-field" [class.input-error]="isInvalid('register', 'ownerName')">
               @if (isInvalid('register', 'ownerName')) {
-                <p class="text-danger-400 text-xs">Campo requerido</p>
+                <p class="text-danger-400 text-xs">{{ t('auth.required') }}</p>
               }
             </div>
 
             <div class="space-y-1.5">
-              <label class="text-surface-400 text-sm">Email</label>
-              <input formControlName="ownerEmail" type="email" placeholder="hola@mirestaurante.com"
+              <label class="text-surface-400 text-sm">{{ t('auth.email') }}</label>
+              <input formControlName="ownerEmail" type="email" [placeholder]="t('auth.emailPlaceholder')"
                      class="input-field" [class.input-error]="isInvalid('register', 'ownerEmail')">
               @if (isInvalid('register', 'ownerEmail')) {
-                <p class="text-danger-400 text-xs">Ingresá un email válido</p>
+                <p class="text-danger-400 text-xs">{{ t('auth.invalidEmail') }}</p>
               }
             </div>
 
             <div class="space-y-1.5">
-              <label class="text-surface-400 text-sm">Contraseña</label>
+              <label class="text-surface-400 text-sm">{{ t('auth.password') }}</label>
               <input formControlName="ownerPassword" type="password" placeholder="••••••••"
                      class="input-field" [class.input-error]="isInvalid('register', 'ownerPassword')">
               @if (isInvalid('register', 'ownerPassword')) {
-                <p class="text-danger-400 text-xs">Mínimo 6 caracteres</p>
+                <p class="text-danger-400 text-xs">{{ t('auth.minPassword', { n: 8 }) }}</p>
               }
             </div>
 
             <div class="space-y-1.5">
               <label class="text-surface-400 text-sm">
-                Teléfono
-                <span class="text-surface-600 ml-1">(opcional)</span>
+                {{ t('auth.register.phone') }}
+                <span class="text-surface-600 ml-1">{{ t('auth.register.optional') }}</span>
               </label>
               <input formControlName="ownerPhone" type="tel" placeholder="+54 11 1234-5678"
                      class="input-field">
@@ -141,15 +155,15 @@
             <button type="submit" [disabled]="loading()"
                     class="btn-primary w-full mt-2">
               @if (loading()) { <span class="loader"></span> }
-              @else { Crear cuenta }
+              @else { {{ t(chosenPlan() ? 'auth.register.submitAndPay' : 'auth.register.submit') }} }
             </button>
 
           </form>
 
           <p class="text-center text-sm text-surface-500 mt-6">
-            ¿Ya tenés cuenta?
+            {{ t('auth.register.haveAccount') }}
             <button (click)="setView('login')" class="text-brand-400 hover:text-brand-300 transition-colors ml-1">
-              Iniciá sesión
+              {{ t('auth.register.loginLink') }}
             </button>
           </p>
         </div>
