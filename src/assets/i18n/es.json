@@ -210,7 +210,44 @@
   },
   "landing": {
     "login": "Iniciar sesión",
-    "goToPanel": "Ir al panel"
+    "goToPanel": "Ir al panel",
+    "nav": {
+      "product": "Producto",
+      "howItWorks": "Cómo funciona",
+      "plans": "Planes",
+      "contact": "Contacto"
+    },
+    "pricing": {
+      "eyebrow": "Planes",
+      "title": "Un precio claro.",
+      "titleAccent": "Sin sorpresas.",
+      "subtitle": "Precios en pesos argentinos. Cancelás cuando quieras y seguís usando el plan hasta el final del período que pagaste.",
+      "monthly": "Mensual",
+      "annual": "Anual",
+      "annualSaving": "−{pct}%",
+      "tiers": {
+        "TRIAL": "Gratis",
+        "STARTER": "Starter",
+        "PRO": "Pro",
+        "ENTERPRISE": "Enterprise"
+      },
+      "taglines": {
+        "TRIAL": "Para empezar a ordenar el stock de tu local.",
+        "STARTER": "Para un restaurante que trabaja en equipo.",
+        "PRO": "Para crecer a más de un local.",
+        "ENTERPRISE": "Para cadenas que necesitan integraciones."
+      },
+      "free": "$0",
+      "freeSub": "Sin tarjeta y sin vencimiento",
+      "perMonth": "/mes",
+      "perYear": "/año",
+      "billedMonthly": "Se debita cada mes con Mercado Pago",
+      "annualEquivalent": "Equivale a {amount} por mes",
+      "everythingIn": "Todo lo de {plan}, más:",
+      "upcoming": "Próximamente",
+      "ctaFree": "Empezar gratis",
+      "ctaPaid": "Elegir {plan}"
+    }
   },
   "plan": {
     "title": "Plan y cuenta",
@@ -288,6 +325,48 @@
     "deleteHelper": "Vas a salir de la sesión apenas se elimine.",
     "deleteInputLabel": "Escribí el nombre de la cuenta para confirmar",
     "deleteError": "No se pudo eliminar la cuenta",
-    "cancel": "Cancelar"
+    "cancel": "Cancelar",
+    "upcoming": "Próximamente"
+  },
+  "auth": {
+    "backHome": "← Volver al inicio",
+    "email": "Email",
+    "emailPlaceholder": "hola@mirestaurante.com",
+    "password": "Contraseña",
+    "invalidEmail": "Ingresá un email válido",
+    "minPassword": "Mínimo {n} caracteres",
+    "required": "Campo requerido",
+    "login": {
+      "title": "Iniciar sesión",
+      "subtitle": "Accedé al panel de tu restaurante.",
+      "forgot": "¿Olvidaste tu contraseña?",
+      "submit": "Iniciar sesión",
+      "error": "Email o contraseña incorrectos",
+      "noAccount": "¿No tenés cuenta?",
+      "registerFree": "Registrate gratis"
+    },
+    "register": {
+      "title": "Crear cuenta",
+      "subtitle": "Empezá a controlar tu operación hoy.",
+      "restaurantName": "Nombre del restaurante",
+      "restaurantPlaceholder": "La Parrilla de Juan",
+      "ownerName": "Tu nombre",
+      "ownerPlaceholder": "Juan García",
+      "phone": "Teléfono",
+      "optional": "(opcional)",
+      "submit": "Crear cuenta",
+      "submitAndPay": "Crear cuenta y pagar",
+      "error": "Error al crear la cuenta",
+      "haveAccount": "¿Ya tenés cuenta?",
+      "loginLink": "Iniciá sesión",
+      "chosenPlan": "Plan elegido: {plan} · {period}",
+      "periods": {
+        "MONTHLY": "mensual",
+        "ANNUAL": "anual"
+      },
+      "changePlan": "Cambiar",
+      "checkoutNotice": "Al crear la cuenta te llevamos a Mercado Pago para el pago. Si no lo terminás, la cuenta queda igual en el plan gratis y podés pagar después desde Plan y cuenta.",
+      "checkoutError": "Tu cuenta quedó creada, pero no pudimos abrir el pago. Podés intentarlo de nuevo desde acá."
+    }
   }
 }

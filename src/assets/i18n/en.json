@@ -210,7 +210,44 @@
   },
   "landing": {
     "login": "Log in",
-    "goToPanel": "Go to dashboard"
+    "goToPanel": "Go to dashboard",
+    "nav": {
+      "product": "Product",
+      "howItWorks": "How it works",
+      "plans": "Pricing",
+      "contact": "Contact"
+    },
+    "pricing": {
+      "eyebrow": "Pricing",
+      "title": "Clear pricing.",
+      "titleAccent": "No surprises.",
+      "subtitle": "Prices in Argentine pesos. Cancel anytime and keep your plan until the end of the period you paid for.",
+      "monthly": "Monthly",
+      "annual": "Yearly",
+      "annualSaving": "−{pct}%",
+      "tiers": {
+        "TRIAL": "Free",
+        "STARTER": "Starter",
+        "PRO": "Pro",
+        "ENTERPRISE": "Enterprise"
+      },
+      "taglines": {
+        "TRIAL": "To start organizing your restaurant's stock.",
+        "STARTER": "For a restaurant that works as a team.",
+        "PRO": "To grow to more than one location.",
+        "ENTERPRISE": "For chains that need integrations."
+      },
+      "free": "$0",
+      "freeSub": "No card, no expiration",
+      "perMonth": "/mo",
+      "perYear": "/yr",
+      "billedMonthly": "Charged monthly through Mercado Pago",
+      "annualEquivalent": "Equals {amount} per month",
+      "everythingIn": "Everything in {plan}, plus:",
+      "upcoming": "Coming soon",
+      "ctaFree": "Start for free",
+      "ctaPaid": "Choose {plan}"
+    }
   },
   "plan": {
     "title": "Plan and account",
@@ -288,6 +325,48 @@
     "deleteHelper": "You will be signed out as soon as it is deleted.",
     "deleteInputLabel": "Type the account name to confirm",
     "deleteError": "Could not delete the account",
-    "cancel": "Cancel"
+    "cancel": "Cancel",
+    "upcoming": "Coming soon"
+  },
+  "auth": {
+    "backHome": "← Back to home",
+    "email": "Email",
+    "emailPlaceholder": "hello@myrestaurant.com",
+    "password": "Password",
+    "invalidEmail": "Enter a valid email",
+    "minPassword": "At least {n} characters",
+    "required": "Required",
+    "login": {
+      "title": "Sign in",
+      "subtitle": "Access your restaurant's dashboard.",
+      "forgot": "Forgot your password?",
+      "submit": "Sign in",
+      "error": "Wrong email or password",
+      "noAccount": "Don't have an account?",
+      "registerFree": "Sign up for free"
+    },
+    "register": {
+      "title": "Create account",
+      "subtitle": "Start controlling your operation today.",
+      "restaurantName": "Restaurant name",
+      "restaurantPlaceholder": "Juan's Grill",
+      "ownerName": "Your name",
+      "ownerPlaceholder": "Juan García",
+      "phone": "Phone",
+      "optional": "(optional)",
+      "submit": "Create account",
+      "submitAndPay": "Create account and pay",
+      "error": "Could not create the account",
+      "haveAccount": "Already have an account?",
+      "loginLink": "Sign in",
+      "chosenPlan": "Chosen plan: {plan} · {period}",
+      "periods": {
+        "MONTHLY": "monthly",
+        "ANNUAL": "yearly"
+      },
+      "changePlan": "Change",
+      "checkoutNotice": "After creating the account we'll take you to Mercado Pago to pay. If you don't finish, the account stays on the free plan and you can pay later from Plan & account.",
+      "checkoutError": "Your account was created, but we couldn't open the payment. You can try again from here."
+    }
   }
 }

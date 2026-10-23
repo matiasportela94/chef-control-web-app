@@ -5,29 +5,21 @@ import { getAccount } from '../../api/fn/account-controller/get-account';
 import { deleteAccount } from '../../api/fn/account-controller/delete-account';
 import { getSubscription } from '../../api/fn/subscription-controller/get-subscription';
 import { listSubscriptionPlans } from '../../api/fn/subscription-controller/list-subscription-plans';
-import { createSubscription } from '../../api/fn/subscription-controller/create-subscription';
 import { cancelSubscription } from '../../api/fn/subscription-controller/cancel-subscription';
 import { AccountResponse } from '../../api/models/account-response';
 import { SubscriptionResponse } from '../../api/models/subscription-response';
 import { SubscriptionPlanResponse } from '../../api/models/subscription-plan-response';
-import { CheckoutResponse } from '../../api/models/checkout-response';
-import { CreateSubscriptionRequest } from '../../api/models/create-subscription-request';
 import { parseBlob } from '../../core/utils/parse-blob';
 import { extractApiError } from '../../core/utils/api-error';
 import { formatDatetime } from '../../core/utils/format';
+import {
+  BillingPeriod, PlanTier, UPCOMING_FEATURES, annualSavingPct, checkoutStarted, clearCheckoutMark, goToCheckout, planPrice
+} from '../../core/utils/plans';
 import { AuthService } from '../../core/services/auth.service';
 import { I18nService } from '../../core/services/i18n.service';
 import { ActionDialogComponent } from '../../shared/components/action-dialog/action-dialog.component';
 import { SpinnerComponent } from '../../shared/components/spinner/spinner.component';
 
-type BillingPeriod = 'MONTHLY' | 'ANNUAL';
-
-/**
- * Marca que esta pestaña se fue al checkout de Mercado Pago. Al volver, la suscripción sigue PENDING
- * hasta que llega el aviso de MP al backend: con la marca se muestra "confirmando" y se consulta un rato.
- * Se usa una marca propia y no los parámetros que MP agrega al volver porque esos no están verificados.
- */
-const CHECKOUT_KEY = 'cc_checkout_started';
 const CONFIRM_POLL_MS = 3000;
 const CONFIRM_MAX_POLLS = 20;
 
@@ -42,6 +34,8 @@ export class PlanComponent implements OnInit, OnDestroy {
   account      = signal<AccountResponse | null>(null);
   subscription = signal<SubscriptionResponse | null>(null);
   plans        = signal<SubscriptionPlanResponse[]>([]);
+  /** El endpoint trae también TRIAL (sin precio, para la landing): acá solo se listan los que se contratan. */
+  paidPlans    = computed(() => this.plans().filter(p => p.monthlyAmountArs != null));
   loading = signal(true);
   error   = signal<string | null>(null);
 
@@ -80,20 +74,15 @@ export class PlanComponent implements OnInit, OnDestroy {
   /** Cancelable: la que todavía cobra o va a cobrar. */
   canCancel = computed(() => this.isOwner() && (this.status() === 'ACTIVE' || this.status() === 'PAST_DUE'));
 
-  /** El descuento anual sale de los precios que manda el backend, no de un 15 escrito acá. */
-  annualSavingPct = computed(() => {
-    const p = this.plans()[0];
-    if (!p?.monthlyAmountArs || !p.annualAmountArs) return 0;
-    return Math.round((1 - p.annualAmountArs / (p.monthlyAmountArs * 12)) * 100);
-  });
+  annualSavingPct = computed(() => annualSavingPct(this.plans()));
 
   constructor(private api: Api, private auth: AuthService, private router: Router, private i18n: I18nService) {}
 
   async ngOnInit(): Promise<void> {
     await this.load();
-    if (this.readCheckoutMark()) {
+    if (checkoutStarted()) {
       if (this.status() === 'PENDING') this.pollConfirmation(0);
-      else this.clearCheckoutMark();
+      else clearCheckoutMark();
     }
   }
 
@@ -132,16 +121,11 @@ export class PlanComponent implements OnInit, OnDestroy {
 
   // ---- contratar
 
-  async subscribe(planTier: string): Promise<void> {
+  async subscribe(planTier: PlanTier): Promise<void> {
     this.subscribing.set(planTier);
     this.subscribeError.set(null);
     try {
-      const raw = await this.api.invoke(createSubscription, {
-        body: { planTier: planTier as CreateSubscriptionRequest['planTier'], billingPeriod: this.period() },
-      });
-      const checkout = await parseBlob<CheckoutResponse>(raw);
-      this.writeCheckoutMark();
-      window.location.href = checkout.checkoutUrl!;
+      await goToCheckout(this.api, planTier, this.period());
       // subscribing queda en el plan elegido mientras el navegador se va a Mercado Pago.
     } catch (e: any) {
       this.subscribeError.set(extractApiError(e, this.t('plan.subscribeError')));
@@ -157,22 +141,17 @@ export class PlanComponent implements OnInit, OnDestroy {
         this.subscription.set(await this.parseOptional<SubscriptionResponse>(raw));
       } catch { /* un error suelto no corta la espera: se reintenta */ }
       if (this.status() !== 'PENDING') {
-        this.clearCheckoutMark();
+        clearCheckoutMark();
         this.confirmState.set(this.status() === 'ACTIVE' ? 'done' : 'idle');
         await this.load();
       } else if (attempt + 1 >= CONFIRM_MAX_POLLS) {
-        this.clearCheckoutMark();
+        clearCheckoutMark();
         this.confirmState.set('timeout');
       } else {
         this.pollConfirmation(attempt + 1);
       }
     }, CONFIRM_POLL_MS);
   }
-
-  // sessionStorage puede no estar (modo privado estricto): sin marca solo se pierde el "confirmando".
-  private writeCheckoutMark(): void { try { sessionStorage.setItem(CHECKOUT_KEY, '1'); } catch { } }
-  private readCheckoutMark(): boolean { try { return sessionStorage.getItem(CHECKOUT_KEY) === '1'; } catch { return false; } }
-  private clearCheckoutMark(): void { try { sessionStorage.removeItem(CHECKOUT_KEY); } catch { } }
 
   // ---- cancelar
 
@@ -241,9 +220,12 @@ export class PlanComponent implements OnInit, OnDestroy {
     return label.startsWith('plan.') ? key : label;
   }
 
-  /** $170.000: los precios de los planes son pesos enteros. */
+  isUpcoming(key: string): boolean {
+    return UPCOMING_FEATURES.has(key);
+  }
+
   price(n?: number): string {
-    return n == null ? '—' : '$' + n.toLocaleString('es-AR', { maximumFractionDigits: 0 });
+    return planPrice(n);
   }
 
   dateTime(iso?: string): string {

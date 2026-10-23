@@ -71,7 +71,7 @@
       </div>
 
       <!-- Planes -->
-      @if (plans().length) {
+      @if (paidPlans().length) {
         <div class="data-card" style="padding:18px 20px;">
           <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:14px;">
             <p style="font-size:15px;font-weight:600;color:var(--text-1);">{{ t('plan.plans') }}</p>
@@ -87,7 +87,7 @@
           @if (subscribeError()) { <div class="notice notice-danger" style="margin-bottom:12px;">{{ subscribeError() }}</div> }
 
           <div class="plan-grid">
-            @for (p of plans(); track p.planTier) {
+            @for (p of paidPlans(); track p.planTier) {
               <div class="plan-card" [class.current]="p.planTier === a.plan">
                 <p style="font-size:14px;font-weight:700;color:var(--text-1);">{{ tierName(p.planTier) }}</p>
                 @if (period() === 'MONTHLY') {
@@ -99,7 +99,7 @@
                 }
                 <ul class="plan-features">
                   @for (f of p.features ?? []; track f) {
-                    <li><i class="ti ti-check"></i><span>{{ featureLabel(f) }}</span></li>
+                    <li [class.upcoming]="isUpcoming(f)"><i class="ti ti-check"></i><span>{{ featureLabel(f) }}@if (isUpcoming(f)) { <em>· {{ t('plan.upcoming') }}</em> }</span></li>
                   }
                 </ul>
                 @if (status() === 'ACTIVE' && subscription()?.planTier === p.planTier) {
@@ -143,7 +143,7 @@
         <p style="font-size:13px;font-weight:600;color:var(--text-1);margin-bottom:10px;">{{ t('plan.included') }}</p>
         <div style="display:flex;flex-wrap:wrap;gap:6px;">
           @for (f of a.features ?? []; track f) {
-            <span class="badge badge-neutral"><i class="ti ti-check" style="color:var(--accent);"></i> {{ featureLabel(f) }}</span>
+            <span class="badge badge-neutral"><i class="ti ti-check" style="color:var(--accent);"></i> {{ featureLabel(f) }}@if (isUpcoming(f)) { · {{ t('plan.upcoming') }} }</span>
           }
         </div>
       </div>
