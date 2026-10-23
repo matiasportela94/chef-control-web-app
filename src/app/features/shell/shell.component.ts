@@ -5,6 +5,7 @@ import { AuthService } from '../../core/services/auth.service';
 import { AlertNotificationService } from '../../core/services/alert-notification.service';
 import { AiRefreshService } from '../../core/services/ai-refresh.service';
 import { ThemeService } from '../../core/services/theme.service';
+import { I18nService } from '../../core/services/i18n.service';
 import { AiInputComponent } from '../../shared/components/ai-input/ai-input.component';
 
 @Component({
@@ -29,7 +30,12 @@ export class ShellComponent implements OnInit, OnDestroy {
     public theme: ThemeService,
     private aiRefresh: AiRefreshService,
     private router: Router,
+    private i18n: I18nService,
   ) {}
+
+  t(key: string): string {
+    return this.i18n.t(key);
+  }
 
   async ngOnInit(): Promise<void> {
     await this.alertNotification.refresh();

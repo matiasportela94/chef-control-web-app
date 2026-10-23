@@ -27,7 +27,8 @@
     "waste": "Waste",
     "stockCounts": "Stock counts",
     "foodCost": "Food Cost",
-    "users": "Users"
+    "users": "Users",
+    "logout": "Log out"
   },
   "errors": {
     "INVALID_CREDENTIALS": "Invalid email or password",
@@ -84,6 +85,9 @@
     "PAYMENT_PROVIDER_UNAVAILABLE": "We could not reach MercadoPago. Try again in a moment",
     "GOOGLE_TOKEN_INVALID": "We couldn't verify your Google account. Please try again.",
     "GOOGLE_ACCOUNT_NOT_REGISTERED": "You don't have an account yet: enter your restaurant's name to create it.",
+    "GOOGLE_ACCOUNT_ALREADY_LINKED": "That Google account is already linked to another user.",
+    "USER_ALREADY_LINKED_TO_GOOGLE": "You already have another Google account linked. Unlink it first.",
+    "GOOGLE_ACCOUNT_MISMATCH": "That's not the Google account you have linked. Confirm with that account.",
     "PLAN_FEATURE_REQUIRED": "Your plan doesn't include this feature. You can change it in Plan & account."
   },
   "ai": {
@@ -383,5 +387,34 @@
     "foodCost": "Recipes and food cost are included from the Starter plan.",
     "cta": "See plans",
     "toastTitle": "Not included in your plan"
+  },
+  "profile": {
+    "title": "My profile",
+    "name": "Name",
+    "email": "Email",
+    "google": {
+      "title": "Google",
+      "connected": "Connected",
+      "unlinkedHint": "Connect your Google account to sign in with one tap, without typing your password.",
+      "linkedHint": "Your Google account is connected: you can sign in with the Google button.",
+      "linking": "Connecting your Google account…",
+      "linkedToast": "Google account connected",
+      "linkError": "We couldn't connect your Google account. Please try again.",
+      "unlink": "Unlink"
+    },
+    "unlink": {
+      "title": "Unlink Google",
+      "explain": "To keep signing in without Google, choose a new password. It replaces your previous one: from now on you sign in with your email and this password.",
+      "newPassword": "New password",
+      "repeatPassword": "Repeat the password",
+      "tooShort": "It must be at least 8 characters long.",
+      "mismatch": "Passwords don't match.",
+      "fillPassword": "Enter your new password to confirm with Google.",
+      "confirmWithGoogle": "To confirm, choose the Google account you have linked.",
+      "unlinking": "Unlinking…",
+      "doneToast": "Google account unlinked",
+      "doneHint": "From now on you sign in with your email and the new password.",
+      "error": "We couldn't unlink your Google account. Please try again."
+    }
   }
 }

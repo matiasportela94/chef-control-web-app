@@ -11,9 +11,9 @@
     transition:background .25s;
   " class="lg:px-6">
     <!-- Hamburger (mobile only) -->
-    <button (click)="sidebarOpen.set(true)" class="lg:hidden" style="
+    <button (click)="sidebarOpen.set(true)" class="flex lg:hidden" style="
       width:34px;height:34px;flex-shrink:0;
-      display:flex;align-items:center;justify-content:center;
+      align-items:center;justify-content:center;
       background:none;border:none;color:var(--text-1);font-size:20px;cursor:pointer;
     ">
       <i class="ti ti-menu-2"></i>
@@ -28,18 +28,19 @@
         display:flex;align-items:center;justify-content:center;
         font-size:15px;font-weight:700;color:#000;
       ">C</div>
-      <span style="font-size:15px;font-weight:700;color:var(--text-1);">
+      <!-- Debajo de 380px (Android de 360) no entra junto a los botones: queda solo la "C" -->
+      <span style="font-size:15px;font-weight:700;color:var(--text-1);" class="max-[379px]:hidden">
         <span style="color:var(--accent);">Chef</span> Control
       </span>
     </div>
 
     @if (authService.currentUser(); as user) {
-      <span style="font-size:12px;color:var(--text-3);truncate;display:none;" class="md:block">
+      <span style="font-size:12px;color:var(--text-3);min-width:0;" class="hidden md:block truncate">
         {{ user.restaurantName }}
       </span>
     }
 
-    <div style="margin-left:auto;display:flex;align-items:center;gap:10px;flex-shrink:0;">
+    <div style="margin-left:auto;display:flex;align-items:center;flex-shrink:0;" class="gap-1.5 sm:gap-2.5">
       <!-- Entrada rápida -->
       <button (click)="aiInputOpen.set(true)" style="
         display:flex;align-items:center;gap:6px;
@@ -72,21 +73,17 @@
       </button>
 
       @if (authService.currentUser(); as user) {
-        <span style="font-size:12px;color:var(--text-2);" class="hidden md:block">{{ user.name }}</span>
+        <a routerLink="/profile" class="profile-link hidden md:block" [title]="t('profile.title')">{{ user.name }}</a>
+        <!-- En el teléfono el nombre no entra: queda el ícono -->
+        <a routerLink="/profile" class="profile-icon flex md:hidden" [title]="t('profile.title')" [attr.aria-label]="t('profile.title')">
+          <i class="ti ti-user"></i>
+        </a>
       }
 
-      <!-- Salir -->
-      <button (click)="logout()" style="
-        font-family:'Poppins',sans-serif;font-size:12px;font-weight:500;
-        color:var(--text-2);
-        background:none;
-        border:1.5px solid var(--border);
-        border-radius:8px;
-        padding:6px 14px;
-        cursor:pointer;
-        transition:border-color .15s, color .15s;
-      ">
-        Salir
+      <!-- Salir: en el teléfono solo el ícono, para que entre el de perfil -->
+      <button (click)="logout()" class="logout-btn" [title]="t('nav.logout')" [attr.aria-label]="t('nav.logout')">
+        <i class="ti ti-logout sm:hidden"></i>
+        <span class="hidden sm:inline">{{ t('nav.logout') }}</span>
       </button>
     </div>
   </header>

@@ -3,6 +3,8 @@ import { Api } from '../../api/api';
 import { login } from '../../api/fn/auth-controller/login';
 import { register } from '../../api/fn/auth-controller/register';
 import { signInWithGoogle } from '../../api/fn/auth-controller/sign-in-with-google';
+import { linkGoogleAccount } from '../../api/fn/auth-controller/link-google-account';
+import { unlinkGoogleAccount } from '../../api/fn/auth-controller/unlink-google-account';
 import { GoogleSignInRequest } from '../../api/models/google-sign-in-request';
 import { forgotPassword } from '../../api/fn/auth-controller/forgot-password';
 import { switchRestaurant } from '../../api/fn/auth-controller/switch-restaurant';
@@ -23,6 +25,8 @@ export interface CurrentUser {
   permissions: string[];
   /** Features del plan de la cuenta del local activo. Falta en sesiones guardadas antes de que existiera. */
   features?: string[];
+  /** Tiene una cuenta de Google vinculada. Falta en sesiones guardadas antes de que existiera. */
+  googleLinked?: boolean;
   restaurantId: string;
   restaurantName: string;
   restaurants: RestaurantSummary[];
@@ -65,6 +69,18 @@ export class AuthService {
     return response;
   }
 
+  /** Vincula la cuenta de Google del token al usuario logueado. */
+  async linkGoogle(idToken: string): Promise<void> {
+    await this.api.invoke(linkGoogleAccount, { body: { idToken } });
+    this.patchUser({ googleLinked: true });
+  }
+
+  /** Desvincula Google: el token confirma que es la cuenta vinculada y `newPassword` reemplaza la contraseña. */
+  async unlinkGoogle(idToken: string, newPassword: string): Promise<void> {
+    await this.api.invoke(unlinkGoogleAccount, { body: { idToken, newPassword } });
+    this.patchUser({ googleLinked: false });
+  }
+
   async forgotPassword(body: ForgotPasswordRequest): Promise<void> {
     await this.api.invoke(forgotPassword, { body });
   }
@@ -91,11 +107,21 @@ export class AuthService {
       role:           r.role                ?? '',
       permissions:    r.permissions          ?? [],
       features:       r.features             ?? [],
+      googleLinked:   r.googleLinked         ?? false,
       restaurantId:   r.activeRestaurantId  ?? '',
       restaurantName: r.activeRestaurantName ?? '',
       restaurants:    r.restaurants          ?? [],
       expiresAt:      r.expiresAt,
     };
+    this.storeUser(user);
+  }
+
+  private patchUser(changes: Partial<CurrentUser>): void {
+    const user = this.currentUser();
+    if (user) this.storeUser({ ...user, ...changes });
+  }
+
+  private storeUser(user: CurrentUser): void {
     sessionStorage.setItem(USER_KEY, JSON.stringify(user));
     this.currentUser.set(user);
   }

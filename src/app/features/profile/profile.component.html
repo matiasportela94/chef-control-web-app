@@ -1,0 +1,96 @@
+<div class="page-wrap">
+
+  <div class="page-header">
+    <div style="min-width:0;">
+      <h1 class="page-title">{{ t('profile.title') }}</h1>
+    </div>
+  </div>
+
+  @if (user(); as u) {
+    <div class="profile-col">
+
+      <div class="data-card" style="padding:18px 20px;">
+        <p class="eyebrow">{{ t('profile.name') }}</p>
+        <p class="value ellipsis">{{ u.name }}</p>
+        <p class="eyebrow" style="margin-top:12px;">{{ t('profile.email') }}</p>
+        <p class="value ellipsis">{{ u.email }}</p>
+      </div>
+
+      @if (googleEnabled) {
+        <div class="data-card" style="padding:18px 20px;">
+          <div class="google-head">
+            <h2 class="card-title"><i class="ti ti-brand-google"></i> {{ t('profile.google.title') }}</h2>
+            @if (u.googleLinked) {
+              <span class="badge badge-soft"><i class="ti ti-circle-check"></i> {{ t('profile.google.connected') }}</span>
+            }
+          </div>
+          <p class="hint">{{ u.googleLinked ? t('profile.google.linkedHint') : t('profile.google.unlinkedHint') }}</p>
+
+          @if (linkError()) { <div class="notice notice-danger">{{ linkError() }}</div> }
+
+          @if (u.googleLinked) {
+            <button type="button" (click)="openUnlink()" class="btn-secondary btn-sm" style="margin-top:14px;">
+              {{ t('profile.google.unlink') }}
+            </button>
+          } @else if (linking()) {
+            <p class="hint"><i class="ti ti-loader-2 spin"></i> {{ t('profile.google.linking') }}</p>
+          } @else {
+            <div class="google-slot">
+              <app-google-button [text]="'continue_with'" (credential)="link($event)" />
+            </div>
+          }
+        </div>
+      }
+
+    </div>
+  }
+</div>
+
+@if (unlinkOpen()) {
+  <div class="dialog-backdrop" (click)="closeUnlink()">
+    <div class="dialog" role="dialog" aria-modal="true" aria-labelledby="unlink-title" (click)="$event.stopPropagation()">
+
+      <div class="dialog-head">
+        <h3 id="unlink-title">{{ t('profile.unlink.title') }}</h3>
+        <button type="button" (click)="closeUnlink()" class="icon-btn" [title]="t('common.close')">
+          <i class="ti ti-x"></i>
+        </button>
+      </div>
+
+      <div class="dialog-body">
+        <p class="explain">{{ t('profile.unlink.explain') }}</p>
+
+        <label class="field-label" for="unlink-password">{{ t('profile.unlink.newPassword') }}</label>
+        <input id="unlink-password" type="password" autocomplete="new-password" class="field-input"
+               [value]="newPassword()" (input)="newPassword.set(inputValue($event))" [disabled]="unlinkLoading()">
+
+        <label class="field-label" for="unlink-repeat" style="margin-top:12px;">{{ t('profile.unlink.repeatPassword') }}</label>
+        <input id="unlink-repeat" type="password" autocomplete="new-password" class="field-input"
+               [value]="repeatPassword()" (input)="repeatPassword.set(inputValue($event))" [disabled]="unlinkLoading()">
+
+        @if (passwordProblem()) { <p class="field-problem">{{ passwordProblem() }}</p> }
+        @if (unlinkError()) { <div class="notice notice-danger">{{ unlinkError() }}</div> }
+
+        <div class="confirm">
+          @if (unlinkLoading()) {
+            <p class="hint"><i class="ti ti-loader-2 spin"></i> {{ t('profile.unlink.unlinking') }}</p>
+          } @else if (passwordOk()) {
+            <p class="hint" style="margin-bottom:10px;">{{ t('profile.unlink.confirmWithGoogle') }}</p>
+            <div class="google-slot">
+              <app-google-button [text]="'continue_with'" (credential)="unlink($event)" />
+            </div>
+          } @else {
+            <p class="hint">{{ t('profile.unlink.fillPassword') }}</p>
+          }
+        </div>
+      </div>
+
+      <div class="dialog-foot">
+        <button type="button" (click)="closeUnlink()" class="btn-secondary btn-sm" [disabled]="unlinkLoading()">
+          {{ t('common.cancel') }}
+        </button>
+      </div>
+
+    </div>
+  </div>
+}
