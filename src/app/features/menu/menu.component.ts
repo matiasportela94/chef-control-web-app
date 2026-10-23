@@ -1,4 +1,5 @@
 import { Component, HostListener, OnInit, computed, signal } from '@angular/core';
+import { AuthService } from '../../core/services/auth.service';
 import { FormArray, FormBuilder, FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { DecimalPipe }                 from '@angular/common';
 import { Api }                         from '../../api/api';
@@ -229,7 +230,7 @@ export class MenuComponent implements OnInit {
   cartaForm: FormGroup;
   sectionForm: FormGroup;
 
-  constructor(private api: Api, private fb: FormBuilder, private i18n: I18nService) {
+  constructor(private api: Api, private fb: FormBuilder, private i18n: I18nService, private auth: AuthService) {
     this.cartaForm = this.fb.group({
       name: ['', Validators.required],
     });
@@ -296,7 +297,8 @@ export class MenuComponent implements OnInit {
         { page: 0, size: 999, active: this.catalogMode() ? this.viewMode() === 'active' : true }) as unknown;
       const res = await parseBlob<PagedResponseMenuItemResponse>(raw);
       this.menuItems.set(res.content ?? []);
-      void this.loadAllCosts(res.content ?? []);
+      // Sin food cost en el plan cada costo rebotaría con 403: una request por plato para nada.
+      if (this.auth.hasFeature('RECIPES_AND_FOOD_COST')) void this.loadAllCosts(res.content ?? []);
     } catch {
       this.error.set('No se pudieron cargar los platos.');
     } finally {

@@ -1,4 +1,6 @@
 import { Component, OnInit, computed, signal } from '@angular/core';
+import { RouterLink } from '@angular/router';
+import { AuthService } from '../../core/services/auth.service';
 import { FormsModule } from '@angular/forms';
 import { Api } from '../../api/api';
 import { calculate } from '../../api/fn/food-cost-controller/calculate';
@@ -26,7 +28,7 @@ interface Preset { label: string; from: string; to: string; }
 @Component({
   selector: 'app-food-cost',
   standalone: true,
-  imports: [FormsModule, SelectComponent, StepLineChartComponent],
+  imports: [FormsModule, RouterLink, SelectComponent, StepLineChartComponent],
   templateUrl: './food-cost.component.html',
   styleUrl: './food-cost.component.scss'
 })
@@ -140,14 +142,19 @@ export class FoodCostComponent implements OnInit {
 
   readonly Math = Math;
 
-  constructor(private api: Api, private i18n: I18nService) {}
+  /** El plan no incluye food cost: la pantalla muestra a qué plan pasar en vez de rebotar con 403. */
+  readonly locked: boolean;
+
+  constructor(private api: Api, private i18n: I18nService, auth: AuthService) {
+    this.locked = !auth.hasFeature('RECIPES_AND_FOOD_COST');
+  }
 
   menuItemOptions(): SelectOption[] {
     return this.menuItems().map(m => ({ value: m.id!, label: m.name! }));
   }
 
   async ngOnInit(): Promise<void> {
-    await this.loadMenuItems();
+    if (!this.locked) await this.loadMenuItems();
   }
 
   async loadMenuItems(): Promise<void> {

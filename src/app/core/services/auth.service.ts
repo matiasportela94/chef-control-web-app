@@ -21,6 +21,8 @@ export interface CurrentUser {
   email: string;
   role: string;
   permissions: string[];
+  /** Features del plan de la cuenta del local activo. Falta en sesiones guardadas antes de que existiera. */
+  features?: string[];
   restaurantId: string;
   restaurantName: string;
   restaurants: RestaurantSummary[];
@@ -88,6 +90,7 @@ export class AuthService {
       email:          r.email               ?? '',
       role:           r.role                ?? '',
       permissions:    r.permissions          ?? [],
+      features:       r.features             ?? [],
       restaurantId:   r.activeRestaurantId  ?? '',
       restaurantName: r.activeRestaurantName ?? '',
       restaurants:    r.restaurants          ?? [],
@@ -100,6 +103,21 @@ export class AuthService {
   /** Permiso efectivo (rol + overrides), ya resuelto por el backend y guardado en el login. */
   hasPermission(permission: string): boolean {
     return this.currentUser()?.permissions.includes(permission) ?? false;
+  }
+
+  /**
+   * La feature está en el plan de la cuenta. Sirve para no ofrecer lo que el backend va a rechazar; quien
+   * decide es el backend (403 PLAN_FEATURE_REQUIRED). Una sesión vieja sin el dato no esconde nada.
+   */
+  hasFeature(feature: string): boolean {
+    const features = this.currentUser()?.features;
+    return features ? features.includes(feature) : true;
+  }
+
+  /** Vuelve a pedir la sesión del local activo: trae el plan nuevo después de pagar. */
+  async refreshSession(): Promise<void> {
+    const id = this.currentUser()?.restaurantId;
+    if (id) await this.switchToRestaurant(id);
   }
 
   private loadUser(): CurrentUser | null {
