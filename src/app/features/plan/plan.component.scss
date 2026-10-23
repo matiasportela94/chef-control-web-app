@@ -1,0 +1,51 @@
+.eyebrow { font-size: 11px; color: var(--text-3); text-transform: uppercase; letter-spacing: .06em; }
+.ellipsis { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.hint { font-size: 12px; color: var(--text-3); margin-top: 12px; }
+// En el teléfono baja abajo del plan y alineado a la izquierda; al lado del plan, a la derecha.
+@media (min-width: 640px) { .created { text-align: right; } }
+
+.notice {
+  display: flex; align-items: flex-start; gap: 8px;
+  font-size: 13px; line-height: 1.45; color: var(--text-2);
+  background: var(--bg-input); border: 1px solid var(--border); border-radius: 12px; padding: 12px 14px;
+  i { font-size: 16px; margin-top: 1px; flex-shrink: 0; }
+}
+.notice-danger { background: var(--red-bg); border-color: var(--red); color: var(--red); }
+.notice-ok { border-color: var(--accent); i { color: var(--accent); } }
+
+.segmented {
+  display: inline-flex; padding: 3px; gap: 2px;
+  background: var(--bg-input); border: 1px solid var(--border); border-radius: 10px;
+  button {
+    display: inline-flex; align-items: center; gap: 6px;
+    font-size: 12px; font-weight: 600; color: var(--text-2);
+    background: transparent; border: 0; border-radius: 8px; padding: 6px 12px; cursor: pointer;
+    min-height: 32px;
+    &.on { background: var(--bg-card); color: var(--text-1); box-shadow: 0 1px 2px rgba(0, 0, 0, .08); }
+  }
+  .saving { font-size: 10px; font-weight: 700; color: var(--accent); }
+}
+
+// Mobile-first: una columna; se abren columnas cuando entran tarjetas de 220px.
+.plan-grid { display: grid; grid-template-columns: 1fr; gap: 10px; }
+@media (min-width: 640px) { .plan-grid { grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); } }
+
+.plan-card {
+  display: flex; flex-direction: column; gap: 4px; min-width: 0;
+  border: 1.5px solid var(--border); border-radius: 14px; padding: 16px;
+  &.current { border-color: var(--accent); }
+}
+.plan-price {
+  font-size: 24px; font-weight: 700; color: var(--text-1); margin-top: 4px;
+  span { font-size: 12px; font-weight: 500; color: var(--text-3); margin-left: 2px; }
+}
+.plan-sub { font-size: 11px; color: var(--text-3); min-height: 16px; }
+.plan-features {
+  list-style: none; margin: 10px 0 14px; padding: 0; display: flex; flex-direction: column; gap: 5px; flex: 1;
+  li { display: flex; gap: 6px; font-size: 12px; color: var(--text-2); min-width: 0; }
+  i { color: var(--accent); flex-shrink: 0; margin-top: 1px; }
+}
+
+.spin { display: inline-block; animation: spin 1s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { .spin { animation: none; } }
