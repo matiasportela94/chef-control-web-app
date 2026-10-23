@@ -27,6 +27,7 @@ import { formatARS }                   from '../../core/utils/format';
 import { extractApiError }             from '../../core/utils/api-error';
 import { PaginatorComponent }          from '../../shared/components/paginator/paginator.component';
 import { ActionDialogComponent }       from '../../shared/components/action-dialog/action-dialog.component';
+import { CatalogImportComponent }      from '../../shared/components/catalog-import/catalog-import.component';
 import { DrawerComponent }             from '../../shared/components/drawer/drawer.component';
 import { SpinnerComponent }            from '../../shared/components/spinner/spinner.component';
 import { SearchFilterBarComponent, FilterBarState } from '../../shared/components/search-filter-bar/search-filter-bar.component';
@@ -54,7 +55,7 @@ import { I18nService }                 from '../../core/services/i18n.service';
 @Component({
   selector: 'app-menu',
   standalone: true,
-  imports: [ReactiveFormsModule, DecimalPipe, PaginatorComponent, ActionDialogComponent, DrawerComponent, SpinnerComponent, SearchFilterBarComponent, SelectComponent],
+  imports: [ReactiveFormsModule, DecimalPipe, PaginatorComponent, ActionDialogComponent, DrawerComponent, SpinnerComponent, SearchFilterBarComponent, SelectComponent, CatalogImportComponent],
   templateUrl: './menu.component.html',
   styleUrl: './menu.component.scss'
 })
@@ -78,6 +79,9 @@ export class MenuComponent implements OnInit {
 
   // Drawer de pasos
   sectionsDrawerOpen = signal(false);
+  importOpen         = signal(false);
+  /** El import exige PRODUCTS_CREATE (las recetas, además, permisos de menú: eso lo resuelve el drawer). */
+  canImport          = computed(() => this.auth.hasPermission('PRODUCTS_CREATE'));
   editingSection     = signal<MenuSectionResponse | null>(null);
   savingSection      = signal(false);
   sectionError       = signal<string | null>(null);
@@ -263,6 +267,11 @@ export class MenuComponent implements OnInit {
       this.cartaControl.setValue(first.id);
     }
     await Promise.all([this.loadMenuItems(), this.loadFormData()]);
+  }
+
+  /** La importación pudo crear platos, pasos del menú e insumos, y reemplazar recetas. */
+  async onImported(): Promise<void> {
+    await Promise.all([this.loadCartas(), this.loadSections(), this.loadMenuItems(), this.loadFormData()]);
   }
 
   t(key: string): string {
@@ -707,8 +716,8 @@ export class MenuComponent implements OnInit {
       ...(v.price != null       ? { price:       +v.price }             : {}),
       ...(v.sectionId           ? { sectionId:   v.sectionId }          : {}),
     };
+    const ed = this.editing();
     try {
-      const ed = this.editing();
       let itemId: string;
       if (ed?.id) {
         await this.api.invoke(updateMenuItem, { id: ed.id, body });
@@ -717,6 +726,9 @@ export class MenuComponent implements OnInit {
         const raw = await this.api.invoke(createMenuItem, { body }) as unknown;
         const created = await parseBlob<MenuItemResponse>(raw);
         itemId = created.id!;
+        // Si lo que sigue falla (la receta, con una unidad que no convierte), el plato ya existe: el drawer pasa a
+        // editarlo, o al reintentar se crearía otro con el mismo nombre.
+        this.editing.set(created);
       }
 
       // Save recipe if items exist
@@ -749,7 +761,8 @@ export class MenuComponent implements OnInit {
       this.drawerOpen.set(false);
       await this.loadMenuItems();
     } catch (e: any) {
-      this.saveError.set(extractApiError(e, 'Error al guardar el plato'));
+      this.saveError.set(extractApiError(e, this.t('menu.saveItemError')));
+      if (!ed && this.editing()) void this.loadMenuItems();  // se creó antes de fallar: que aparezca en la lista
     } finally {
       this.saving.set(false);
     }
