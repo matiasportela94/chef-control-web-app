@@ -87,6 +87,11 @@ export const routes: Routes = [
         loadComponent: () => import('./features/plan/plan.component').then(m => m.PlanComponent)
       },
       {
+        // Sin permissionGuard: es el perfil de cada usuario, no un permiso delegable.
+        path: 'profile',
+        loadComponent: () => import('./features/profile/profile.component').then(m => m.ProfileComponent)
+      },
+      {
         path: 'audit',
         canActivate: [permissionGuard('AUDIT_VIEW')],
         loadComponent: () => import('./features/audit/audit.component').then(m => m.AuditComponent)

@@ -27,7 +27,8 @@
     "waste": "Merma",
     "stockCounts": "Conteos",
     "foodCost": "Food Cost",
-    "users": "Usuarios"
+    "users": "Usuarios",
+    "logout": "Salir"
   },
   "errors": {
     "INVALID_CREDENTIALS": "Email o contraseña incorrectos",
@@ -84,6 +85,9 @@
     "PAYMENT_PROVIDER_UNAVAILABLE": "No pudimos comunicarnos con MercadoPago. Probá de nuevo en un momento",
     "GOOGLE_TOKEN_INVALID": "No pudimos validar tu cuenta de Google. Probá de nuevo.",
     "GOOGLE_ACCOUNT_NOT_REGISTERED": "Todavía no tenés cuenta: completá el nombre de tu restaurante para crearla.",
+    "GOOGLE_ACCOUNT_ALREADY_LINKED": "Esa cuenta de Google ya está vinculada a otro usuario.",
+    "USER_ALREADY_LINKED_TO_GOOGLE": "Ya tenés otra cuenta de Google vinculada. Desvinculala primero.",
+    "GOOGLE_ACCOUNT_MISMATCH": "Esa no es la cuenta de Google que tenés vinculada. Confirmá con esa cuenta.",
     "PLAN_FEATURE_REQUIRED": "Tu plan no incluye esta función. Podés cambiarlo en Plan y cuenta."
   },
   "ai": {
@@ -383,5 +387,34 @@
     "foodCost": "Recetas y food cost están incluidos desde el plan Starter.",
     "cta": "Ver planes",
     "toastTitle": "Función no incluida en tu plan"
+  },
+  "profile": {
+    "title": "Mi perfil",
+    "name": "Nombre",
+    "email": "Email",
+    "google": {
+      "title": "Google",
+      "connected": "Conectada",
+      "unlinkedHint": "Conectá tu cuenta de Google para entrar con un toque, sin escribir la contraseña.",
+      "linkedHint": "Tu cuenta de Google está conectada: podés entrar con el botón de Google.",
+      "linking": "Conectando tu cuenta de Google…",
+      "linkedToast": "Conectaste tu cuenta de Google",
+      "linkError": "No pudimos conectar tu cuenta de Google. Probá de nuevo.",
+      "unlink": "Desvincular"
+    },
+    "unlink": {
+      "title": "Desvincular Google",
+      "explain": "Para seguir entrando sin Google, elegí una contraseña nueva. Reemplaza la que tenías: desde ahora entrás con tu email y esta contraseña.",
+      "newPassword": "Contraseña nueva",
+      "repeatPassword": "Repetí la contraseña",
+      "tooShort": "Tiene que tener al menos 8 caracteres.",
+      "mismatch": "Las contraseñas no coinciden.",
+      "fillPassword": "Completá la contraseña nueva para confirmar con Google.",
+      "confirmWithGoogle": "Para confirmar, elegí la cuenta de Google que tenés vinculada.",
+      "unlinking": "Desvinculando…",
+      "doneToast": "Desvinculaste tu cuenta de Google",
+      "doneHint": "Desde ahora entrás con tu email y la contraseña nueva.",
+      "error": "No pudimos desvincular tu cuenta de Google. Probá de nuevo."
+    }
   }
 }
