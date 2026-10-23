@@ -83,7 +83,8 @@
     "INVALID_SUBSCRIPTION_PLAN": "Ese plan no se puede contratar",
     "PAYMENT_PROVIDER_UNAVAILABLE": "No pudimos comunicarnos con MercadoPago. Probá de nuevo en un momento",
     "GOOGLE_TOKEN_INVALID": "No pudimos validar tu cuenta de Google. Probá de nuevo.",
-    "GOOGLE_ACCOUNT_NOT_REGISTERED": "Todavía no tenés cuenta: completá el nombre de tu restaurante para crearla."
+    "GOOGLE_ACCOUNT_NOT_REGISTERED": "Todavía no tenés cuenta: completá el nombre de tu restaurante para crearla.",
+    "PLAN_FEATURE_REQUIRED": "Tu plan no incluye esta función. Podés cambiarlo en Plan y cuenta."
   },
   "ai": {
     "title": "Entrada rápida",
@@ -258,7 +259,7 @@
     "currentPlan": "Plan actual",
     "createdAt": "Cuenta creada el",
     "tiers": {
-      "TRIAL": "Prueba",
+      "TRIAL": "Gratis",
       "STARTER": "Starter",
       "PRO": "Pro",
       "ENTERPRISE": "Enterprise"
@@ -277,13 +278,13 @@
     "annualSaving": "−{pct}%",
     "nextCharge": "Próximo cobro: {date}",
     "chargesByMp": "Los cobros los hace Mercado Pago, que te manda el comprobante de cada uno.",
-    "pastDue": "No pudimos cobrar tu plan. Mercado Pago va a reintentar: revisá tu medio de pago. Conservás el plan hasta el {date}; después la cuenta pasa al plan de prueba.",
-    "cancelledUntil": "Cancelaste la suscripción. Seguís con el plan {plan} hasta el {date}; después pasás al plan de prueba.",
+    "pastDue": "No pudimos cobrar tu plan. Mercado Pago va a reintentar: revisá tu medio de pago. Conservás el plan hasta el {date}; después la cuenta pasa al plan gratis.",
+    "cancelledUntil": "Cancelaste la suscripción. Seguís con el plan {plan} hasta el {date}; después pasás al plan gratis.",
     "pendingCheckout": "Tenés un pago sin terminar en Mercado Pago. Si ya pagaste, puede tardar unos minutos en confirmarse; si no, elegí el plan de nuevo.",
     "confirming": "Estamos confirmando tu pago con Mercado Pago…",
     "confirmed": "¡Listo! Tu plan {plan} ya está activo.",
     "confirmTimeout": "Mercado Pago todavía no nos confirmó el pago. Puede tardar unos minutos: volvé a esta página en un rato.",
-    "trialHint": "Estás en el plan de prueba. Elegí un plan para usar todo Chef Control.",
+    "trialHint": "Estás en el plan gratis. Elegí un plan para usar todo Chef Control.",
     "plans": "Planes",
     "yourPlan": "Tu plan",
     "subscribe": "Suscribirme",
@@ -292,8 +293,8 @@
     "ownerOnly": "Solo el dueño de la cuenta ({owner}) puede contratar o cancelar un plan.",
     "cancelSubscription": "Cancelar suscripción",
     "cancelTitle": "Cancelar la suscripción",
-    "cancelMessage": "Mercado Pago deja de cobrarte. Conservás el plan {plan} hasta el {date}; después la cuenta pasa al plan de prueba.",
-    "cancelMessageNow": "Mercado Pago deja de cobrarte y la cuenta pasa al plan de prueba en el acto.",
+    "cancelMessage": "Mercado Pago deja de cobrarte. Conservás el plan {plan} hasta el {date}; después la cuenta pasa al plan gratis.",
+    "cancelMessageNow": "Mercado Pago deja de cobrarte y la cuenta pasa al plan gratis en el acto.",
     "cancelConfirm": "Cancelar suscripción",
     "cancelKeep": "Volver",
     "cancelError": "No se pudo cancelar la suscripción",
@@ -376,5 +377,11 @@
       "useEmail": "Prefiero registrarme con email",
       "error": "No pudimos entrar con Google. Probá de nuevo."
     }
+  },
+  "planGate": {
+    "title": "No está incluido en tu plan",
+    "foodCost": "Recetas y food cost están incluidos desde el plan Starter.",
+    "cta": "Ver planes",
+    "toastTitle": "Función no incluida en tu plan"
   }
 }

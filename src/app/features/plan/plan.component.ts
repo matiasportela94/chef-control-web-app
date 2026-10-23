@@ -143,6 +143,8 @@ export class PlanComponent implements OnInit, OnDestroy {
       if (this.status() !== 'PENDING') {
         clearCheckoutMark();
         this.confirmState.set(this.status() === 'ACTIVE' ? 'done' : 'idle');
+        // El plan nuevo viaja en la sesión (features): sin renovarla, el resto de la app seguiría viendo el viejo.
+        if (this.status() === 'ACTIVE') await this.auth.refreshSession().catch(() => {});
         await this.load();
       } else if (attempt + 1 >= CONFIRM_MAX_POLLS) {
         clearCheckoutMark();

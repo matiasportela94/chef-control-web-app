@@ -83,7 +83,8 @@
     "INVALID_SUBSCRIPTION_PLAN": "That plan cannot be subscribed to",
     "PAYMENT_PROVIDER_UNAVAILABLE": "We could not reach MercadoPago. Try again in a moment",
     "GOOGLE_TOKEN_INVALID": "We couldn't verify your Google account. Please try again.",
-    "GOOGLE_ACCOUNT_NOT_REGISTERED": "You don't have an account yet: enter your restaurant's name to create it."
+    "GOOGLE_ACCOUNT_NOT_REGISTERED": "You don't have an account yet: enter your restaurant's name to create it.",
+    "PLAN_FEATURE_REQUIRED": "Your plan doesn't include this feature. You can change it in Plan & account."
   },
   "ai": {
     "title": "Quick entry",
@@ -258,7 +259,7 @@
     "currentPlan": "Current plan",
     "createdAt": "Account created on",
     "tiers": {
-      "TRIAL": "Trial",
+      "TRIAL": "Free",
       "STARTER": "Starter",
       "PRO": "Pro",
       "ENTERPRISE": "Enterprise"
@@ -277,13 +278,13 @@
     "annualSaving": "−{pct}%",
     "nextCharge": "Next charge: {date}",
     "chargesByMp": "Charges are made by Mercado Pago, which sends you a receipt for each one.",
-    "pastDue": "We could not charge your plan. Mercado Pago will retry: check your payment method. You keep the plan until {date}; after that the account moves to the trial plan.",
-    "cancelledUntil": "You cancelled the subscription. You keep the {plan} plan until {date}; after that you move to the trial plan.",
+    "pastDue": "We couldn't charge your plan. Mercado Pago will retry: check your payment method. You keep the plan until {date}; after that the account moves to the free plan.",
+    "cancelledUntil": "You cancelled the subscription. You keep the {plan} plan until {date}; after that you move to the free plan.",
     "pendingCheckout": "You have an unfinished payment in Mercado Pago. If you already paid, it may take a few minutes to confirm; if not, choose the plan again.",
     "confirming": "Confirming your payment with Mercado Pago…",
     "confirmed": "Done! Your {plan} plan is active.",
     "confirmTimeout": "Mercado Pago has not confirmed the payment yet. It may take a few minutes: come back to this page in a while.",
-    "trialHint": "You are on the trial plan. Choose a plan to use all of Chef Control.",
+    "trialHint": "You're on the free plan. Choose a plan to use all of Chef Control.",
     "plans": "Plans",
     "yourPlan": "Your plan",
     "subscribe": "Subscribe",
@@ -292,8 +293,8 @@
     "ownerOnly": "Only the account owner ({owner}) can subscribe to or cancel a plan.",
     "cancelSubscription": "Cancel subscription",
     "cancelTitle": "Cancel the subscription",
-    "cancelMessage": "Mercado Pago stops charging you. You keep the {plan} plan until {date}; after that the account moves to the trial plan.",
-    "cancelMessageNow": "Mercado Pago stops charging you and the account moves to the trial plan right away.",
+    "cancelMessage": "Mercado Pago stops charging you. You keep the {plan} plan until {date}; after that the account moves to the free plan.",
+    "cancelMessageNow": "Mercado Pago stops charging you and the account moves to the free plan right away.",
     "cancelConfirm": "Cancel subscription",
     "cancelKeep": "Back",
     "cancelError": "Could not cancel the subscription",
@@ -376,5 +377,11 @@
       "useEmail": "I'd rather sign up with email",
       "error": "We couldn't sign you in with Google. Please try again."
     }
+  },
+  "planGate": {
+    "title": "Not included in your plan",
+    "foodCost": "Recipes and food cost are included from the Starter plan.",
+    "cta": "See plans",
+    "toastTitle": "Not included in your plan"
   }
 }

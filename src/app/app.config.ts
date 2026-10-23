@@ -10,6 +10,7 @@ import { ApiConfiguration } from './api/api-configuration';
 import { credentialsInterceptor } from './core/interceptors/credentials.interceptor';
 import { authErrorInterceptor } from './core/interceptors/auth-error.interceptor';
 import { blobErrorInterceptor } from './core/interceptors/blob-error.interceptor';
+import { planFeatureInterceptor } from './core/interceptors/plan-feature.interceptor';
 import { serverErrorInterceptor } from './core/interceptors/server-error.interceptor';
 
 // Sin esto los pipes number/percent/currency caen en en-US y muestran "1,234.56": punto decimal
@@ -23,7 +24,7 @@ export const appConfig: ApplicationConfig = {
     provideZoneChangeDetection({ eventCoalescing: true }),
     provideRouter(routes),
     provideHttpClient(
-      withInterceptors([blobErrorInterceptor, credentialsInterceptor, authErrorInterceptor, serverErrorInterceptor])
+      withInterceptors([planFeatureInterceptor, blobErrorInterceptor, credentialsInterceptor, authErrorInterceptor, serverErrorInterceptor])
     ),
     {
       provide: ApiConfiguration,
