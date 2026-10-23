@@ -14,9 +14,17 @@
         }
       </p>
     </div>
-    <button (click)="openCreate()" class="btn-primary btn-sm">
-      <i class="ti ti-plus"></i> Nuevo plato
-    </button>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;">
+      @if (canImport()) {
+        <!-- En el teléfono solo el ícono -->
+        <button (click)="importOpen.set(true)" class="btn-secondary btn-sm" [title]="t('import.title')">
+          <i class="ti ti-file-spreadsheet"></i><span class="hidden sm:inline">{{ t('import.button') }}</span>
+        </button>
+      }
+      <button (click)="openCreate()" class="btn-primary btn-sm">
+        <i class="ti ti-plus"></i> Nuevo plato
+      </button>
+    </div>
   </div>
 
   <!-- Carta seleccionada / catálogo -->
@@ -704,3 +712,7 @@
   (confirm)="confirmDeleteSection()"
   (cancel)="deletingSection.set(null)">
 </app-action-dialog>
+
+@if (canImport()) {
+  <app-catalog-import [isOpen]="importOpen()" (closed)="importOpen.set(false)" (imported)="onImported()" />
+}

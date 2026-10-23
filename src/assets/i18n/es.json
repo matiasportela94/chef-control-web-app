@@ -88,7 +88,16 @@
     "GOOGLE_ACCOUNT_ALREADY_LINKED": "Esa cuenta de Google ya está vinculada a otro usuario.",
     "USER_ALREADY_LINKED_TO_GOOGLE": "Ya tenés otra cuenta de Google vinculada. Desvinculala primero.",
     "GOOGLE_ACCOUNT_MISMATCH": "Esa no es la cuenta de Google que tenés vinculada. Confirmá con esa cuenta.",
-    "PLAN_FEATURE_REQUIRED": "Tu plan no incluye esta función. Podés cambiarlo en Plan y cuenta."
+    "PLAN_FEATURE_REQUIRED": "Tu plan no incluye esta función. Podés cambiarlo en Plan y cuenta.",
+    "IMPORT_REQUIRED_FIELD": "Falta completar este dato.",
+    "IMPORT_INVALID_VALUE": "Valor fuera de lo permitido: un número negativo o en cero, o un texto demasiado largo.",
+    "IMPORT_UNKNOWN_UNIT": "No conocemos esa unidad. Usá una de la hoja Unidades.",
+    "IMPORT_UNKNOWN_INGREDIENT": "Ese ingrediente no es un insumo: cargalo en la hoja Insumos o revisá cómo está escrito.",
+    "IMPORT_INCOMPATIBLE_UNIT": "Esa unidad no se puede convertir a la del insumo (por ejemplo, gramos en un insumo que se cuenta por unidad).",
+    "IMPORT_DUPLICATE_PRODUCT": "Este insumo está repetido en el archivo.",
+    "IMPORT_DUPLICATE_INGREDIENT": "Este ingrediente está repetido en la receta del plato.",
+    "IMPORT_CATEGORY_CREATE_FORBIDDEN": "Esa categoría no existe y tu usuario no puede crear categorías. Usá una que ya exista o pedile a quien administra la cuenta que la cree.",
+    "IMPORT_AMBIGUOUS_NAME": "En el catálogo hay más de uno con ese nombre escrito distinto (por ejemplo, \"Tomate\" y \"tomate\"). Unificalos primero."
   },
   "ai": {
     "title": "Entrada rápida",
@@ -419,5 +428,77 @@
   },
   "dashboard": {
     "live": "En vivo"
+  },
+  "import": {
+    "title": "Importar desde Excel",
+    "button": "Importar",
+    "productsOnlyPlan": "Tu plan no incluye recetas: se importa solo la hoja Insumos. Las recetas están desde el plan Starter.",
+    "productsOnlyPermission": "Tu usuario no puede crear ni editar platos: se importa solo la hoja Insumos.",
+    "step1": "1. Descargá la plantilla",
+    "step1Hint": "Tiene una hoja para insumos, otra para recetas, la lista de unidades y las instrucciones con ejemplos.",
+    "downloadTemplate": "Descargar plantilla",
+    "step2": "2. Completala y elegí el archivo",
+    "chooseFile": "Elegir archivo .xlsx",
+    "checking": "Revisando el archivo…",
+    "previewTitle": "Esto es lo que se va a importar",
+    "resultTitle": "Esto es lo que se importó",
+    "counters": {
+      "productsCreated": "insumos nuevos",
+      "productsExisting": "insumos que ya existían (no se modifican)",
+      "categoriesCreated": "categorías nuevas",
+      "sectionsCreated": "pasos del menú nuevos",
+      "menuItemsCreated": "platos nuevos",
+      "recipesCreated": "recetas nuevas",
+      "recipesReplaced": "recetas reemplazadas"
+    },
+    "replaceWarning": "En los platos que ya existen se reemplaza la receta entera por la del archivo. Su precio y su paso del menú no cambian.",
+    "errorsTitle": "Para corregir ({count})",
+    "errorsHint": "No se guarda nada mientras el archivo tenga errores. Corregilo y volvé a elegirlo.",
+    "row": "fila {row}",
+    "value": "Valor: {value}",
+    "moreErrors": "…y {count} más.",
+    "rowError": "Hay un problema con esta fila.",
+    "confirm": "Confirmar importación",
+    "done": "Listo: la importación quedó guardada.",
+    "readError": "No pudimos leer el archivo. Tiene que ser un Excel .xlsx: si está en otro formato, guardalo como .xlsx.",
+    "checkError": "No pudimos revisar el archivo. Probá de nuevo.",
+    "saveError": "No pudimos guardar la importación. Probá de nuevo.",
+    "templateError": "No pudimos generar la plantilla. Probá de nuevo.",
+    "missingColumns": "A la hoja {sheet} le faltan columnas obligatorias: {columns}. Usá los encabezados de la plantilla.",
+    "noSheets": "No encontramos las hojas de la plantilla ({sheets}). Descargala y completala.",
+    "empty": "El archivo no tiene filas para importar.",
+    "tooManyRows": "La hoja {sheet} tiene más de {max} filas. Dividila en varios archivos.",
+    "sheets": {
+      "PRODUCTS": "Insumos",
+      "RECIPES": "Recetas"
+    },
+    "columns": {
+      "name": "Nombre",
+      "unit": "Unidad",
+      "category": "Categoría",
+      "minStock": "Stock mínimo",
+      "yieldPercentage": "Rendimiento %",
+      "menuItem": "Plato",
+      "price": "Precio de venta",
+      "section": "Paso del menú",
+      "ingredient": "Ingrediente",
+      "quantity": "Cantidad (para 1 plato)"
+    },
+    "template": {
+      "fileName": "plantilla-chef-control.xlsx",
+      "unitsSheet": "Unidades",
+      "instructionsSheet": "Instrucciones",
+      "unitName": "Unidad",
+      "unitAbbreviation": "Abreviatura",
+      "unitsNote": "Escribí la unidad tal cual figura acá, con el nombre o la abreviatura y sin plural (\"litros\" no sirve: es \"Litro\" o \"l\").",
+      "instructions": "Cómo completar la plantilla\n• Hoja Insumos: una fila por insumo. Nombre y Unidad son obligatorios (los marcados con *). Un insumo que ya existe no se modifica.\n• Unidad: el nombre o la abreviatura tal cual figuran en la hoja Unidades, sin plural.\n• Categoría: si no existe, se crea.\n• Rendimiento %: cuánto queda útil de lo que comprás. 90 = de 1 kg quedan 900 g.\n• Hoja Recetas: una fila por ingrediente. El precio de venta y el paso del menú van en la primera fila de cada plato.\n• Cantidad: lo que lleva UN plato, en la unidad de esa fila.\n• El ingrediente tiene que ser un insumo que ya exista o que esté en la hoja Insumos.\n• Si el plato ya existe, su receta se reemplaza por la del archivo; el precio y el paso del menú no cambian.\n• Los números pueden ir como 1.234,5 o 1,5.\n• No dejes ejemplos ni notas en las hojas Insumos y Recetas: todo lo que esté ahí se importa.",
+      "exampleProducts": "Ejemplo de la hoja Insumos",
+      "exampleProduct1": "Papa | kg | Verduras | 10 | 90",
+      "exampleProduct2": "Aceite de girasol | l | Almacén | 5 |",
+      "exampleRecipes": "Ejemplo de la hoja Recetas",
+      "exampleRecipe1": "Papas fritas | 6.500 | Guarniciones | Papa | 300 | g",
+      "exampleRecipe2": "Papas fritas | | | Aceite de girasol | 50 | ml"
+    },
+    "unreadableNumber": "No es un número. Escribilo como 1.234,5 o 1,5."
   }
 }

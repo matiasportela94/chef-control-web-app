@@ -16,6 +16,7 @@ import { CategoryResponse } from '../../api/models/category-response';
 import { PagedResponseProductResponse } from '../../api/models/paged-response-product-response';
 import { PaginatorComponent } from '../../shared/components/paginator/paginator.component';
 import { ActionDialogComponent } from '../../shared/components/action-dialog/action-dialog.component';
+import { CatalogImportComponent } from '../../shared/components/catalog-import/catalog-import.component';
 import { DrawerComponent } from '../../shared/components/drawer/drawer.component';
 import { ChartSeries, StepLineChartComponent } from '../../shared/components/step-line-chart/step-line-chart.component';
 import { SpinnerComponent } from '../../shared/components/spinner/spinner.component';
@@ -25,13 +26,14 @@ import { parseBlob } from '../../core/utils/parse-blob';
 import { formatDateOnly } from '../../core/utils/format';
 import { todayISO, firstOfMonth } from '../../core/utils/date';
 import { I18nService } from '../../core/services/i18n.service';
+import { AuthService } from '../../core/services/auth.service';
 import { extractApiError } from '../../core/utils/api-error';
 import { isFormFieldInvalid } from '../../core/utils/form';
 
 @Component({
   selector: 'app-products',
   standalone: true,
-  imports: [ReactiveFormsModule, FormsModule, DecimalPipe, PaginatorComponent, ActionDialogComponent, DrawerComponent, SpinnerComponent, SearchFilterBarComponent, SelectComponent, StepLineChartComponent],
+  imports: [ReactiveFormsModule, FormsModule, DecimalPipe, PaginatorComponent, ActionDialogComponent, DrawerComponent, SpinnerComponent, SearchFilterBarComponent, SelectComponent, StepLineChartComponent, CatalogImportComponent],
   templateUrl: './products.component.html',
   styleUrl: './products.component.scss'
 })
@@ -93,6 +95,9 @@ export class ProductsComponent implements OnInit {
   );
 
   drawerOpen     = signal(false);
+  importOpen     = signal(false);
+  /** El import exige PRODUCTS_CREATE (las recetas, además, permisos de menú: eso lo resuelve el drawer). */
+  canImport      = computed(() => this.auth.hasPermission('PRODUCTS_CREATE'));
   editingProduct = signal<ProductResponse | null>(null);
   saving         = signal(false);
   saveError      = signal<string | null>(null);
@@ -105,7 +110,8 @@ export class ProductsComponent implements OnInit {
   constructor(
     private api: Api,
     private fb: FormBuilder,
-    private i18n: I18nService
+    private i18n: I18nService,
+    private auth: AuthService,
   ) {
     this.form = this.fb.group({
       name:          ['', Validators.required],
@@ -120,6 +126,11 @@ export class ProductsComponent implements OnInit {
   }
 
   async ngOnInit(): Promise<void> {
+    await Promise.all([this.loadProducts(), this.loadFormData()]);
+  }
+
+  /** La importación pudo crear insumos y categorías. */
+  async onImported(): Promise<void> {
     await Promise.all([this.loadProducts(), this.loadFormData()]);
   }
 

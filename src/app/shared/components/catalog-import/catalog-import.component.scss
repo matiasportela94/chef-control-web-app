@@ -1,0 +1,39 @@
+.step { margin-bottom: 18px; }
+.step-title { font-size: 13px; font-weight: 700; color: var(--text-1); margin-bottom: 6px; }
+.hint { font-size: 12px; line-height: 1.5; color: var(--text-3); margin-bottom: 10px; }
+.ellipsis { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+.file-btn { display: inline-flex; align-items: center; gap: 6px; cursor: pointer; }
+.file-btn.disabled { opacity: .5; pointer-events: none; }
+.file-name { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--text-2); margin-top: 8px; }
+
+.notice {
+  display: flex; align-items: flex-start; gap: 8px; margin-bottom: 12px;
+  font-size: 12px; line-height: 1.5; color: var(--text-2);
+  background: var(--bg-input); border: 1px solid var(--border); border-radius: 12px; padding: 10px 12px;
+  i { font-size: 16px; margin-top: 1px; flex-shrink: 0; }
+  span { min-width: 0; }
+}
+.notice-danger { background: var(--red-bg); border-color: var(--red); color: var(--red); }
+.notice-ok { border-color: var(--accent); i { color: var(--accent); } }
+
+// Dos columnas también en el teléfono: son números cortos con su etiqueta abajo.
+.counters { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin-bottom: 12px; }
+.counter {
+  display: flex; flex-direction: column; gap: 2px; min-width: 0;
+  font-size: 11px; line-height: 1.35; color: var(--text-3);
+  border: 1px solid var(--border); border-radius: 12px; padding: 10px 12px;
+  span { font-size: 20px; font-weight: 700; color: var(--text-1); }
+}
+
+.errors-title { margin-top: 18px; color: var(--red); }
+.error-list { display: flex; flex-direction: column; gap: 8px; margin-bottom: 10px; }
+.error-card { border: 1px solid var(--border); border-left: 3px solid var(--red); border-radius: 10px; padding: 10px 12px; min-width: 0; }
+.error-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.error-column { font-size: 11px; font-weight: 600; color: var(--text-2); }
+.error-message { font-size: 12px; line-height: 1.45; color: var(--text-1); margin-top: 6px; }
+.error-value { font-size: 11px; color: var(--text-3); margin-top: 4px; }
+
+.spin { display: inline-block; animation: spin 1s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { .spin { animation: none; } }

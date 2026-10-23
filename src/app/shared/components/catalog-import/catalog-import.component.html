@@ -1,0 +1,91 @@
+<app-drawer [isOpen]="isOpen" [title]="t('import.title')" titleIcon="file-spreadsheet" (closed)="close()">
+
+  @if (recipesBlockedBy(); as reason) {
+    <div class="notice"><i class="ti ti-info-circle"></i><span>{{ t(reason === 'plan' ? 'import.productsOnlyPlan' : 'import.productsOnlyPermission') }}</span></div>
+  }
+
+  @if (step() === 'done') {
+    <div class="notice notice-ok"><i class="ti ti-circle-check"></i><span>{{ t('import.done') }}</span></div>
+  } @else {
+    <!-- 1. Plantilla -->
+    <div class="step">
+      <p class="step-title">{{ t('import.step1') }}</p>
+      <p class="hint">{{ t('import.step1Hint') }}</p>
+      <button type="button" (click)="downloadTemplate()" [disabled]="templateLoading()" class="btn-secondary btn-sm">
+        <i class="ti" [class.ti-download]="!templateLoading()" [class.ti-loader-2]="templateLoading()" [class.spin]="templateLoading()"></i>
+        {{ t('import.downloadTemplate') }}
+      </button>
+    </div>
+
+    <!-- 2. Archivo -->
+    <div class="step">
+      <p class="step-title">{{ t('import.step2') }}</p>
+      <label class="btn-secondary btn-sm file-btn" [class.disabled]="step() === 'checking' || step() === 'saving'">
+        <i class="ti ti-upload"></i> {{ t('import.chooseFile') }}
+        <input type="file" accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+               (change)="onFile($event)" [disabled]="step() === 'checking' || step() === 'saving'" hidden>
+      </label>
+      @if (fileName()) { <p class="file-name ellipsis"><i class="ti ti-file"></i> {{ fileName() }}</p> }
+    </div>
+  }
+
+  @if (step() === 'checking') {
+    <p class="hint"><i class="ti ti-loader-2 spin"></i> {{ t('import.checking') }}</p>
+  }
+  @for (problem of problems(); track $index) {
+    <div class="notice notice-danger"><i class="ti ti-alert-triangle"></i><span>{{ problem }}</span></div>
+  }
+  @if (requestError()) {
+    <div class="notice notice-danger"><i class="ti ti-alert-triangle"></i><span>{{ requestError() }}</span></div>
+  }
+
+  <!-- 3. Vista previa / resultado -->
+  @if ((step() === 'preview' || step() === 'saving' || step() === 'done') && result(); as r) {
+    <p class="step-title" style="margin-top:18px;">{{ step() === 'done' ? t('import.resultTitle') : t('import.previewTitle') }}</p>
+    <div class="counters">
+      <div class="counter"><span>{{ r.productsCreated ?? 0 }}</span>{{ t('import.counters.productsCreated') }}</div>
+      <div class="counter"><span>{{ r.productsExisting ?? 0 }}</span>{{ t('import.counters.productsExisting') }}</div>
+      <div class="counter"><span>{{ r.categoriesCreated ?? 0 }}</span>{{ t('import.counters.categoriesCreated') }}</div>
+      @if (hasRecipes()) {
+        <div class="counter"><span>{{ r.sectionsCreated ?? 0 }}</span>{{ t('import.counters.sectionsCreated') }}</div>
+        <div class="counter"><span>{{ r.menuItemsCreated ?? 0 }}</span>{{ t('import.counters.menuItemsCreated') }}</div>
+        <div class="counter"><span>{{ r.recipesCreated ?? 0 }}</span>{{ t('import.counters.recipesCreated') }}</div>
+        <div class="counter"><span>{{ r.recipesReplaced ?? 0 }}</span>{{ t('import.counters.recipesReplaced') }}</div>
+      }
+    </div>
+    @if (hasRecipes() && step() !== 'done') {
+      <div class="notice"><i class="ti ti-info-circle"></i><span>{{ t('import.replaceWarning') }}</span></div>
+    }
+  }
+
+  @if (errors().length) {
+    <p class="step-title errors-title">{{ t('import.errorsTitle', { count: errors().length }) }}</p>
+    <p class="hint">{{ t('import.errorsHint') }}</p>
+    <div class="error-list">
+      @for (error of shownErrors(); track $index) {
+        <div class="error-card">
+          <div class="error-head">
+            <span class="badge badge-red">{{ t('import.sheets.' + error.sheet) }} · {{ t('import.row', { row: error.row ?? '' }) }}</span>
+            @if (columnLabel(error); as column) { <span class="error-column ellipsis">{{ column }}</span> }
+          </div>
+          <p class="error-message">{{ errorMessage(error) }}</p>
+          @if (error.value) { <p class="error-value ellipsis">{{ t('import.value', { value: error.value }) }}</p> }
+        </div>
+      }
+    </div>
+    @if (hiddenErrors()) { <p class="hint">{{ t('import.moreErrors', { count: hiddenErrors() }) }}</p> }
+  }
+
+  <div drawer-footer class="panel-footer" style="justify-content:flex-end;">
+    @if (step() === 'done') {
+      <button type="button" (click)="close()" class="btn-primary btn-sm">{{ t('common.close') }}</button>
+    } @else {
+      <button type="button" (click)="close()" class="btn-secondary btn-sm" [disabled]="step() === 'saving'">{{ t('common.cancel') }}</button>
+      <button type="button" (click)="confirm()" class="btn-primary btn-sm"
+              [disabled]="step() !== 'preview' || !result() || errors().length > 0">
+        @if (step() === 'saving') { <i class="ti ti-loader-2 spin"></i> }
+        {{ t('import.confirm') }}
+      </button>
+    }
+  </div>
+</app-drawer>

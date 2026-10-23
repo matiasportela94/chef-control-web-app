@@ -88,7 +88,16 @@
     "GOOGLE_ACCOUNT_ALREADY_LINKED": "That Google account is already linked to another user.",
     "USER_ALREADY_LINKED_TO_GOOGLE": "You already have another Google account linked. Unlink it first.",
     "GOOGLE_ACCOUNT_MISMATCH": "That's not the Google account you have linked. Confirm with that account.",
-    "PLAN_FEATURE_REQUIRED": "Your plan doesn't include this feature. You can change it in Plan & account."
+    "PLAN_FEATURE_REQUIRED": "Your plan doesn't include this feature. You can change it in Plan & account.",
+    "IMPORT_REQUIRED_FIELD": "This field is required.",
+    "IMPORT_INVALID_VALUE": "Value out of range: a negative or zero number, or a text that is too long.",
+    "IMPORT_UNKNOWN_UNIT": "We don't know that unit. Use one from the Unidades sheet.",
+    "IMPORT_UNKNOWN_INGREDIENT": "That ingredient isn't a product: add it to the Insumos sheet or check its spelling.",
+    "IMPORT_INCOMPATIBLE_UNIT": "That unit can't be converted to the product's unit (for example, grams for a product counted by unit).",
+    "IMPORT_DUPLICATE_PRODUCT": "This product is repeated in the file.",
+    "IMPORT_DUPLICATE_INGREDIENT": "This ingredient is repeated in the dish's recipe.",
+    "IMPORT_CATEGORY_CREATE_FORBIDDEN": "That category doesn't exist and your user can't create categories. Use an existing one or ask your account admin to create it.",
+    "IMPORT_AMBIGUOUS_NAME": "The catalog has more than one item with that name written differently (for example, \"Tomate\" and \"tomate\"). Merge them first."
   },
   "ai": {
     "title": "Quick entry",
@@ -419,5 +428,77 @@
   },
   "dashboard": {
     "live": "Live"
+  },
+  "import": {
+    "title": "Import from Excel",
+    "button": "Import",
+    "productsOnlyPlan": "Your plan doesn't include recipes: only the Insumos sheet is imported. Recipes are included from the Starter plan.",
+    "productsOnlyPermission": "Your user can't create or edit dishes: only the Insumos sheet is imported.",
+    "step1": "1. Download the template",
+    "step1Hint": "It has a sheet for products, one for recipes, the list of units and instructions with examples.",
+    "downloadTemplate": "Download template",
+    "step2": "2. Fill it in and choose the file",
+    "chooseFile": "Choose .xlsx file",
+    "checking": "Checking the file…",
+    "previewTitle": "This is what will be imported",
+    "resultTitle": "This is what was imported",
+    "counters": {
+      "productsCreated": "new products",
+      "productsExisting": "products that already existed (not changed)",
+      "categoriesCreated": "new categories",
+      "sectionsCreated": "new menu sections",
+      "menuItemsCreated": "new dishes",
+      "recipesCreated": "new recipes",
+      "recipesReplaced": "replaced recipes"
+    },
+    "replaceWarning": "For dishes that already exist, the whole recipe is replaced by the one in the file. Their price and menu section don't change.",
+    "errorsTitle": "To fix ({count})",
+    "errorsHint": "Nothing is saved while the file has errors. Fix it and choose it again.",
+    "row": "row {row}",
+    "value": "Value: {value}",
+    "moreErrors": "…and {count} more.",
+    "rowError": "There's a problem with this row.",
+    "confirm": "Confirm import",
+    "done": "Done: the import was saved.",
+    "readError": "We couldn't read the file. It must be an Excel .xlsx: if it's in another format, save it as .xlsx.",
+    "checkError": "We couldn't check the file. Please try again.",
+    "saveError": "We couldn't save the import. Please try again.",
+    "templateError": "We couldn't generate the template. Please try again.",
+    "missingColumns": "The {sheet} sheet is missing required columns: {columns}. Use the template headers.",
+    "noSheets": "We couldn't find the template sheets ({sheets}). Download it and fill it in.",
+    "empty": "The file has no rows to import.",
+    "tooManyRows": "The {sheet} sheet has more than {max} rows. Split it into several files.",
+    "sheets": {
+      "PRODUCTS": "Insumos",
+      "RECIPES": "Recetas"
+    },
+    "columns": {
+      "name": "Nombre",
+      "unit": "Unidad",
+      "category": "Categoría",
+      "minStock": "Stock mínimo",
+      "yieldPercentage": "Rendimiento %",
+      "menuItem": "Plato",
+      "price": "Precio de venta",
+      "section": "Paso del menú",
+      "ingredient": "Ingrediente",
+      "quantity": "Cantidad (para 1 plato)"
+    },
+    "template": {
+      "fileName": "chef-control-template.xlsx",
+      "unitsSheet": "Unidades",
+      "instructionsSheet": "Instructions",
+      "unitName": "Unit",
+      "unitAbbreviation": "Abbreviation",
+      "unitsNote": "Write the unit exactly as it appears here, by name or abbreviation and without plural.",
+      "instructions": "How to fill in the template\n• Insumos (products) sheet: one row per product. Nombre and Unidad are required (marked with *).\n• Unidad: the name or abbreviation, as they appear in the Unidades sheet.\n• Categoría: created if it does not exist.\n• Rendimiento %: how much of what you buy is usable. 90 = 900 g out of 1 kg.\n• Recetas (recipes) sheet: one row per ingredient. Sale price and menu section go in the first row of each dish.\n• Cantidad: what ONE dish takes, in the unit of that row.\n• The ingredient must be an existing product or one in the Insumos sheet.\n• If the dish already exists, its recipe is replaced by the file's; price and menu section don't change.\n• Numbers can be written as 1.234,5 or 1,5.\n• Don't leave examples or notes in the Insumos and Recetas sheets: everything there is imported.",
+      "exampleProducts": "Insumos sheet example",
+      "exampleProduct1": "Potato | kg | Vegetables | 10 | 90",
+      "exampleProduct2": "Sunflower oil | l | Pantry | 5 |",
+      "exampleRecipes": "Recetas sheet example",
+      "exampleRecipe1": "French fries | 6.500 | Sides | Potato | 300 | g",
+      "exampleRecipe2": "French fries | | | Sunflower oil | 50 | ml"
+    },
+    "unreadableNumber": "Not a number. Write it like 1.234,5 or 1,5."
   }
 }
