@@ -1,31 +1,35 @@
-import { Component, OnInit, computed, signal } from '@angular/core';
+import { Component, OnDestroy, OnInit, computed, signal } from '@angular/core';
 import { Router } from '@angular/router';
 import { Api } from '../../api/api';
 import { getAccount } from '../../api/fn/account-controller/get-account';
 import { deleteAccount } from '../../api/fn/account-controller/delete-account';
+import { getSubscription } from '../../api/fn/subscription-controller/get-subscription';
+import { listSubscriptionPlans } from '../../api/fn/subscription-controller/list-subscription-plans';
+import { createSubscription } from '../../api/fn/subscription-controller/create-subscription';
+import { cancelSubscription } from '../../api/fn/subscription-controller/cancel-subscription';
 import { AccountResponse } from '../../api/models/account-response';
+import { SubscriptionResponse } from '../../api/models/subscription-response';
+import { SubscriptionPlanResponse } from '../../api/models/subscription-plan-response';
+import { CheckoutResponse } from '../../api/models/checkout-response';
+import { CreateSubscriptionRequest } from '../../api/models/create-subscription-request';
 import { parseBlob } from '../../core/utils/parse-blob';
 import { extractApiError } from '../../core/utils/api-error';
+import { formatDatetime } from '../../core/utils/format';
 import { AuthService } from '../../core/services/auth.service';
+import { I18nService } from '../../core/services/i18n.service';
 import { ActionDialogComponent } from '../../shared/components/action-dialog/action-dialog.component';
 import { SpinnerComponent } from '../../shared/components/spinner/spinner.component';
 
-/** Etiquetas de Feature (domain/plan/Feature.java) — las que no estén acá se muestran crudas. */
-const FEATURE_LABELS: Record<string, string> = {
-  STOCK_MOVEMENTS:       'Movimientos de stock',
-  PRODUCT_CATALOG:       'Catálogo de insumos',
-  BASIC_REPORTS:         'Reportes básicos',
-  WHATSAPP_INTEGRATION:  'Integración WhatsApp',
-  AI_INTERPRETER:        'Entrada rápida con IA',
-  MULTI_USER:            'Múltiples usuarios',
-  RECIPES_AND_FOOD_COST: 'Recetas y food cost',
-  ADVANCED_REPORTS:      'Reportes avanzados',
-  CUSTOM_ALERTS:         'Alertas personalizadas',
-  MULTI_RESTAURANT:      'Múltiples restaurantes',
-  POS_INTEGRATION:       'Integración POS',
-  API_ACCESS:            'Acceso a la API',
-  PRIORITY_SUPPORT:      'Soporte prioritario',
-};
+type BillingPeriod = 'MONTHLY' | 'ANNUAL';
+
+/**
+ * Marca que esta pestaña se fue al checkout de Mercado Pago. Al volver, la suscripción sigue PENDING
+ * hasta que llega el aviso de MP al backend: con la marca se muestra "confirmando" y se consulta un rato.
+ * Se usa una marca propia y no los parámetros que MP agrega al volver porque esos no están verificados.
+ */
+const CHECKOUT_KEY = 'cc_checkout_started';
+const CONFIRM_POLL_MS = 3000;
+const CONFIRM_MAX_POLLS = 20;
 
 @Component({
   selector: 'app-plan',
@@ -34,10 +38,23 @@ const FEATURE_LABELS: Record<string, string> = {
   templateUrl: './plan.component.html',
   styleUrl: './plan.component.scss'
 })
-export class PlanComponent implements OnInit {
-  account = signal<AccountResponse | null>(null);
+export class PlanComponent implements OnInit, OnDestroy {
+  account      = signal<AccountResponse | null>(null);
+  subscription = signal<SubscriptionResponse | null>(null);
+  plans        = signal<SubscriptionPlanResponse[]>([]);
   loading = signal(true);
   error   = signal<string | null>(null);
+
+  period         = signal<BillingPeriod>('MONTHLY');
+  subscribing    = signal<string | null>(null);
+  subscribeError = signal<string | null>(null);
+
+  confirmState = signal<'idle' | 'waiting' | 'done' | 'timeout'>('idle');
+  private pollTimer?: ReturnType<typeof setTimeout>;
+
+  cancelling    = signal(false);
+  cancelLoading = signal(false);
+  cancelError   = signal<string | null>(null);
 
   deleting      = signal(false);
   deleteConfirm = signal('');
@@ -48,31 +65,144 @@ export class PlanComponent implements OnInit {
     this.deleteLoading() || this.deleteConfirm().trim() !== (this.account()?.name ?? ''));
 
   /**
-   * Solo el dueño puede cerrar la cuenta — y el backend lo vuelve a exigir, esto es únicamente
-   * para no mostrar un botón que va a rebotar. Se compara por email porque el nombre del rol
+   * Solo el dueño puede contratar, cancelar o cerrar la cuenta — y el backend lo vuelve a exigir, esto es
+   * únicamente para no mostrar botones que van a rebotar. Se compara por email porque el nombre del rol
    * es texto libre de cada cuenta y no sirve para identificar al dueño.
    */
   isOwner = computed(() =>
     !!this.account()?.ownerEmail && this.account()!.ownerEmail === this.auth.currentUser()?.email);
 
-  constructor(private api: Api, private auth: AuthService, private router: Router) {}
+  status = computed(() => this.subscription()?.status ?? null);
+
+  /** Con una suscripción ACTIVE el backend rechaza otra (409): cambiar de plan es cancelar y volver a suscribirse. */
+  canSubscribe = computed(() => this.isOwner() && this.status() !== 'ACTIVE');
+
+  /** Cancelable: la que todavía cobra o va a cobrar. */
+  canCancel = computed(() => this.isOwner() && (this.status() === 'ACTIVE' || this.status() === 'PAST_DUE'));
+
+  /** El descuento anual sale de los precios que manda el backend, no de un 15 escrito acá. */
+  annualSavingPct = computed(() => {
+    const p = this.plans()[0];
+    if (!p?.monthlyAmountArs || !p.annualAmountArs) return 0;
+    return Math.round((1 - p.annualAmountArs / (p.monthlyAmountArs * 12)) * 100);
+  });
+
+  constructor(private api: Api, private auth: AuthService, private router: Router, private i18n: I18nService) {}
 
   async ngOnInit(): Promise<void> {
     await this.load();
+    if (this.readCheckoutMark()) {
+      if (this.status() === 'PENDING') this.pollConfirmation(0);
+      else this.clearCheckoutMark();
+    }
+  }
+
+  ngOnDestroy(): void {
+    clearTimeout(this.pollTimer);
+  }
+
+  t(key: string, params?: Record<string, string | number>): string {
+    return this.i18n.t(key, params);
   }
 
   async load(): Promise<void> {
     if (!this.account()) this.loading.set(true);
     this.error.set(null);
     try {
-      const raw = await this.api.invoke(getAccount) as unknown;
-      this.account.set(await parseBlob<AccountResponse>(raw));
+      const [account, subscription, plans] = await Promise.all([
+        this.api.invoke(getAccount),
+        this.api.invoke(getSubscription),
+        this.api.invoke(listSubscriptionPlans),
+      ]) as unknown[];
+      this.account.set(await parseBlob<AccountResponse>(account));
+      this.subscription.set(await this.parseOptional<SubscriptionResponse>(subscription));
+      this.plans.set(await parseBlob<SubscriptionPlanResponse[]>(plans));
     } catch {
-      this.error.set('No se pudo cargar la información de la cuenta.');
+      this.error.set(this.t('plan.loadError'));
     } finally {
       this.loading.set(false);
     }
   }
+
+  /** GET /subscription responde 204 sin cuerpo si la cuenta nunca se suscribió. */
+  private async parseOptional<T>(raw: unknown): Promise<T | null> {
+    if (raw == null || (raw instanceof Blob && raw.size === 0)) return null;
+    return parseBlob<T>(raw);
+  }
+
+  // ---- contratar
+
+  async subscribe(planTier: string): Promise<void> {
+    this.subscribing.set(planTier);
+    this.subscribeError.set(null);
+    try {
+      const raw = await this.api.invoke(createSubscription, {
+        body: { planTier: planTier as CreateSubscriptionRequest['planTier'], billingPeriod: this.period() },
+      });
+      const checkout = await parseBlob<CheckoutResponse>(raw);
+      this.writeCheckoutMark();
+      window.location.href = checkout.checkoutUrl!;
+      // subscribing queda en el plan elegido mientras el navegador se va a Mercado Pago.
+    } catch (e: any) {
+      this.subscribeError.set(extractApiError(e, this.t('plan.subscribeError')));
+      this.subscribing.set(null);
+    }
+  }
+
+  private pollConfirmation(attempt: number): void {
+    this.confirmState.set('waiting');
+    this.pollTimer = setTimeout(async () => {
+      try {
+        const raw = await this.api.invoke(getSubscription);
+        this.subscription.set(await this.parseOptional<SubscriptionResponse>(raw));
+      } catch { /* un error suelto no corta la espera: se reintenta */ }
+      if (this.status() !== 'PENDING') {
+        this.clearCheckoutMark();
+        this.confirmState.set(this.status() === 'ACTIVE' ? 'done' : 'idle');
+        await this.load();
+      } else if (attempt + 1 >= CONFIRM_MAX_POLLS) {
+        this.clearCheckoutMark();
+        this.confirmState.set('timeout');
+      } else {
+        this.pollConfirmation(attempt + 1);
+      }
+    }, CONFIRM_POLL_MS);
+  }
+
+  // sessionStorage puede no estar (modo privado estricto): sin marca solo se pierde el "confirmando".
+  private writeCheckoutMark(): void { try { sessionStorage.setItem(CHECKOUT_KEY, '1'); } catch { } }
+  private readCheckoutMark(): boolean { try { return sessionStorage.getItem(CHECKOUT_KEY) === '1'; } catch { return false; } }
+  private clearCheckoutMark(): void { try { sessionStorage.removeItem(CHECKOUT_KEY); } catch { } }
+
+  // ---- cancelar
+
+  openCancel(): void {
+    this.cancelling.set(true);
+    this.cancelError.set(null);
+  }
+
+  async confirmCancel(): Promise<void> {
+    this.cancelLoading.set(true);
+    this.cancelError.set(null);
+    try {
+      await this.api.invoke(cancelSubscription);
+      this.cancelling.set(false);
+      await this.load();
+    } catch (e: any) {
+      this.cancelError.set(extractApiError(e, this.t('plan.cancelError')));
+    } finally {
+      this.cancelLoading.set(false);
+    }
+  }
+
+  /** En mora no hay período pagado que conservar: cancelar baja a prueba en el acto. */
+  get cancelMessage(): string {
+    const s = this.subscription();
+    if (!s || s.status === 'PAST_DUE' || !s.currentPeriodEnd) return this.t('plan.cancelMessageNow');
+    return this.t('plan.cancelMessage', { plan: this.tierName(s.planTier), date: this.dateTime(s.currentPeriodEnd) });
+  }
+
+  // ---- cerrar la cuenta
 
   openDelete(): void {
     this.deleting.set(true);
@@ -94,21 +224,39 @@ export class PlanComponent implements OnInit {
       await this.auth.logout();
       await this.router.navigate(['/']);
     } catch (e: any) {
-      this.deleteError.set(extractApiError(e, 'No se pudo eliminar la cuenta'));
+      this.deleteError.set(extractApiError(e, this.t('plan.deleteError')));
     } finally {
       this.deleteLoading.set(false);
     }
   }
 
+  // ---- formato
+
+  tierName(tier?: string): string {
+    return tier ? this.t('plan.tiers.' + tier) : '—';
+  }
+
   featureLabel(key: string): string {
-    return FEATURE_LABELS[key] ?? key;
+    const label = this.t('plan.features.' + key);
+    return label.startsWith('plan.') ? key : label;
+  }
+
+  /** $170.000: los precios de los planes son pesos enteros. */
+  price(n?: number): string {
+    return n == null ? '—' : '$' + n.toLocaleString('es-AR', { maximumFractionDigits: 0 });
+  }
+
+  dateTime(iso?: string): string {
+    return formatDatetime(iso);
   }
 
   get restaurantUsage(): string {
     const a = this.account();
     if (!a) return '';
     const used = a.restaurantCount ?? 0;
-    return a.restaurantLimit == null ? `${used} (sin límite)` : `${used} de ${a.restaurantLimit}`;
+    return a.restaurantLimit == null
+      ? this.t('plan.restaurantUsageUnlimited', { used })
+      : this.t('plan.restaurantUsage', { used, limit: a.restaurantLimit });
   }
 
   formatDate(iso?: string): string {
