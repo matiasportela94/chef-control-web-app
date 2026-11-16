@@ -2,14 +2,14 @@
 
   <div class="page-header">
     <div>
-      <h1 class="page-title">Restaurantes</h1>
+      <h1 class="page-title">{{ t('restaurants.title') }}</h1>
       <p class="page-subtitle">
-        @if (!loading()) { {{ restaurants().length }} locales en tu cuenta }
+        @if (!loading()) { {{ t('restaurants.count', { n: restaurants().length }) }} }
       </p>
     </div>
     @if (canCreate) {
       <button (click)="openCreate()" class="btn-primary btn-sm">
-        <i class="ti ti-plus"></i> Nuevo restaurante
+        <i class="ti ti-plus"></i> {{ t('restaurants.new') }}
       </button>
     }
   </div>
@@ -19,7 +19,7 @@
   @if (!loading() && error()) {
     <div style="background:var(--red-bg);border:1.5px solid var(--red);border-radius:14px;padding:20px;text-align:center;">
       <p style="font-size:12px;color:var(--red);margin-bottom:12px;">{{ error() }}</p>
-      <button (click)="load()" class="btn-secondary btn-sm">Reintentar</button>
+      <button (click)="load()" class="btn-secondary btn-sm">{{ t('common.retry') }}</button>
     </div>
   }
 
@@ -30,31 +30,32 @@
           <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;">
             <div style="display:flex;align-items:center;gap:8px;min-width:0;flex-wrap:wrap;">
               <p style="color:var(--text-1);font-weight:600;font-size:13px;">{{ r.name }}</p>
-              @if (isCurrent(r)) { <span class="badge badge-owner">Local actual</span> }
+              @if (isCurrent(r)) { <span class="badge badge-owner">{{ t('restaurants.current') }}</span> }
               @if (!r.isActive) {
-                <span class="badge" style="background:var(--red-bg);color:var(--red);">Deshabilitado</span>
+                <span class="badge" style="background:var(--red-bg);color:var(--red);">{{ t('restaurants.disabled') }}</span>
               }
+              <span style="font-size:11px;color:var(--text-3);">{{ taxLabel(r.taxCondition) }}</span>
               <span style="font-size:11px;color:var(--text-3);">{{ r.timezone }}</span>
             </div>
-            <div style="display:flex;align-items:center;gap:6px;">
+            <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
               @if (canUpdate) {
                 <button (click)="openEdit(r)" class="btn-secondary btn-sm">
-                  <i class="ti ti-edit"></i> Editar
+                  <i class="ti ti-edit"></i> {{ t('common.edit') }}
                 </button>
                 @if (!isCurrent(r)) {
                   <button (click)="toggleActive(r)" [disabled]="rowBusy() === r.id" class="btn-secondary btn-sm">
                     <i class="ti" [class.ti-player-play]="!r.isActive" [class.ti-player-pause]="r.isActive"></i>
-                    {{ r.isActive ? 'Deshabilitar' : 'Habilitar' }}
+                    {{ r.isActive ? t('restaurants.disable') : t('restaurants.enable') }}
                   </button>
                 }
               }
               @if (canDelete && !isCurrent(r)) {
-                <button (click)="openDelete(r)" class="btn-danger btn-sm">
+                <button (click)="openDelete(r)" class="btn-danger btn-sm" [title]="t('common.delete')" [attr.aria-label]="t('common.delete')">
                   <i class="ti ti-trash"></i>
                 </button>
               }
               @if (isCurrent(r)) {
-                <span style="font-size:11px;color:var(--text-3);">Cambiá de local para deshabilitarlo o eliminarlo</span>
+                <span style="font-size:11px;color:var(--text-3);">{{ t('restaurants.switchToManage') }}</span>
               }
             </div>
           </div>
@@ -65,20 +66,46 @@
 
 </div>
 
-<app-drawer [isOpen]="drawerOpen()" [title]="editing() ? 'Editar restaurante' : 'Nuevo restaurante'" (closed)="closeDrawer()">
+<app-drawer [isOpen]="drawerOpen()" [title]="editing() ? t('restaurants.editTitle') : t('restaurants.newTitle')" (closed)="closeDrawer()">
   <form id="restaurant-form" [formGroup]="form" (ngSubmit)="save()" style="display:flex;flex-direction:column;gap:16px;">
 
     <div>
-      <label class="field-label">Nombre <span style="color:var(--red);">*</span></label>
-      <input formControlName="name" type="text" placeholder="Ej: Sucursal Palermo"
+      <label class="field-label">{{ t('restaurants.name') }} <span style="color:var(--red);">*</span></label>
+      <input formControlName="name" type="text" [placeholder]="t('restaurants.namePlaceholder')"
              class="field-input" [class.input-error]="isInvalid('name')">
-      @if (isInvalid('name')) { <p style="font-size:11px;color:var(--red);margin-top:4px;">Campo requerido</p> }
+      @if (isInvalid('name')) { <p style="font-size:11px;color:var(--red);margin-top:4px;">{{ t('restaurants.required') }}</p> }
     </div>
 
     <div>
-      <label class="field-label">Zona horaria</label>
+      <label class="field-label">{{ t('restaurants.taxCondition') }}</label>
+      <div class="status-toggle" role="radiogroup" [attr.aria-label]="t('restaurants.taxCondition')">
+        @for (c of taxConditions; track c) {
+          <button type="button" class="status-btn" role="radio"
+                  [class.on]="form.get('taxCondition')?.value === c" [attr.aria-checked]="form.get('taxCondition')?.value === c"
+                  (click)="setTaxCondition(c)">
+            {{ t('restaurants.tax.' + c) }}
+          </button>
+        }
+      </div>
+      @if (!form.get('taxCondition')?.value) {
+        <p style="font-size:11px;color:var(--text-3);margin-top:6px;">{{ t('restaurants.taxNotSet') }}</p>
+      }
+      <p style="font-size:11px;color:var(--text-3);margin-top:6px;line-height:1.45;">{{ t('restaurants.taxHint') }}</p>
+      @if (switchingToRi) {
+        <div style="display:flex;align-items:flex-start;gap:10px;border:1.5px solid var(--accent);border-radius:12px;padding:12px 14px;margin-top:10px;">
+          <i class="ti ti-info-circle" style="color:var(--accent);font-size:18px;flex-shrink:0;line-height:1.2;"></i>
+          <div style="min-width:0;">
+            <p style="font-size:13px;font-weight:600;color:var(--text-1);margin:0 0 4px;">{{ t('restaurants.toRiTitle') }}</p>
+            <p style="font-size:12px;color:var(--text-2);margin:0;line-height:1.5;">{{ t('restaurants.toRiBody') }}</p>
+          </div>
+        </div>
+      }
+    </div>
+
+    <div>
+      <label class="field-label">{{ t('restaurants.timezone') }}</label>
       <input formControlName="timezone" type="text" placeholder="America/Argentina/Buenos_Aires" class="field-input">
-      <p style="font-size:11px;color:var(--text-3);margin-top:4px;">Vacío usa la zona horaria por defecto.</p>
+      <p style="font-size:11px;color:var(--text-3);margin-top:4px;">{{ t('restaurants.timezoneHint') }}</p>
     </div>
 
     @if (saveError()) {
@@ -90,28 +117,28 @@
   </form>
 
   <div drawer-footer style="padding:14px 20px;border-top:1px solid var(--border);display:flex;gap:8px;background:var(--bg-card);">
-    <button type="button" (click)="closeDrawer()" class="btn-secondary btn-sm">Cancelar</button>
+    <button type="button" (click)="closeDrawer()" class="btn-secondary btn-sm">{{ t('common.cancel') }}</button>
     <button type="submit" form="restaurant-form" [disabled]="saving()" class="btn-primary btn-sm" style="flex:1;justify-content:center;">
       @if (saving()) { <span class="loader"></span> }
-      {{ editing() ? 'Guardar cambios' : 'Crear restaurante' }}
+      {{ editing() ? t('restaurants.saveChanges') : t('restaurants.create') }}
     </button>
   </div>
 </app-drawer>
 
 <app-action-dialog
   [visible]="!!deleting()"
-  title="Eliminar restaurante"
+  [title]="t('restaurants.deleteTitle')"
   icon="⚠️"
   tone="danger"
-  [message]="deleteError() ?? 'Se borra TODA la data de este local: stock, compras, ventas, mermas, recetas, menú, accesos de usuarios y su auditoría. No se puede deshacer.'"
+  [message]="deleteError() ?? t('restaurants.deleteMessage')"
   [itemTitle]="deleting()?.name ?? ''"
-  helperText="En la cuenta solo queda una línea de auditoría diciendo que este local se eliminó."
-  inputLabel="Escribí el nombre del restaurante para confirmar"
+  [helperText]="t('restaurants.deleteHelper')"
+  [inputLabel]="t('restaurants.deleteInputLabel')"
   [inputPlaceholder]="deleting()?.name ?? ''"
   [inputValue]="deleteConfirm()"
   (inputValueChange)="deleteConfirm.set($event)"
-  confirmLabel="Eliminar definitivamente"
-  cancelLabel="Cancelar"
+  [confirmLabel]="t('restaurants.deleteConfirm')"
+  [cancelLabel]="t('common.cancel')"
   [confirmDisabled]="deleteBlocked()"
   (confirm)="confirmDelete()"
   (cancel)="closeDelete()">

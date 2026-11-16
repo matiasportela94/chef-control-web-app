@@ -3,7 +3,7 @@ import { ImportLabels, normalizeHeader, parseArNumber, parseCatalogWorkbook } fr
 const labels: ImportLabels = {
   sheets: { PRODUCTS: 'Insumos', RECIPES: 'Recetas' },
   columns: {
-    name: 'Nombre', unit: 'Unidad', category: 'Categoría', minStock: 'Stock mínimo', yieldPercentage: 'Rendimiento %',
+    name: 'Nombre', unit: 'Unidad', category: 'Categoría', minStock: 'Stock mínimo', yieldPercentage: 'Rendimiento %', ivaPercentage: 'IVA %',
     menuItem: 'Plato', price: 'Precio de venta', section: 'Paso del menú', ingredient: 'Ingrediente',
     quantity: 'Cantidad (para 1 plato)',
   },
@@ -67,6 +67,25 @@ describe('parseCatalogWorkbook', () => {
     ]);
     expect(parsed.recipes).toEqual([
       { row: 2, menuItem: 'Puré', ingredient: 'Papa', quantity: 0.25, unit: 'kg', price: 8500 },
+    ]);
+  });
+
+  it('lee la columna opcional IVA % como "21", "10,5", "21%" o una celda de porcentaje', () => {
+    const parsed = parseCatalogWorkbook([
+      { sheet: 'Insumos', data: [
+        ['Nombre*', 'Unidad*', 'IVA %'],
+        ['Papa', 'kg', '10,5'],
+        ['Aceite', 'l', '21%'],
+        ['Carne', 'kg', 21],
+        ['Vino', 'l', 0.27],       // Excel con formato %: 27 % se guarda 0,27
+        ['Sal', 'kg', 0],
+        ['Agua', 'l', null],
+        ['Pan', 'kg', 'veinte'],
+      ] },
+    ], labels, false);
+    expect(parsed.products.map(p => p.ivaPercentage)).toEqual([10.5, 21, 21, 27, 0, undefined, undefined]);
+    expect(parsed.errors).toEqual([
+      { sheet: 'PRODUCTS', row: 8, field: 'ivaPercentage', errorCode: 'UNREADABLE_NUMBER', value: 'veinte' },
     ]);
   });
 

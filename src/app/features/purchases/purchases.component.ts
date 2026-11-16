@@ -22,8 +22,12 @@ import { PagedResponseProductResponse }  from '../../api/models/paged-response-p
 import { DecimalPipe, NgClass } from '@angular/common';
 import { parseBlob } from '../../core/utils/parse-blob';
 import { formatARS, formatDate } from '../../core/utils/format';
-import { todayISO, dateToInstant } from '../../core/utils/date';
+import { arToday, arDateOf, arDayStart } from '../../core/utils/date';
 import { extractApiError } from '../../core/utils/api-error';
+import { IVA_RATES, formatIvaRate, ivaForLine } from '../../core/utils/iva';
+import { AuthService } from '../../core/services/auth.service';
+import { I18nService } from '../../core/services/i18n.service';
+import { RouterLink } from '@angular/router';
 import { PaginatorComponent } from '../../shared/components/paginator/paginator.component';
 import { DrawerComponent } from '../../shared/components/drawer/drawer.component';
 import { SpinnerComponent } from '../../shared/components/spinner/spinner.component';
@@ -32,7 +36,7 @@ import { SelectComponent, SelectOption } from '../../shared/components/select/se
 @Component({
   selector: 'app-purchases',
   standalone: true,
-  imports: [ReactiveFormsModule, DecimalPipe, NgClass, PaginatorComponent, DrawerComponent, SpinnerComponent, SelectComponent],
+  imports: [ReactiveFormsModule, DecimalPipe, NgClass, RouterLink, PaginatorComponent, DrawerComponent, SpinnerComponent, SelectComponent],
   templateUrl: './purchases.component.html',
   styleUrl: './purchases.component.scss'
 })
@@ -59,12 +63,26 @@ export class PurchasesComponent implements OnInit {
   unitOptions = computed<SelectOption[]>(() =>
     this.units().map(u => ({ value: u.id ?? '', label: u.abbreviation ?? '' }))
   );
+  /** Alícuota de cada línea. Valores en texto (el select trabaja con strings); 0 = "Sin IVA". */
+  readonly ivaOptions = computed<SelectOption[]>(() => IVA_RATES.map(r => ({
+    value: String(r), label: r === 0 ? this.t('purchases.ivaNone') : this.t('purchases.ivaOption', { rate: formatIvaRate(r) }),
+  })));
+
+  /** Condición fiscal del local activo, de la sesión. Una sesión de antes de que existiera el dato la toma como sin definir. */
+  readonly taxCondition = computed(() => {
+    const u = this.auth.currentUser();
+    return u?.restaurants.find(r => r.id === u.restaurantId)?.taxCondition ?? null;
+  });
+  readonly canEditRestaurants = computed(() => this.auth.hasPermission('RESTAURANTS_UPDATE'));
 
   createOpen = signal(false);
   editMode   = signal(false);
   editingId  = signal<string | null>(null);
   saving     = signal(false);
   saveError  = signal<string | null>(null);
+
+  /** Editando una compra cargada antes del IVA: se corrige el precio sin desglose (el back no tiene alícuota ni flag). */
+  editLegacy = signal(false);
 
   detailOpen    = signal(false);
   detail        = signal<PurchaseDetailResponse | null>(null);
@@ -79,13 +97,19 @@ export class PurchasesComponent implements OnInit {
 
   form: FormGroup;
 
-  constructor(private api: Api, private fb: FormBuilder, private aiRefresh: AiRefreshService, private alertNotification: AlertNotificationService) {
+  constructor(private api: Api, private fb: FormBuilder, private aiRefresh: AiRefreshService,
+              private alertNotification: AlertNotificationService, private auth: AuthService, private i18n: I18nService) {
     this.form = this.fb.group({
-      purchasedAt: [todayISO()],
+      purchasedAt: [arToday()],
       supplierId:  [''],
       notes:       [''],
+      pricesIncludeIva: [true],
       items:       this.fb.array([], Validators.minLength(1)),
     });
+  }
+
+  t(key: string, params?: Record<string, string | number>): string {
+    return this.i18n.t(key, params);
   }
 
   async ngOnInit(): Promise<void> {
@@ -108,7 +132,7 @@ export class PurchasesComponent implements OnInit {
       this.purchases.set(res.content ?? []);
       this.total.set(res.totalElements ?? 0);
     } catch {
-      this.error.set('No se pudieron cargar las compras.');
+      this.error.set(this.t('purchases.loadError'));
     } finally {
       this.loading.set(false);
     }
@@ -130,9 +154,13 @@ export class PurchasesComponent implements OnInit {
 
   openCreate(): void {
     this.editMode.set(false);
+    this.editLegacy.set(false);
     this.editingId.set(null);
     this.items.clear();
-    this.form.reset({ purchasedAt: todayISO(), supplierId: '', notes: '' });
+    this.form.get('pricesIncludeIva')?.enable();
+    // RI recupera el IVA: sus facturas se cargan sin IVA. Monotributo o sin definir: el IVA es costo, con IVA.
+    this.form.reset({ purchasedAt: arToday(), supplierId: '', notes: '',
+                      pricesIncludeIva: this.taxCondition() !== 'RESPONSABLE_INSCRIPTO' });
     this.addItem();
     this.saveError.set(null);
     this.createOpen.set(true);
@@ -151,15 +179,17 @@ export class PurchasesComponent implements OnInit {
       d = await parseBlob<PurchaseDetailResponse>(raw);
     } catch { /* stays null */ }
 
-    const purchasedDate = purchase.purchasedAt
-      ? new Date(purchase.purchasedAt).toISOString().substring(0, 10)
-      : todayISO();
+    const purchasedDate = purchase.purchasedAt ? arDateOf(purchase.purchasedAt) : arToday();
 
+    // El back recalcula la corrección de precio con la alícuota y el flag de la compra: acá se muestran, no se editan.
+    this.editLegacy.set(d?.pricesIncludeIva == null);
     this.form.patchValue({
       purchasedAt: purchasedDate,
       supplierId:  purchase.supplierId ?? '',
       notes:       purchase.notes ?? '',
+      pricesIncludeIva: d?.pricesIncludeIva ?? true,
     });
+    this.form.get('pricesIncludeIva')?.disable();
 
     if (d?.items) {
       for (const item of d.items) {
@@ -172,6 +202,7 @@ export class PurchasesComponent implements OnInit {
           // Solo lectura: la corrección de una compra cambia el precio, no el lote. Se muestra
           // para que se vea qué vence mientras se corrige, no para editarlo.
           expirationDate: [{ value: item.expirationDate ?? null, disabled: true }],
+          ivaPercentage:  [{ value: String(item.ivaPercentage ?? 0), disabled: true }],
           // display helpers
           _productName: [item.productName ?? ''],
           _unitAbbr:    [item.unitAbbreviation ?? ''],
@@ -197,6 +228,7 @@ export class PurchasesComponent implements OnInit {
       quantity:       [null as number | null, [Validators.required, Validators.min(0.001)]],
       pricePerUnit:   [null as number | null, [Validators.required, Validators.min(0.01)]],
       expirationDate: [null as string | null],
+      ivaPercentage:  ['0'],
       _productName:   [''],
       _unitAbbr:      [''],
     });
@@ -216,6 +248,16 @@ export class PurchasesComponent implements OnInit {
     if (product?.defaultUnit?.id) {
       this.items.at(index).get('unitId')?.setValue(product.defaultUnit.id);
     }
+    // Se propone la alícuota del insumo; manda la factura, así que se puede cambiar.
+    this.items.at(index).get('ivaPercentage')?.setValue(String(product?.ivaPercentage ?? 0));
+  }
+
+  setPricesIncludeIva(value: boolean): void {
+    this.form.get('pricesIncludeIva')?.setValue(value);
+  }
+
+  get pricesIncludeIva(): boolean {
+    return !!this.form.get('pricesIncludeIva')?.value;
   }
 
   itemSubtotal(index: number): number {
@@ -223,8 +265,24 @@ export class PurchasesComponent implements OnInit {
     return (+(v.quantity) || 0) * (+(v.pricePerUnit) || 0);
   }
 
-  get grandTotal(): number {
-    return this.items.controls.reduce((sum, _, i) => sum + this.itemSubtotal(i), 0);
+  /**
+   * Neto / IVA / total antes de guardar, con la regla del back (ivaForLine). Es una vista previa: guardada,
+   * vale lo que devuelve el back. Una compra vieja sin datos de IVA se corrige como antes, sin desglose.
+   */
+  get ivaSummary(): { net: number; iva: number; total: number } {
+    if (this.editLegacy()) {
+      const total = this.items.controls.reduce((sum, _, i) => sum + this.itemSubtotal(i), 0);
+      return { net: total, iva: 0, total };
+    }
+    const include = this.pricesIncludeIva;
+    let net = 0, iva = 0;  // en centavos, para que la suma no arrastre decimales de punto flotante
+    for (const control of this.items.controls) {
+      const v = control.getRawValue();
+      const line = ivaForLine(+v.quantity || 0, +v.pricePerUnit || 0, +v.ivaPercentage || 0, include);
+      net += Math.round(line.net * 100);
+      iva += Math.round(line.iva * 100);
+    }
+    return { net: net / 100, iva: iva / 100, total: (net + iva) / 100 };
   }
 
   async save(): Promise<void> {
@@ -238,21 +296,24 @@ export class PurchasesComponent implements OnInit {
   private async saveCreate(): Promise<void> {
     if (this.form.invalid || this.items.length === 0) {
       this.form.markAllAsTouched();
-      if (this.items.length === 0) this.saveError.set('Agregá al menos un ítem.');
+      if (this.items.length === 0) this.saveError.set(this.t('purchases.addItemError'));
       return;
     }
     this.saving.set(true);
     this.saveError.set(null);
     const v = this.form.getRawValue();
+    // Siempre explícitos (lo que el usuario ve): con null el back aplicaría sus defaults, que pueden ser otros.
     const body = {
+      pricesIncludeIva: !!v.pricesIncludeIva,
       items: v.items.map((item: any) => ({
         productId:    item.productId,
         unitId:       item.unitId,
         quantity:     +item.quantity,
         pricePerUnit: +item.pricePerUnit,
+        ivaPercentage: +item.ivaPercentage,
         ...(item.expirationDate ? { expirationDate: item.expirationDate } : {}),
       })),
-      ...(v.purchasedAt ? { purchasedAt: dateToInstant(v.purchasedAt) } : {}),
+      ...(v.purchasedAt ? { purchasedAt: arDayStart(v.purchasedAt) } : {}),
       ...(v.supplierId  ? { supplierId:  v.supplierId  } : {}),
       ...(v.notes?.trim() ? { notes: v.notes.trim() } : {}),
     };
@@ -262,7 +323,7 @@ export class PurchasesComponent implements OnInit {
       await this.loadPurchases();
       void this.alertNotification.refresh();
     } catch (e: any) {
-      this.saveError.set(extractApiError(e, 'Error al registrar la compra'));
+      this.saveError.set(extractApiError(e, this.t('purchases.saveError')));
     } finally {
       this.saving.set(false);
     }
@@ -279,7 +340,7 @@ export class PurchasesComponent implements OnInit {
     const body: any = {
       supplierId:  v.supplierId  || null,
       notes:       v.notes?.trim() || null,
-      purchasedAt: v.purchasedAt ? dateToInstant(v.purchasedAt) : null,
+      purchasedAt: v.purchasedAt ? arDayStart(v.purchasedAt) : null,
       items: v.items
         .filter((item: any) => item.itemId)
         .map((item: any) => ({
@@ -297,7 +358,7 @@ export class PurchasesComponent implements OnInit {
         this.detail.set(await parseBlob<PurchaseDetailResponse>(raw));
       }
     } catch (e: any) {
-      this.saveError.set(extractApiError(e, 'Error al actualizar la compra'));
+      this.saveError.set(extractApiError(e, this.t('purchases.updateError')));
     } finally {
       this.saving.set(false);
     }
@@ -329,16 +390,17 @@ export class PurchasesComponent implements OnInit {
     if (!id) return;
     this.reversing.set(true);
     this.reverseError.set(null);
+    // Se lee antes de cerrar el modal: closeReverseModal() lo borra, y leído después el form precargado no se abría nunca.
+    const target = this.reverseTarget();
     try {
       await this.api.invoke(reversePurchase, { id });
       this.closeReverseModal();
       await this.loadPurchases();
       void this.alertNotification.refresh();
       // Pre-fill the create form with the original data for correction
-      const target = this.reverseTarget();
       if (target) this.openCreatePrefilled(target);
     } catch (e: any) {
-      this.reverseError.set(extractApiError(e, 'Error al revertir la compra'));
+      this.reverseError.set(extractApiError(e, this.t('purchases.reverseError')));
     } finally {
       this.reversing.set(false);
     }
@@ -346,18 +408,22 @@ export class PurchasesComponent implements OnInit {
 
   private openCreatePrefilled(d: PurchaseDetailResponse): void {
     this.editMode.set(false);
+    this.editLegacy.set(false);
     this.editingId.set(null);
     this.items.clear();
     this.saveError.set(null);
 
-    const purchasedDate = d.purchasedAt
-      ? new Date(d.purchasedAt).toISOString().substring(0, 10)
-      : todayISO();
+    const purchasedDate = d.purchasedAt ? arDateOf(d.purchasedAt) : arToday();
 
+    // La compra rehecha tiene que dar los mismos números. Una vieja (sin datos de IVA) se rehace "con IVA" y
+    // alícuota 0: así neto = lo que se pagó, como se costeaba. Con null el back aplicaría los defaults de hoy
+    // (para un RI, "sin IVA" y la alícuota actual del insumo), que cambiarían el costo.
+    this.form.get('pricesIncludeIva')?.enable();
     this.form.reset({
       purchasedAt: purchasedDate,
       supplierId:  d.supplierId ?? '',
       notes:       d.notes ?? '',
+      pricesIncludeIva: d.pricesIncludeIva ?? true,
     });
 
     if (d.items) {
@@ -371,6 +437,7 @@ export class PurchasesComponent implements OnInit {
           // Se copia del ítem original: corregir una compra no puede perder el vencimiento.
           // Sin esto el lote nuevo nacía sin fecha y desaparecía del control de vencimientos.
           expirationDate: [item.expirationDate ?? null],
+          ivaPercentage:  [String(item.ivaPercentage ?? 0)],
           _productName:   [item.productName ?? ''],
           _unitAbbr:      [item.unitAbbreviation ?? ''],
         }));
@@ -410,6 +477,16 @@ export class PurchasesComponent implements OnInit {
   isItemInvalid(index: number, field: string): boolean {
     const ctrl = this.items.at(index).get(field);
     return !!(ctrl?.invalid && ctrl?.touched);
+  }
+
+  /** "IVA 21 % · Neto $ 826,44 · IVA $ 173,55" debajo de cada línea del detalle; null en una compra vieja. */
+  lineIva(item: { ivaPercentage?: number; netAmount?: number; ivaAmount?: number }): string | null {
+    if (item.ivaPercentage == null) return null;
+    return this.t('purchases.lineIva', {
+      rate: item.ivaPercentage === 0 ? this.t('purchases.ivaNone') : formatIvaRate(item.ivaPercentage),
+      // Sin cortar entre "$" y el número cuando la línea se parte en el teléfono.
+      net: formatARS(item.netAmount).replace(' ', '\u00A0'), iva: formatARS(item.ivaAmount).replace(' ', '\u00A0'),
+    });
   }
 
   readonly formatARS = formatARS;

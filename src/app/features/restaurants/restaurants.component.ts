@@ -14,6 +14,9 @@ import { ActionDialogComponent } from '../../shared/components/action-dialog/act
 import { DrawerComponent } from '../../shared/components/drawer/drawer.component';
 import { SpinnerComponent } from '../../shared/components/spinner/spinner.component';
 import { isFormFieldInvalid } from '../../core/utils/form';
+import { I18nService } from '../../core/services/i18n.service';
+
+type TaxCondition = NonNullable<RestaurantResponse['taxCondition']>;
 
 @Component({
   selector: 'app-restaurants',
@@ -44,11 +47,34 @@ export class RestaurantsComponent implements OnInit {
 
   form: FormGroup;
 
-  constructor(private api: Api, private fb: FormBuilder, public auth: AuthService) {
+  readonly taxConditions: TaxCondition[] = ['RESPONSABLE_INSCRIPTO', 'MONOTRIBUTO'];
+
+  constructor(private api: Api, private fb: FormBuilder, public auth: AuthService, private i18n: I18nService) {
     this.form = this.fb.group({
       name: ['', Validators.required],
       timezone: [''],
+      // Una vez definida no vuelve a "sin definir": el back toma null como "no cambiar".
+      taxCondition: [null as TaxCondition | null],
     });
+  }
+
+  t(key: string, params?: Record<string, string | number>): string {
+    return this.i18n.t(key, params);
+  }
+
+  taxLabel(condition: TaxCondition | null | undefined): string {
+    return this.t(condition ? `restaurants.tax.${condition}` : 'restaurants.taxNotSet');
+  }
+
+  setTaxCondition(condition: TaxCondition): void {
+    this.form.get('taxCondition')?.setValue(condition);
+  }
+
+  /** Pasar a RI baja el food cost de las compras nuevas: se avisa antes de guardar, para que no parezca un error. */
+  get switchingToRi(): boolean {
+    const r = this.editing();
+    return !!r && r.taxCondition !== 'RESPONSABLE_INSCRIPTO'
+      && this.form.get('taxCondition')?.value === 'RESPONSABLE_INSCRIPTO';
   }
 
   get canCreate(): boolean { return this.auth.hasPermission('RESTAURANTS_CREATE'); }
@@ -70,7 +96,7 @@ export class RestaurantsComponent implements OnInit {
       const raw = await this.api.invoke(listRestaurants) as unknown;
       this.restaurants.set(await parseBlob<RestaurantResponse[]>(raw));
     } catch {
-      this.error.set('No se pudieron cargar los restaurantes.');
+      this.error.set(this.t('restaurants.loadError'));
     } finally {
       this.loading.set(false);
     }
@@ -78,14 +104,14 @@ export class RestaurantsComponent implements OnInit {
 
   openCreate(): void {
     this.editing.set(null);
-    this.form.reset({ name: '', timezone: '' });
+    this.form.reset({ name: '', timezone: '', taxCondition: null });
     this.saveError.set(null);
     this.drawerOpen.set(true);
   }
 
   openEdit(r: RestaurantResponse): void {
     this.editing.set(r);
-    this.form.reset({ name: r.name ?? '', timezone: r.timezone ?? '' });
+    this.form.reset({ name: r.name ?? '', timezone: r.timezone ?? '', taxCondition: r.taxCondition ?? null });
     this.saveError.set(null);
     this.drawerOpen.set(true);
   }
@@ -103,7 +129,11 @@ export class RestaurantsComponent implements OnInit {
     this.saving.set(true);
     this.saveError.set(null);
     const raw = this.form.getRawValue();
-    const body = { name: raw.name.trim(), timezone: raw.timezone?.trim() || undefined };
+    const body = {
+      name: raw.name.trim(),
+      timezone: raw.timezone?.trim() || undefined,
+      taxCondition: raw.taxCondition ?? undefined,
+    };
     try {
       const r = this.editing();
       if (r?.id) {
@@ -112,9 +142,12 @@ export class RestaurantsComponent implements OnInit {
         await this.api.invoke(createRestaurant, { body });
       }
       this.drawerOpen.set(false);
+      // La sesión guarda la condición fiscal del local activo (el default de "precios con IVA" en compras):
+      // sin esto quedaría la vieja hasta el próximo login. De paso trae el nombre nuevo.
+      if (r && this.isCurrent(r)) await this.auth.refreshSession().catch(() => undefined);
       await this.load();
     } catch (e: any) {
-      this.saveError.set(extractApiError(e, 'Error al guardar el restaurante'));
+      this.saveError.set(extractApiError(e, this.t('restaurants.saveError')));
     } finally {
       this.saving.set(false);
     }
@@ -128,7 +161,7 @@ export class RestaurantsComponent implements OnInit {
       await this.api.invoke(setRestaurantActive, { id: r.id, body: { active: !r.isActive } });
       await this.load();
     } catch (e: any) {
-      this.error.set(extractApiError(e, 'No se pudo cambiar el estado del restaurante'));
+      this.error.set(extractApiError(e, this.t('restaurants.toggleError')));
     } finally {
       this.rowBusy.set(null);
     }
@@ -155,7 +188,7 @@ export class RestaurantsComponent implements OnInit {
       this.closeDelete();
       await this.load();
     } catch (e: any) {
-      this.deleteError.set(extractApiError(e, 'Error al eliminar el restaurante'));
+      this.deleteError.set(extractApiError(e, this.t('restaurants.deleteError')));
     } finally {
       this.deleteLoading.set(false);
     }

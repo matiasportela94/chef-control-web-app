@@ -27,13 +27,13 @@ export interface ImportLabels {
 
 type Cell = string | number | boolean | Date | null | undefined;
 
-export const PRODUCT_FIELDS = ['name', 'unit', 'category', 'minStock', 'yieldPercentage'] as const;
+export const PRODUCT_FIELDS = ['name', 'unit', 'category', 'minStock', 'yieldPercentage', 'ivaPercentage'] as const;
 export const RECIPE_FIELDS = ['menuItem', 'price', 'section', 'ingredient', 'quantity', 'unit'] as const;
 export const REQUIRED_FIELDS: Record<ImportSheet, readonly string[]> = {
   PRODUCTS: ['name', 'unit'],
   RECIPES: ['menuItem', 'ingredient', 'quantity', 'unit'],
 };
-const NUMERIC_FIELDS = new Set(['minStock', 'yieldPercentage', 'price', 'quantity']);
+const NUMERIC_FIELDS = new Set(['minStock', 'yieldPercentage', 'ivaPercentage', 'price', 'quantity']);
 
 /** Código propio del front (el back nunca lo devuelve): un número escrito como texto que no se puede leer. */
 export const UNREADABLE_NUMBER = 'UNREADABLE_NUMBER';
@@ -111,7 +111,12 @@ function parseSheet<T extends { row?: number }>(
         if (text !== undefined) row[field] = text;
         continue;
       }
-      const number = parseArNumber(cell);
+      let number = parseArNumber(cell);
+      // Una celda con formato de porcentaje guarda 21 % como 0,21. Ninguna alícuota válida está entre 0 y 1,
+      // así que no hay ambigüedad: se pasa a 21. (Escrito como texto, "21%" ya se lee 21.)
+      if (field === 'ivaPercentage' && typeof cell === 'number' && number! > 0 && number! < 1) {
+        number = Math.round(number! * 1000) / 10;
+      }
       if (Number.isNaN(number)) {
         result.errors.push({ sheet, row: i + 1, field, errorCode: UNREADABLE_NUMBER, value: cellText(cell) });
       } else if (number !== undefined) {

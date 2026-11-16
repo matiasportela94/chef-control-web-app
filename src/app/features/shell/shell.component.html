@@ -168,6 +168,12 @@
         <a routerLink="/purchases" routerLinkActive="side-link-active" class="side-link">
           <i class="ti ti-shopping-cart"></i> Compras
         </a>
+
+        @if (authService.hasPermission('PURCHASES_VIEW')) {
+          <a routerLink="/purchase-iva" routerLinkActive="side-link-active" class="side-link">
+            <i class="ti ti-receipt-tax"></i> {{ t('nav.purchaseIva') }}
+          </a>
+        }
       }
 
       <button type="button" class="side-section-label" style="margin-top:8px;" (click)="toggleSection('inventory', $event)">

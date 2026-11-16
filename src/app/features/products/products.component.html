@@ -110,6 +110,10 @@
                   <span style="color:var(--text-3);">—</span>
                 }
               </div>
+              <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:10px;">
+                <span style="font-size:11px;color:var(--text-3);">{{ t('products.iva') }}</span>
+                <span style="font-size:13px;color:var(--text-2);">{{ ivaLabel(p) }}</span>
+              </div>
               @if (p.nextExpirationDate) {
                 <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:10px;">
                   <span style="font-size:11px;color:var(--text-3);">{{ t('products.nextExpiry') }}</span>
@@ -151,6 +155,7 @@
                   <th class="hidden sm:table-cell" style="text-align:right;">{{ t('products.nextExpiry') }}</th>
                   <th class="hidden md:table-cell" style="text-align:right;">Mín</th>
                   <th class="hidden md:table-cell" style="text-align:right;">Máx</th>
+                  <th class="hidden md:table-cell" style="text-align:right;">{{ t('products.iva') }}</th>
                   <th style="text-align:center;">Estado</th>
                   <th style="text-align:right;">Acciones</th>
                 </tr>
@@ -216,6 +221,9 @@
                     </td>
                     <td class="hidden md:table-cell" style="text-align:right;color:var(--text-2);">
                       {{ p.maxStock != null ? (p.maxStock | number:'1.0-2') : '—' }}
+                    </td>
+                    <td class="hidden md:table-cell" style="text-align:right;color:var(--text-2);white-space:nowrap;">
+                      {{ ivaLabel(p) }}
                     </td>
                     <td style="text-align:center;">
                       @if (p.isActive) {
@@ -307,6 +315,12 @@
         <label class="field-label">Categoría <span style="color:var(--text-3);font-weight:400;">(opc.)</span></label>
         <app-select formControlName="categoryId" [options]="categoryOptions()" placeholder="Sin categoría"></app-select>
       </div>
+    </div>
+
+    <div>
+      <label class="field-label">{{ t('products.iva') }} <span style="color:var(--text-3);font-weight:400;">(opc.)</span></label>
+      <app-select formControlName="ivaPercentage" [options]="ivaOptions" [placeholder]="t('products.ivaNotSet')"></app-select>
+      <p class="field-hint" style="margin-top:4px;">{{ t('products.ivaHint') }}</p>
     </div>
 
     <!-- Estado -->

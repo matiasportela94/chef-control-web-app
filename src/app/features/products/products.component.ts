@@ -29,6 +29,7 @@ import { I18nService } from '../../core/services/i18n.service';
 import { AuthService } from '../../core/services/auth.service';
 import { extractApiError } from '../../core/utils/api-error';
 import { isFormFieldInvalid } from '../../core/utils/form';
+import { IVA_RATES, formatIvaRate } from '../../core/utils/iva';
 
 @Component({
   selector: 'app-products',
@@ -93,6 +94,8 @@ export class ProductsComponent implements OnInit {
   categoryOptions = computed<SelectOption[]>(() =>
     this.categories().map(c => ({ value: c.id ?? '', label: c.name ?? '' }))
   );
+  /** El valor '' es "Sin cargar" (el placeholder del select). */
+  readonly ivaOptions: SelectOption[] = IVA_RATES.map(r => ({ value: String(r), label: formatIvaRate(r) }));
 
   drawerOpen     = signal(false);
   importOpen     = signal(false);
@@ -122,6 +125,7 @@ export class ProductsComponent implements OnInit {
       maxStock:      [null as number | null],
       yieldPercentage: [null as number | null],
       yieldLoss:       [null as number | null],
+      ivaPercentage:   [''],
     });
   }
 
@@ -163,7 +167,7 @@ export class ProductsComponent implements OnInit {
     this.editingProduct.set(null);
     this.form.get('name')?.enable();
     this.form.reset({ name: '', sku: '', defaultUnitId: '', categoryId: '', minStock: null, maxStock: null,
-                      yieldPercentage: null, yieldLoss: null });
+                      yieldPercentage: null, yieldLoss: null, ivaPercentage: '' });
     this.yieldMode.set('percent');
     this.advancedOpen.set(false);
     this.saveError.set(null);
@@ -182,6 +186,7 @@ export class ProductsComponent implements OnInit {
       maxStock:      p.maxStock      ?? null,
       yieldPercentage: this.isDefaultYield(p.yieldPercentage) ? null : p.yieldPercentage!,
       yieldLoss:       null,
+      ivaPercentage:   p.ivaPercentage != null ? String(Number(p.ivaPercentage)) : '',
     });
     this.yieldMode.set('percent');
     this.syncLossFromPercent();
@@ -215,6 +220,8 @@ export class ProductsComponent implements OnInit {
       // Siempre se guarda el porcentaje: dos representaciones del mismo dato en la base
       // serían dos fuentes de verdad. El modo "pierdo X por unidad" convierte al escribir.
       ...(v.yieldPercentage != null ? { yieldPercentage: +v.yieldPercentage } : {}),
+      // El PUT reemplaza todo: sin el campo, la alícuota queda vacía ("Sin cargar"), igual que stock mín/máx.
+      ...(v.ivaPercentage !== '' && v.ivaPercentage != null ? { ivaPercentage: +v.ivaPercentage } : {}),
     };
     try {
       const editing = this.editingProduct();
@@ -294,6 +301,10 @@ export class ProductsComponent implements OnInit {
   }
 
   readonly formatDateOnly = formatDateOnly;
+
+  ivaLabel(p: ProductResponse): string {
+    return p.ivaPercentage != null ? formatIvaRate(p.ivaPercentage) : '—';
+  }
 
   // ── Historial de costos ───────────────────────────────────────────────────
   // El costo de compra ya vivía completo en stock_movements desde el día uno; lo que faltaba

@@ -3,13 +3,13 @@
   <!-- Header -->
   <div class="page-header">
     <div>
-      <h1 class="page-title">Compras</h1>
+      <h1 class="page-title">{{ t('purchases.title') }}</h1>
       <p class="page-subtitle">
-        @if (!loading()) { {{ total() | number }} compras registradas }
+        @if (!loading()) { {{ t('purchases.count', { n: (total() | number) ?? '0' }) }} }
       </p>
     </div>
     <button (click)="openCreate()" class="btn-primary btn-sm">
-      <i class="ti ti-shopping-cart"></i> Registrar compra
+      <i class="ti ti-shopping-cart"></i> {{ t('purchases.register') }}
     </button>
   </div>
 
@@ -19,7 +19,7 @@
   @if (!loading() && error()) {
     <div style="background:var(--red-bg);border:1.5px solid var(--red);border-radius:14px;padding:20px;text-align:center;">
       <p style="font-size:12px;color:var(--red);margin-bottom:12px;">{{ error() }}</p>
-      <button (click)="loadPurchases()" class="btn-secondary btn-sm">Reintentar</button>
+      <button (click)="loadPurchases()" class="btn-secondary btn-sm">{{ t('common.retry') }}</button>
     </div>
   }
 
@@ -28,10 +28,10 @@
     @if (purchases().length === 0) {
       <div class="empty-state">
         <i class="ti ti-shopping-cart"></i>
-        <p>Sin compras registradas</p>
-        <span style="font-size:12px;color:var(--text-3);margin-bottom:16px;display:block;">Registrá tu primera compra para empezar a trackear el inventario.</span>
+        <p>{{ t('purchases.emptyTitle') }}</p>
+        <span style="font-size:12px;color:var(--text-3);margin-bottom:16px;display:block;">{{ t('purchases.emptyBody') }}</span>
         <button (click)="openCreate()" class="btn-primary btn-sm">
-          <i class="ti ti-plus"></i> Registrar compra
+          <i class="ti ti-plus"></i> {{ t('purchases.register') }}
         </button>
       </div>
     } @else {
@@ -48,12 +48,12 @@
             </div>
             <div style="display:flex;align-items:center;gap:6px;">
               <button (click)="openEdit(p)" class="btn-secondary btn-sm" style="flex:1;justify-content:center;">
-                Editar precio
+                {{ t('purchases.editPrice') }}
               </button>
               <button (click)="openReverseModal(p)" class="btn-ghost btn-sm" style="flex:1;justify-content:center;">
-                Corregir
+                {{ t('purchases.correct') }}
               </button>
-              <button (click)="openDetail(p)" class="btn-secondary btn-sm">
+              <button (click)="openDetail(p)" class="btn-secondary btn-sm" [title]="t('purchases.viewDetail')" [attr.aria-label]="t('purchases.viewDetail')">
                 <i class="ti ti-eye"></i>
               </button>
             </div>
@@ -67,10 +67,10 @@
           <table class="data-table">
             <thead>
               <tr>
-                <th>Fecha</th>
-                <th class="hidden md:table-cell">Proveedor</th>
-                <th style="text-align:right;">Total</th>
-                <th class="hidden lg:table-cell">Notas</th>
+                <th>{{ t('purchases.colDate') }}</th>
+                <th class="hidden md:table-cell">{{ t('purchases.colSupplier') }}</th>
+                <th style="text-align:right;">{{ t('purchases.colTotal') }}</th>
+                <th class="hidden lg:table-cell">{{ t('purchases.colNotes') }}</th>
                 <th style="text-align:right;"></th>
               </tr>
             </thead>
@@ -90,12 +90,12 @@
                   <td style="text-align:right;">
                     <div style="display:flex;align-items:center;justify-content:flex-end;gap:6px;">
                       <button (click)="openEdit(p)" class="btn-secondary btn-sm">
-                        Editar precio
+                        {{ t('purchases.editPrice') }}
                       </button>
                       <button (click)="openReverseModal(p)" class="btn-ghost btn-sm">
-                        Corregir
+                        {{ t('purchases.correct') }}
                       </button>
-                      <button (click)="openDetail(p)" class="btn-secondary btn-sm">
+                      <button (click)="openDetail(p)" class="btn-secondary btn-sm" [title]="t('purchases.viewDetail')" [attr.aria-label]="t('purchases.viewDetail')">
                         <i class="ti ti-eye"></i>
                       </button>
                     </div>
@@ -125,7 +125,7 @@
 <!-- CREATE / EDIT DRAWER -->
 
 <app-drawer [isOpen]="createOpen()"
-            [title]="editMode() ? 'Editar compra' : 'Registrar compra'"
+            [title]="editMode() ? t('purchases.editTitle') : t('purchases.register')"
             size="2xl" (closed)="closeCreate()">
   <form id="purchase-form" [formGroup]="form" (ngSubmit)="save()" style="display:flex;flex-direction:column;gap:20px;">
 
@@ -133,109 +133,137 @@
       <div class="pc-form-row" style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;">
 
         <div style="margin-bottom:0;">
-          <label class="field-label">Fecha</label>
+          <label class="field-label">{{ t('purchases.date') }}</label>
           <input formControlName="purchasedAt" type="date" class="field-input">
         </div>
 
         <div style="margin-bottom:0;">
-          <label class="field-label">Proveedor <span style="color:var(--text-3);font-weight:400;">(opcional)</span></label>
-          <app-select formControlName="supplierId" [options]="supplierOptions()" placeholder="Sin proveedor"></app-select>
+          <label class="field-label">{{ t('purchases.supplier') }} <span style="color:var(--text-3);font-weight:400;">{{ t('purchases.optional') }}</span></label>
+          <app-select formControlName="supplierId" [options]="supplierOptions()" [placeholder]="t('purchases.noSupplier')"></app-select>
         </div>
 
         <div style="margin-bottom:0;">
-          <label class="field-label">Notas <span style="color:var(--text-3);font-weight:400;">(opcional)</span></label>
-          <input formControlName="notes" type="text" placeholder="Factura #1234, etc." class="field-input">
+          <label class="field-label">{{ t('purchases.notes') }} <span style="color:var(--text-3);font-weight:400;">{{ t('purchases.optional') }}</span></label>
+          <input formControlName="notes" type="text" [placeholder]="t('purchases.notesPlaceholder')" class="field-input">
         </div>
 
       </div>
 
+      <!-- IVA: cómo vienen los precios de la factura -->
+      @if (editLegacy()) {
+        <p class="iva-note"><i class="ti ti-info-circle"></i> {{ t('purchases.legacyEditNote') }}</p>
+      } @else {
+        <div>
+          <label class="field-label">{{ t('purchases.pricesLabel') }}</label>
+          <div class="status-toggle" style="max-width:320px;" role="radiogroup" [attr.aria-label]="t('purchases.pricesLabel')">
+            <button type="button" class="status-btn" role="radio" [class.on]="pricesIncludeIva" [attr.aria-checked]="pricesIncludeIva"
+                    [disabled]="editMode()" (click)="setPricesIncludeIva(true)">{{ t('purchases.withIva') }}</button>
+            <button type="button" class="status-btn" role="radio" [class.on]="!pricesIncludeIva" [attr.aria-checked]="!pricesIncludeIva"
+                    [disabled]="editMode()" (click)="setPricesIncludeIva(false)">{{ t('purchases.withoutIva') }}</button>
+          </div>
+          <p class="iva-note">{{ editMode() ? t('purchases.editIvaHint') : t('purchases.pricesHint') }}</p>
+          @if (!editMode() && !taxCondition()) {
+            <div class="iva-notice">
+              <i class="ti ti-alert-circle"></i>
+              <span>
+                {{ t('purchases.noTaxCondition') }}
+                @if (canEditRestaurants()) {
+                  <a routerLink="/restaurants">{{ t('purchases.configureTaxCondition') }}</a>
+                }
+              </span>
+            </div>
+          }
+        </div>
+      }
+
       <!-- Items section -->
       <div>
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
-          <span class="section-title">Ítems de la compra</span>
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;margin-bottom:10px;">
+          <span class="section-title">{{ t('purchases.items') }}</span>
           @if (!editMode()) {
             <button type="button" (click)="addItem()" class="btn-ghost btn-sm">
-              <i class="ti ti-plus"></i> Agregar ítem
+              <i class="ti ti-plus"></i> {{ t('purchases.addItem') }}
             </button>
           }
           @if (editMode()) {
-            <span style="font-size:11px;color:var(--text-3);">Producto y cantidad son inmutables. Solo podés editar el precio.</span>
+            <span style="font-size:11px;color:var(--text-3);">{{ t('purchases.editOnlyPrice') }}</span>
           }
         </div>
 
-        <!-- Column headers -->
-        @if (items.length > 0) {
-          <div class="items-header hidden md:grid" style="margin-bottom:4px;">
-            <span class="field-label">Producto</span>
-            <span class="field-label">Unidad</span>
-            <span class="field-label">Cantidad</span>
-            <span class="field-label">Precio/U</span>
-            <span class="field-label">Vencimiento</span>
-            <span class="field-label" style="text-align:right;">Subtotal</span>
-            <span></span>
-          </div>
-        }
+        <!-- Items: una tarjeta por línea. El drawer mide 420 px como máximo en cualquier pantalla, así que no hay
+             grilla de columnas: cada campo lleva su etiqueta. -->
+        <div formArrayName="items" style="display:flex;flex-direction:column;gap:8px;">
+          @for (item of items.controls; track item; let i = $index) {
+            <div [formGroupName]="i" class="items-row" [class.opacity-80]="editMode()">
 
-        <!-- Items list -->
-        <div formArrayName="items" style="display:flex;flex-direction:column;gap:6px;">
-          @for (item of items.controls; track $index; let i = $index) {
-            <div [formGroupName]="i" class="items-row"
-                 style="background:var(--bg-input);border-radius:10px;padding:10px;"
-                 [class.opacity-80]="editMode()">
-
-              @if (!editMode()) {
-                <app-select formControlName="productId" (change)="onProductChange(i)"
-                            [options]="productOptions()" placeholder="Seleccioná un producto"
-                            [invalid]="isItemInvalid(i, 'productId')" compact></app-select>
-
-                <app-select formControlName="unitId"
-                            [options]="unitOptions()" placeholder="Unidad"
-                            [invalid]="isItemInvalid(i, 'unitId')" compact></app-select>
-
-                <input formControlName="quantity" type="number" min="0.001" step="any" placeholder="0"
-                       class="field-input" [class.input-error]="isItemInvalid(i, 'quantity')" style="font-size:12px;padding:6px 10px;">
-              } @else {
-                <div style="display:flex;align-items:center;padding:6px 10px;background:var(--bg-card);border-radius:8px;color:var(--text-2);font-size:12px;">
-                  {{ item.get('_productName')?.value || '—' }}
-                </div>
-
-                <div style="display:flex;align-items:center;padding:6px 10px;background:var(--bg-card);border-radius:8px;color:var(--text-3);font-size:12px;">
-                  {{ item.get('_unitAbbr')?.value || '—' }}
-                </div>
-
-                <div style="display:flex;align-items:center;padding:6px 10px;background:var(--bg-card);border-radius:8px;color:var(--text-3);font-size:12px;">
-                  {{ item.get('quantity')?.value | number:'1.0-2' }}
-                </div>
-              }
-
-              <!-- Price per unit (always editable) -->
-              <input formControlName="pricePerUnit" type="number" min="0.01" step="any" placeholder="$ 0,00"
-                     class="field-input" [class.input-error]="isItemInvalid(i, 'pricePerUnit')"
-                     [class.ring-1]="editMode()" [class.ring-brand-500]="editMode()"
-                     style="font-size:12px;padding:6px 10px;">
-
-              @if (!editMode()) {
-                <input formControlName="expirationDate" type="date" class="field-input" style="font-size:12px;padding:6px 10px;">
-              } @else {
-                <div></div>
-              }
-
-              <!-- Subtotal -->
-              <div style="display:flex;align-items:center;justify-content:flex-end;">
-                <span style="font-size:12px;color:var(--text-2);font-weight:600;">
-                  {{ formatARS(itemSubtotal(i)) }}
-                </span>
-              </div>
-
-              <!-- Remove (create mode only) -->
-              <div style="display:flex;align-items:center;justify-content:center;">
+              <div class="cell-product">
                 @if (!editMode()) {
-                  <button type="button" (click)="removeItem(i)" class="btn-icon" style="color:var(--text-3);">
+                  <app-select formControlName="productId" (change)="onProductChange(i)" style="flex:1;min-width:0;"
+                              [options]="productOptions()" [placeholder]="t('purchases.pickProduct')"
+                              [invalid]="isItemInvalid(i, 'productId')" compact></app-select>
+                  <button type="button" (click)="removeItem(i)" class="btn-icon" style="color:var(--text-3);flex-shrink:0;"
+                          [title]="t('purchases.removeItem')" [attr.aria-label]="t('purchases.removeItem')">
                     <i class="ti ti-x"></i>
                   </button>
                 } @else {
-                  <div style="width:34px;"></div>
+                  <div class="ro-cell" style="flex:1;color:var(--text-1);font-weight:600;">{{ item.get('_productName')?.value || '—' }}</div>
                 }
+              </div>
+
+              <div class="cell">
+                <span class="cell-label">{{ t('purchases.colUnit') }}</span>
+                @if (!editMode()) {
+                  <app-select formControlName="unitId" [options]="unitOptions()" placeholder="—"
+                              [invalid]="isItemInvalid(i, 'unitId')" compact></app-select>
+                } @else {
+                  <div class="ro-cell">{{ item.get('_unitAbbr')?.value || '—' }}</div>
+                }
+              </div>
+
+              <div class="cell">
+                <span class="cell-label">{{ t('purchases.colQuantity') }}</span>
+                @if (!editMode()) {
+                  <input formControlName="quantity" type="number" min="0.001" step="any" placeholder="0"
+                         [attr.aria-label]="t('purchases.colQuantity')"
+                         class="field-input cell-input" [class.input-error]="isItemInvalid(i, 'quantity')">
+                } @else {
+                  <div class="ro-cell">{{ item.get('quantity')?.value | number:'1.0-3' }}</div>
+                }
+              </div>
+
+              <!-- Precio: lo único editable en la corrección -->
+              <div class="cell">
+                <span class="cell-label">{{ t('purchases.colPrice') }}</span>
+                <input formControlName="pricePerUnit" type="number" min="0.01" step="any" [placeholder]="t('purchases.pricePlaceholder')"
+                       [attr.aria-label]="t('purchases.colPrice')"
+                       class="field-input cell-input" [class.input-error]="isItemInvalid(i, 'pricePerUnit')"
+                       [class.ring-1]="editMode()" [class.ring-brand-500]="editMode()">
+              </div>
+
+              <!-- IVA de la línea: se propone el del insumo, manda la factura. Una compra vieja no tiene. -->
+              <div class="cell cell-half">
+                <span class="cell-label">{{ t('purchases.colIva') }}</span>
+                @if (!editLegacy()) {
+                  <app-select formControlName="ivaPercentage" [options]="ivaOptions()" compact></app-select>
+                } @else {
+                  <div class="ro-cell">—</div>
+                }
+              </div>
+
+              <div class="cell cell-half">
+                <span class="cell-label">{{ t('purchases.colExpiration') }}</span>
+                @if (!editMode()) {
+                  <input formControlName="expirationDate" type="date" class="field-input cell-input"
+                         [attr.aria-label]="t('purchases.colExpiration')">
+                } @else {
+                  <div class="ro-cell">{{ item.get('expirationDate')?.value || '—' }}</div>
+                }
+              </div>
+
+              <!-- Subtotal: cantidad × precio, como en la factura -->
+              <div class="cell-subtotal">
+                <span class="cell-label">{{ t('purchases.colSubtotal') }}</span>
+                <span>{{ formatARS(itemSubtotal(i)) }}</span>
               </div>
 
             </div>
@@ -244,10 +272,23 @@
 
         @if (items.length === 0 && !editMode()) {
           <div style="border:1.5px dashed var(--border);border-radius:12px;padding:32px;text-align:center;">
-            <p style="font-size:12px;color:var(--text-3);">Sin ítems — usá "+ Agregar ítem" para comenzar.</p>
+            <p style="font-size:12px;color:var(--text-3);">{{ t('purchases.noItems') }}</p>
           </div>
         }
       </div>
+
+      <!-- Resumen: vista previa con la regla del back -->
+      @if (items.length > 0) {
+        @let sum = ivaSummary;
+        <div class="iva-summary">
+          @if (!editLegacy()) {
+            <div><span>{{ t('purchases.summaryNet') }}</span><span>{{ formatARS(sum.net) }}</span></div>
+            <div><span>{{ t('purchases.summaryIva') }}</span><span>{{ formatARS(sum.iva) }}</span></div>
+          }
+          <div class="iva-summary-total"><span>{{ t('purchases.summaryTotal') }}</span><span>{{ formatARS(sum.total) }}</span></div>
+          @if (!editLegacy()) { <p>{{ t('purchases.previewNote') }}</p> }
+        </div>
+      }
 
       @if (saveError()) {
         <div style="background:var(--red-bg);border:1.5px solid var(--red);border-radius:10px;padding:12px 16px;font-size:12px;color:var(--red);">
@@ -257,16 +298,16 @@
 
     </form>
 
-  <div drawer-footer style="padding:14px 20px;border-top:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;background:var(--bg-card);">
+  <div drawer-footer style="padding:14px 20px;border-top:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;background:var(--bg-card);">
     <div style="font-size:12px;">
-      <span style="color:var(--text-3);">Total:</span>
-      <span style="color:var(--text-1);font-weight:700;font-size:15px;margin-left:8px;">{{ formatARS(grandTotal) }}</span>
+      <span style="color:var(--text-3);">{{ t('purchases.summaryTotal') }}:</span>
+      <span style="color:var(--text-1);font-weight:700;font-size:15px;margin-left:8px;">{{ formatARS(ivaSummary.total) }}</span>
     </div>
     <div style="display:flex;align-items:center;gap:8px;">
-      <button type="button" (click)="closeCreate()" class="btn-secondary btn-sm">Cancelar</button>
+      <button type="button" (click)="closeCreate()" class="btn-secondary btn-sm">{{ t('common.cancel') }}</button>
       <button type="submit" form="purchase-form" [disabled]="saving()" class="btn-primary btn-sm" style="min-width:140px;justify-content:center;">
         @if (saving()) { <span class="loader"></span> }
-        {{ editMode() ? 'Guardar cambios' : 'Registrar compra' }}
+        {{ editMode() ? t('purchases.saveChanges') : t('purchases.register') }}
       </button>
     </div>
   </div>
@@ -274,7 +315,7 @@
 
 <!-- DETAIL DRAWER -->
 
-<app-drawer [isOpen]="detailOpen()" title="Detalle de compra" size="lg" (closed)="closeDetail()">
+<app-drawer [isOpen]="detailOpen()" [title]="t('purchases.detailTitle')" size="lg" (closed)="closeDetail()">
 
   @if (detailLoading()) {
     <div style="display:flex;flex-direction:column;gap:12px;">
@@ -289,63 +330,84 @@
   @if (!detailLoading() && detail(); as d) {
 
     <!-- Meta -->
-    <div class="pc-meta-row" style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:20px;">
+    <div class="pc-meta-row" style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:10px;">
       <div class="data-card" style="padding:14px;">
-        <p class="section-title" style="margin-bottom:4px;">Fecha</p>
+        <p class="section-title" style="margin-bottom:4px;">{{ t('purchases.date') }}</p>
         <p style="color:var(--text-1);font-size:12px;font-weight:500;">{{ formatDate(d.purchasedAt) }}</p>
       </div>
-      <div class="data-card" style="padding:14px;">
-        <p class="section-title" style="margin-bottom:4px;">Proveedor</p>
-        <p style="color:var(--text-1);font-size:12px;font-weight:500;">{{ d.supplierName ?? '—' }}</p>
+      <div class="data-card" style="padding:14px;min-width:0;">
+        <p class="section-title" style="margin-bottom:4px;">{{ t('purchases.supplier') }}</p>
+        <p style="color:var(--text-1);font-size:12px;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{ d.supplierName ?? '—' }}</p>
       </div>
       <div class="data-card" style="padding:14px;">
-        <p class="section-title" style="margin-bottom:4px;">Total</p>
+        <p class="section-title" style="margin-bottom:4px;">{{ t('purchases.colTotal') }}</p>
         <p style="color:var(--text-1);font-size:12px;font-weight:700;">{{ formatARS(d.total) }}</p>
       </div>
     </div>
 
+    <!-- IVA: solo si la compra lo tiene (las cargadas antes se ven como siempre) -->
+    @if (d.pricesIncludeIva != null) {
+      <div class="pc-meta-row" style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:10px;">
+        <div class="data-card" style="padding:14px;">
+          <p class="section-title" style="margin-bottom:4px;">{{ t('purchases.summaryNet') }}</p>
+          <p style="color:var(--text-1);font-size:12px;font-weight:500;">{{ formatARS(d.netTotal) }}</p>
+        </div>
+        <div class="data-card" style="padding:14px;">
+          <p class="section-title" style="margin-bottom:4px;">{{ t('purchases.summaryIva') }}</p>
+          <p style="color:var(--text-1);font-size:12px;font-weight:500;">{{ formatARS(d.ivaTotal) }}</p>
+        </div>
+        <div class="data-card" style="padding:14px;">
+          <p class="section-title" style="margin-bottom:4px;">{{ t('purchases.pricesLabel') }}</p>
+          <p style="color:var(--text-1);font-size:12px;font-weight:500;">{{ d.pricesIncludeIva ? t('purchases.withIva') : t('purchases.withoutIva') }}</p>
+        </div>
+      </div>
+    }
+
     @if (d.notes) {
-      <div class="data-card" style="padding:12px 16px;margin-bottom:20px;">
-        <p class="section-title" style="margin-bottom:4px;">Notas</p>
+      <div class="data-card" style="padding:12px 16px;margin-bottom:10px;">
+        <p class="section-title" style="margin-bottom:4px;">{{ t('purchases.notes') }}</p>
         <p style="color:var(--text-2);font-size:12px;">{{ d.notes }}</p>
       </div>
     }
 
     <!-- Items -->
-    <div class="table-wrap">
+    <div class="table-wrap" style="margin-top:10px;">
       <div style="padding:10px 16px;border-bottom:1px solid var(--border);">
-        <span class="section-title">Ítems</span>
+        <span class="section-title">{{ t('purchases.detailItems') }}</span>
       </div>
       <div style="overflow-x:auto;">
         <table class="data-table">
           <thead>
             <tr>
-              <th>Producto</th>
-              <th class="hidden sm:table-cell" style="text-align:center;">Unidad</th>
-              <th style="text-align:right;">Cantidad</th>
-              <th class="hidden sm:table-cell" style="text-align:right;">Precio/U</th>
-              <th style="text-align:right;">Subtotal</th>
+              <th>{{ t('purchases.colProduct') }}</th>
+              <th class="hidden sm:table-cell" style="text-align:center;">{{ t('purchases.colUnit') }}</th>
+              <th style="text-align:right;">{{ t('purchases.colQuantity') }}</th>
+              <th class="hidden sm:table-cell" style="text-align:right;">{{ t('purchases.colPrice') }}</th>
+              <th style="text-align:right;">{{ t('purchases.colSubtotal') }}</th>
             </tr>
           </thead>
           <tbody>
             @for (item of d.items; track item.id) {
               <tr>
-                <td>
+                <td style="min-width:0;">
                   <p style="color:var(--text-1);font-weight:600;">{{ item.productName }}</p>
                   @if (item.productSku) {
                     <p style="font-size:11px;color:var(--text-3);">{{ item.productSku }}</p>
+                  }
+                  @if (lineIva(item); as ivaLine) {
+                    <p style="font-size:11px;color:var(--text-3);margin-top:2px;">{{ ivaLine }}</p>
                   }
                 </td>
                 <td class="hidden sm:table-cell" style="text-align:center;color:var(--text-2);">
                   {{ item.unitAbbreviation }}
                 </td>
-                <td style="text-align:right;color:var(--text-2);">
+                <td style="text-align:right;color:var(--text-2);white-space:nowrap;">
                   {{ item.quantity | number:'1.0-2' }}
                 </td>
-                <td class="hidden sm:table-cell" style="text-align:right;color:var(--text-2);">
+                <td class="hidden sm:table-cell" style="text-align:right;color:var(--text-2);white-space:nowrap;">
                   {{ formatARS(item.pricePerUnit) }}
                 </td>
-                <td style="text-align:right;color:var(--text-1);font-weight:600;">
+                <td style="text-align:right;color:var(--text-1);font-weight:600;white-space:nowrap;">
                   {{ formatARS(item.subtotal) }}
                 </td>
               </tr>
@@ -354,7 +416,7 @@
         </table>
       </div>
       <div style="display:flex;justify-content:flex-end;padding:12px 16px;border-top:1px solid var(--border);">
-        <span style="font-size:12px;color:var(--text-3);margin-right:10px;">Total:</span>
+        <span style="font-size:12px;color:var(--text-3);margin-right:10px;">{{ t('purchases.colTotal') }}:</span>
         <span style="color:var(--text-1);font-weight:700;">{{ formatARS(d.total) }}</span>
       </div>
     </div>
@@ -376,10 +438,8 @@
       <div style="padding:20px 24px;border-bottom:1px solid var(--border);display:flex;align-items:flex-start;gap:12px;">
         <i class="ti ti-alert-triangle" style="font-size:20px;color:var(--accent);margin-top:2px;flex-shrink:0;"></i>
         <div>
-          <h2 style="color:var(--text-1);font-weight:600;font-size:14px;margin-bottom:4px;">Corregir compra</h2>
-          <p style="color:var(--text-3);font-size:12px;">
-            Se revertirán los movimientos de stock y podrás re-ingresar la compra corregida.
-          </p>
+          <h2 style="color:var(--text-1);font-weight:600;font-size:14px;margin-bottom:4px;">{{ t('purchases.reverseTitle') }}</h2>
+          <p style="color:var(--text-3);font-size:12px;">{{ t('purchases.reverseBody') }}</p>
         </div>
       </div>
 
@@ -395,15 +455,15 @@
           @if (reverseTarget(); as d) {
             <div style="display:flex;flex-direction:column;gap:6px;margin-bottom:16px;">
               <div style="display:grid;grid-template-columns:1fr auto auto;gap:8px;padding:0 14px;margin-bottom:4px;">
-                <span class="field-label">Producto</span>
-                <span class="field-label" style="text-align:right;">Comprado</span>
-                <span class="field-label" style="text-align:right;">Disponible</span>
+                <span class="field-label">{{ t('purchases.colProduct') }}</span>
+                <span class="field-label" style="text-align:right;">{{ t('purchases.colBought') }}</span>
+                <span class="field-label" style="text-align:right;">{{ t('purchases.colAvailable') }}</span>
               </div>
               @for (item of d.items; track item.id) {
                 @let consumed = (item.quantity ?? 0) - (item.quantityRemaining ?? item.quantity ?? 0);
                 <div style="display:grid;grid-template-columns:1fr auto auto;gap:8px;align-items:center;background:var(--bg-input);border-radius:10px;padding:10px 14px;"
                      [ngClass]="consumed > 0 ? 'border-warning' : ''">
-                  <div style="font-size:12px;color:var(--text-1);font-weight:500;">{{ item.productName }}</div>
+                  <div style="font-size:12px;color:var(--text-1);font-weight:500;min-width:0;">{{ item.productName }}</div>
                   <div style="font-size:12px;color:var(--text-2);text-align:right;min-width:80px;">
                     {{ item.quantity | number:'1.0-2' }} {{ item.unitAbbreviation }}
                   </div>
@@ -414,15 +474,14 @@
                 </div>
                 @if (consumed > 0) {
                   <p style="font-size:11px;color:var(--accent);padding:0 14px;">
-                    {{ consumed | number:'1.0-2' }} {{ item.unitAbbreviation }} ya consumidos en ventas o mermas.
+                    {{ t('purchases.consumed', { qty: (consumed | number:'1.0-2') ?? '', unit: item.unitAbbreviation ?? '' }) }}
                   </p>
                 }
               }
             </div>
 
             <div style="background:var(--bg-input);border-radius:10px;padding:12px 14px;font-size:11px;color:var(--text-3);margin-bottom:12px;">
-              Los movimientos de stock existentes no se modifican — se crearán nuevos movimientos de reversión en el ledger.
-              Después se abrirá el formulario de carga pre-llenado para que puedas ingresar los datos correctos.
+              {{ t('purchases.reverseNote') }}
             </div>
           }
         }
@@ -436,10 +495,10 @@
 
       <!-- Footer -->
       <div style="display:flex;align-items:center;justify-content:flex-end;gap:8px;padding:14px 24px;border-top:1px solid var(--border);">
-        <button (click)="closeReverseModal()" class="btn-secondary btn-sm">Cancelar</button>
+        <button (click)="closeReverseModal()" class="btn-secondary btn-sm">{{ t('common.cancel') }}</button>
         <button (click)="confirmReverse()" [disabled]="reversing() || reverseLoading()" class="btn-ghost btn-sm">
           @if (reversing()) { <span class="loader"></span> }
-          Revertir y corregir
+          {{ t('purchases.reverseConfirm') }}
         </button>
       </div>
 

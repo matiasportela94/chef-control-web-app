@@ -106,7 +106,7 @@ export class CatalogImportComponent {
       const example = (key: string) => this.t(key).split('|').map(v => v.trim());
       await writeXlsxFile([
         { sheet: sheets.PRODUCTS, data: [header('PRODUCTS', PRODUCT_FIELDS)], stickyRowsCount: 1,
-          columns: [{ width: 30 }, { width: 14 }, { width: 20 }, { width: 14 }, { width: 16 }] },
+          columns: [{ width: 30 }, { width: 14 }, { width: 20 }, { width: 14 }, { width: 16 }, { width: 10 }] },
         { sheet: sheets.RECIPES, data: [header('RECIPES', RECIPE_FIELDS)], stickyRowsCount: 1,
           columns: [{ width: 30 }, { width: 16 }, { width: 18 }, { width: 30 }, { width: 24 }, { width: 14 }] },
         { sheet: this.t('import.template.unitsSheet'), stickyRowsCount: 2, columns: [{ width: 24 }, { width: 14 }],
@@ -202,6 +202,10 @@ export class CatalogImportComponent {
 
   errorMessage(error: ImportRowError): string {
     if (error.errorCode === UNREADABLE_NUMBER) return this.t('import.unreadableNumber');
+    // El genérico ("negativo, cero o texto largo") no explica un 22: para el IVA se dice cuáles valen.
+    if (error.errorCode === 'IMPORT_INVALID_VALUE' && error.field === 'ivaPercentage') {
+      return getErrorMessage('INVALID_IVA_PERCENTAGE') ?? this.t('import.rowError');
+    }
     return getErrorMessage(error.errorCode) ?? this.t('import.rowError');
   }
 
