@@ -15,7 +15,7 @@ import { PagedResponseSaleResponse } from '../../api/models/paged-response-sale-
 import { PagedResponseMenuItemResponse } from '../../api/models/paged-response-menu-item-response';
 import { parseBlob }               from '../../core/utils/parse-blob';
 import { formatARS, formatDate }   from '../../core/utils/format';
-import { todayISO, dateToInstant } from '../../core/utils/date';
+import { arToday, arDateOf, arDayStart } from '../../core/utils/date';
 import { extractApiError }         from '../../core/utils/api-error';
 import { PaginatorComponent }      from '../../shared/components/paginator/paginator.component';
 import { DrawerComponent }         from '../../shared/components/drawer/drawer.component';
@@ -64,7 +64,7 @@ export class SalesComponent implements OnInit {
 
   constructor(private api: Api, private fb: FormBuilder, private aiRefresh: AiRefreshService, private alertNotification: AlertNotificationService) {
     this.form = this.fb.group({
-      soldAt: [todayISO()],
+      soldAt: [arToday()],
       notes:  [''],
       items:  this.fb.array([], Validators.minLength(1)),
     });
@@ -106,7 +106,7 @@ export class SalesComponent implements OnInit {
 
   openCreate(): void {
     this.items.clear();
-    this.form.reset({ soldAt: todayISO(), notes: '' });
+    this.form.reset({ soldAt: arToday(), notes: '' });
     this.addItem();
     this.saveError.set(null);
     this.createOpen.set(true);
@@ -163,7 +163,8 @@ export class SalesComponent implements OnInit {
         menuItemId: i.menuItemId,
         quantity:   +i.quantity,
       })),
-      ...(v.soldAt       ? { soldAt: dateToInstant(v.soldAt) }   : {}),
+      // Medianoche argentina: a las 00:00 UTC la venta caía en el día anterior (21 h) y así se mostraba.
+      ...(v.soldAt       ? { soldAt: arDayStart(v.soldAt) }   : {}),
       ...(v.notes?.trim() ? { notes: v.notes.trim() }   : {}),
     };
     try {
@@ -204,12 +205,13 @@ export class SalesComponent implements OnInit {
     if (!id) return;
     this.reversing.set(true);
     this.reverseError.set(null);
+    // Se lee antes de cerrar el modal: closeReverseModal() lo borra, y leído después el form precargado no se abría nunca.
+    const target = this.reverseTarget();
     try {
       await this.api.invoke(reverseSale, { id });
       this.closeReverseModal();
       await this.loadSales();
       void this.alertNotification.refresh();
-      const target = this.reverseTarget();
       if (target) this.openCreatePrefilled(target);
     } catch (e: any) {
       this.reverseError.set(extractApiError(e, 'Error al revertir la venta'));
@@ -221,9 +223,7 @@ export class SalesComponent implements OnInit {
   private openCreatePrefilled(d: SaleResponse): void {
     this.items.clear();
     this.saveError.set(null);
-    const soldDate = d.soldAt
-      ? new Date(d.soldAt).toISOString().substring(0, 10)
-      : todayISO();
+    const soldDate = d.soldAt ? arDateOf(d.soldAt) : arToday();
     this.form.reset({ soldAt: soldDate, notes: d.notes ?? '' });
     if (d.items) {
       for (const item of d.items) {

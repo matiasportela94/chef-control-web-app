@@ -2,11 +2,6 @@ export function todayISO(): string {
   return new Date().toISOString().substring(0, 10);
 }
 
-/** Converts a YYYY-MM-DD date string to a UTC instant string accepted by the backend. */
-export function dateToInstant(dateStr: string): string {
-  return dateStr ? `${dateStr}T00:00:00.000Z` : '';
-}
-
 export function firstOfMonth(): string {
   const d = new Date();
   return new Date(d.getFullYear(), d.getMonth(), 1).toISOString().substring(0, 10);
@@ -32,8 +27,8 @@ export function lastNDays(n: number): { from: string; to: string } {
 }
 
 // ── Días de Argentina ────────────────────────────────────────────────────────
-// Lo de arriba usa el día UTC: "2026-11-01" se manda como 2026-11-01T00:00Z, que en Argentina es el 31/10 a las
-// 21 h, y así se muestra y así cae en un reporte que corta por día argentino. Estos helpers usan el día de acá.
+// Lo de arriba usa el día UTC. Para guardar la fecha de un registro (compra, venta) y para cortar un reporte por día,
+// estos: "2026-11-01" a las 00:00 UTC es el 31/10 a las 21 h en Argentina, y así se mostraba y se contaba.
 // ponytail: UTC−3 fijo (Argentina no tiene horario de verano desde 2009); si vuelve, pasar a Intl con la zona.
 const AR_TZ = 'America/Argentina/Buenos_Aires';
 

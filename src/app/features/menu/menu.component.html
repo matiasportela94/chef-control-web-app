@@ -447,7 +447,9 @@
         <!-- Lista de ingredientes -->
         <div [formGroup]="recipeForm">
           <div formArrayName="items" style="display:flex;flex-direction:column;gap:6px;">
-            @for (item of recipeItems.controls; track $index; let i = $index) {
+            <!-- track por control: con $index, al quitar un ingrediente del medio la fila reusada queda atada al
+                 FormGroup borrado (muestra el quitado y lo editado no se guarda). -->
+            @for (item of recipeItems.controls; track item; let i = $index) {
               <div [formGroupName]="i" style="display:grid;grid-template-columns:1fr auto auto auto;gap:6px;align-items:center;background:var(--bg-input);border:1.5px solid var(--border);border-radius:10px;padding:8px 10px;">
 
                 <app-select formControlName="productId" (change)="onRecipeProductChange(i)"

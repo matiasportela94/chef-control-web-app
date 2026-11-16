@@ -163,7 +163,9 @@
         }
 
         <div formArrayName="items" style="display:flex;flex-direction:column;gap:6px;">
-          @for (item of items.controls; track $index; let i = $index) {
+          <!-- track por control, no por índice: con $index, al vaciar y rellenar el FormArray (segunda venta) o al
+               quitar una línea del medio, la fila reusada queda atada al FormGroup viejo y lo tipeado se pierde. -->
+          @for (item of items.controls; track item; let i = $index) {
             <div [formGroupName]="i" class="sale-row" style="background:var(--bg-input);border-radius:10px;padding:10px;">
 
               <app-select formControlName="menuItemId" [options]="menuItemOptions()" placeholder="Seleccioná un plato"
