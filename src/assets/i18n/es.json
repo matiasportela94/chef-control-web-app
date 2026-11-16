@@ -97,7 +97,13 @@
     "IMPORT_DUPLICATE_PRODUCT": "Este insumo está repetido en el archivo.",
     "IMPORT_DUPLICATE_INGREDIENT": "Este ingrediente está repetido en la receta del plato.",
     "IMPORT_CATEGORY_CREATE_FORBIDDEN": "Esa categoría no existe y tu usuario no puede crear categorías. Usá una que ya exista o pedile a quien administra la cuenta que la cree.",
-    "IMPORT_AMBIGUOUS_NAME": "En el catálogo hay más de uno con ese nombre escrito distinto (por ejemplo, \"Tomate\" y \"tomate\"). Unificalos primero."
+    "IMPORT_AMBIGUOUS_NAME": "En el catálogo hay más de uno con ese nombre escrito distinto (por ejemplo, \"Tomate\" y \"tomate\"). Unificalos primero.",
+    "SUBSCRIPTION_CHANGE_SAME_PLAN": "Ya tenés ese plan con ese período.",
+    "SUBSCRIPTION_UPGRADE_AND_PERIOD_CHANGE": "Subir de plan y cambiar el período no se hace en un solo paso: primero cambiá de plan y después de período.",
+    "SUBSCRIPTION_PAST_DUE": "Tu suscripción tiene un pago pendiente: primero regularizalo y después cambiá de plan.",
+    "SUBSCRIPTION_CHANGE_NOT_FOUND": "No hay un cambio de plan programado.",
+    "SUBSCRIPTION_CHANGE_IN_PROGRESS": "Tu cambio de plan ya se está aplicando: no se puede cancelar ni reemplazar.",
+    "SUBSCRIPTION_NOT_ACTIVE": "No tenés una suscripción activa: para elegir un plan, suscribite."
   },
   "ai": {
     "title": "Entrada rápida",
@@ -282,7 +288,8 @@
       "ACTIVE": "Suscripción activa",
       "PAST_DUE": "Pago pendiente",
       "CANCELLED": "Suscripción cancelada",
-      "PENDING": "Esperando el pago"
+      "PENDING": "Esperando el pago",
+      "SCHEDULED": "Suscripción programada"
     },
     "monthly": "Mensual",
     "annual": "Anual",
@@ -303,7 +310,6 @@
     "yourPlan": "Tu plan",
     "subscribe": "Suscribirme",
     "subscribeError": "No se pudo iniciar el pago. Probá de nuevo en un momento.",
-    "changePlanHint": "Para cambiar de plan, cancelá la suscripción actual: conservás lo pagado hasta el {date} y después te suscribís al nuevo.",
     "ownerOnly": "Solo el dueño de la cuenta ({owner}) puede contratar o cancelar un plan.",
     "cancelSubscription": "Cancelar suscripción",
     "cancelTitle": "Cancelar la suscripción",
@@ -343,7 +349,48 @@
     "deleteInputLabel": "Escribí el nombre de la cuenta para confirmar",
     "deleteError": "No se pudo eliminar la cuenta",
     "cancel": "Cancelar",
-    "upcoming": "Próximamente"
+    "upcoming": "Próximamente",
+    "periods": {
+      "MONTHLY": "mensual",
+      "ANNUAL": "anual"
+    },
+    "change": {
+      "upgradeTo": "Subir a {plan}",
+      "downgradeTo": "Bajar a {plan}",
+      "switchPeriod": "Pasar a pago {period}",
+      "upgradeAndPeriodHint": "Se hace en dos pasos: primero subí a {plan} con pago {current} y después pasá a pago {period}.",
+      "hint": "Si subís de plan, pagás hoy la diferencia por los días que quedan y el cambio es inmediato. Si bajás o cambiás el período, rige desde el {date}, cuando termina tu período actual.",
+      "pastDueHint": "Para cambiar de plan, primero regularizá el pago.",
+      "previewError": "No pudimos calcular el cambio de plan. Probá de nuevo.",
+      "error": "No pudimos hacer el cambio de plan. Probá de nuevo.",
+      "previewTitle": "Pasar a {plan} {period}",
+      "previewUpgrade": "Pagás hoy {charge} por los {days} de {periodDays} días que quedan de tu período, y el cambio es inmediato. Desde el {date} se cobra {amount}.",
+      "upgradeDiscardsPending": "El cambio que tenías programado se descarta cuando se acredite el pago.",
+      "previewScheduled": "Desde el {date} pasás a {plan} {period}, {amount}. Hasta entonces seguís con {current}.",
+      "previewNeedsCheckout": "Como cambia la frecuencia de cobro, te llevamos a Mercado Pago a cargar la tarjeta para la suscripción nueva. Hoy no se cobra nada.",
+      "previewNoCharge": "Hoy no se cobra nada: se cobra recién ahí, con el mismo medio de pago.",
+      "replacesPending": "Reemplaza el cambio que tenías programado.",
+      "priceMayChange": "El precio puede modificarse al momento del cobro.",
+      "payNow": "Pagar {charge}",
+      "goToCheckout": "Ir a Mercado Pago",
+      "schedule": "Programar cambio",
+      "pending": "Desde el {date} pasás a {plan} {period}, {amount}.",
+      "pendingBadge": "Programado",
+      "awaitingCheckout": "Falta cargar la tarjeta en Mercado Pago: sin eso, el cambio no se aplica.",
+      "completeCheckout": "Completar en Mercado Pago",
+      "discardPending": "Descartar",
+      "cancelPending": "Cancelar cambio",
+      "cancelPendingError": "No pudimos cancelar el cambio. Probá de nuevo.",
+      "applying": "Estamos aplicando tu cambio a {plan} {period}. Puede tardar hasta una hora.",
+      "cancelDiscardsPending": "También se descarta el cambio de plan programado.",
+      "confirming": "Estamos confirmando la autorización con Mercado Pago…",
+      "confirmed": "Listo: desde el {date} pasás a {plan} {period}.",
+      "confirmTimeout": "Todavía no nos llegó la confirmación de Mercado Pago. Si cargaste la tarjeta, en unos minutos vas a ver el cambio acá.",
+      "dropped": "El cambio de plan no se completó en Mercado Pago. Si todavía lo querés, elegilo de nuevo.",
+      "upgradeConfirming": "Estamos confirmando tu pago con Mercado Pago…",
+      "upgraded": "Listo: ya tenés el plan {plan}.",
+      "upgradeTimeout": "Todavía no nos llegó la confirmación del pago. Si pagaste, en unos minutos vas a ver tu plan nuevo acá."
+    }
   },
   "auth": {
     "backHome": "← Volver al inicio",

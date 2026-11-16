@@ -6,14 +6,19 @@ import { deleteAccount } from '../../api/fn/account-controller/delete-account';
 import { getSubscription } from '../../api/fn/subscription-controller/get-subscription';
 import { listSubscriptionPlans } from '../../api/fn/subscription-controller/list-subscription-plans';
 import { cancelSubscription } from '../../api/fn/subscription-controller/cancel-subscription';
+import { previewSubscriptionChange } from '../../api/fn/subscription-controller/preview-subscription-change';
+import { cancelSubscriptionChange } from '../../api/fn/subscription-controller/cancel-subscription-change';
 import { AccountResponse } from '../../api/models/account-response';
 import { SubscriptionResponse } from '../../api/models/subscription-response';
 import { SubscriptionPlanResponse } from '../../api/models/subscription-plan-response';
+import { SubscriptionChangePreviewResponse } from '../../api/models/subscription-change-preview-response';
+import { PendingSubscriptionChangeResponse } from '../../api/models/pending-subscription-change-response';
 import { parseBlob } from '../../core/utils/parse-blob';
 import { extractApiError } from '../../core/utils/api-error';
 import { formatDatetime } from '../../core/utils/format';
 import {
-  BillingPeriod, PlanTier, UPCOMING_FEATURES, annualSavingPct, checkoutStarted, clearCheckoutMark, goToCheckout, planPrice
+  BillingPeriod, CheckoutMark, PlanTier, UPCOMING_FEATURES, annualSavingPct, checkoutMark, clearCheckoutMark, goToCheckout,
+  planPrice, requestPlanChange
 } from '../../core/utils/plans';
 import { AuthService } from '../../core/services/auth.service';
 import { I18nService } from '../../core/services/i18n.service';
@@ -22,6 +27,9 @@ import { SpinnerComponent } from '../../shared/components/spinner/spinner.compon
 
 const CONFIRM_POLL_MS = 3000;
 const CONFIRM_MAX_POLLS = 20;
+
+/** Qué hace elegir un plan en un período, contra la suscripción ACTIVE. Solo decide la etiqueta del botón: el tipo real lo dice el back. */
+type CardAction = 'current' | 'upgrade' | 'downgrade' | 'period' | 'upgradeAndPeriod';
 
 @Component({
   selector: 'app-plan',
@@ -43,8 +51,20 @@ export class PlanComponent implements OnInit, OnDestroy {
   subscribing    = signal<string | null>(null);
   subscribeError = signal<string | null>(null);
 
-  confirmState = signal<'idle' | 'waiting' | 'done' | 'timeout'>('idle');
+  /** 'dropped': se volvió de Mercado Pago pero el cambio ya no está (se reemplazó, se canceló o venció sin autorizar). */
+  confirmState = signal<'idle' | 'waiting' | 'done' | 'timeout' | 'dropped'>('idle');
+  /** Qué se está confirmando a la vuelta de Mercado Pago: una suscripción nueva, una suba o un cambio programado. */
+  confirmKind = signal<CheckoutMark['kind']>('subscribe');
   private pollTimer?: ReturnType<typeof setTimeout>;
+
+  /** La vista previa del cambio elegido: con valor, el diálogo de confirmación está abierto. */
+  preview        = signal<SubscriptionChangePreviewResponse | null>(null);
+  previewLoading = signal<string | null>(null);
+  changeLoading  = signal(false);
+  changeError    = signal<string | null>(null);
+  /** Cancelar o completar el cambio programado. */
+  pendingBusy    = signal(false);
+  pendingError   = signal<string | null>(null);
 
   cancelling    = signal(false);
   cancelLoading = signal(false);
@@ -59,7 +79,7 @@ export class PlanComponent implements OnInit, OnDestroy {
     this.deleteLoading() || this.deleteConfirm().trim() !== (this.account()?.name ?? ''));
 
   /**
-   * Solo el dueño puede contratar, cancelar o cerrar la cuenta — y el backend lo vuelve a exigir, esto es
+   * Solo el dueño puede contratar, cambiar, cancelar o cerrar la cuenta — y el backend lo vuelve a exigir, esto es
    * únicamente para no mostrar botones que van a rebotar. Se compara por email porque el nombre del rol
    * es texto libre de cada cuenta y no sirve para identificar al dueño.
    */
@@ -68,8 +88,11 @@ export class PlanComponent implements OnInit, OnDestroy {
 
   status = computed(() => this.subscription()?.status ?? null);
 
-  /** Con una suscripción ACTIVE el backend rechaza otra (409): cambiar de plan es cancelar y volver a suscribirse. */
+  /** Con una suscripción ACTIVE no se contrata otra (el back responde 409): se cambia de plan. */
   canSubscribe = computed(() => this.isOwner() && this.status() !== 'ACTIVE');
+
+  /** El cambio programado. Con `effectiveAt` vencido ya se está cobrando: no se cancela ni se reemplaza. */
+  pending = computed(() => this.subscription()?.pendingChange ?? null);
 
   /** Cancelable: la que todavía cobra o va a cobrar. */
   canCancel = computed(() => this.isOwner() && (this.status() === 'ACTIVE' || this.status() === 'PAST_DUE'));
@@ -80,10 +103,15 @@ export class PlanComponent implements OnInit, OnDestroy {
 
   async ngOnInit(): Promise<void> {
     await this.load();
-    if (checkoutStarted()) {
-      if (this.status() === 'PENDING') this.pollConfirmation(0);
-      else clearCheckoutMark();
-    }
+    // El selector arranca en el período que se paga, para que la card del plan actual diga "Tu plan".
+    const bp = this.subscription()?.billingPeriod;
+    if (bp === 'MONTHLY' || bp === 'ANNUAL') this.period.set(bp);
+    const mark = checkoutMark();
+    if (!mark) return;
+    const result = this.checkoutResult(mark);
+    if (result === 'waiting') this.pollConfirmation(0, mark);
+    else clearCheckoutMark();
+    if (result === 'dropped') this.showResult(mark.kind, 'dropped');
   }
 
   ngOnDestroy(): void {
@@ -133,26 +161,183 @@ export class PlanComponent implements OnInit, OnDestroy {
     }
   }
 
-  private pollConfirmation(attempt: number): void {
-    this.confirmState.set('waiting');
+  // ---- vuelta de Mercado Pago
+
+  /**
+   * Si ya se ve lo que se fue a hacer a Mercado Pago. Un cambio de período que ya no está (o que es otro) no se
+   * autorizó: lo descartó un reemplazo, una cancelación o el fin del período. No es un éxito.
+   */
+  private checkoutResult(mark: CheckoutMark): 'confirmed' | 'waiting' | 'dropped' {
+    if (mark.kind === 'subscribe') return this.status() !== 'PENDING' ? 'confirmed' : 'waiting';
+    if (mark.kind === 'upgrade') return this.subscription()?.planTier === mark.planTier ? 'confirmed' : 'waiting';
+    const pc = this.pending();
+    if (pc?.planTier !== mark.planTier || pc?.billingPeriod !== mark.billingPeriod) return 'dropped';
+    return pc.awaitingCheckout ? 'waiting' : 'confirmed';
+  }
+
+  private pollConfirmation(attempt: number, mark: CheckoutMark): void {
+    this.showResult(mark.kind, 'waiting');
     this.pollTimer = setTimeout(async () => {
       try {
         const raw = await this.api.invoke(getSubscription);
         this.subscription.set(await this.parseOptional<SubscriptionResponse>(raw));
       } catch { /* un error suelto no corta la espera: se reintenta */ }
-      if (this.status() !== 'PENDING') {
+      const result = this.checkoutResult(mark);
+      if (result === 'confirmed') {
         clearCheckoutMark();
-        this.confirmState.set(this.status() === 'ACTIVE' ? 'done' : 'idle');
-        // El plan nuevo viaja en la sesión (features): sin renovarla, el resto de la app seguiría viendo el viejo.
-        if (this.status() === 'ACTIVE') await this.auth.refreshSession().catch(() => {});
-        await this.load();
+        await this.afterConfirmed(mark.kind);
+      } else if (result === 'dropped') {
+        clearCheckoutMark();
+        this.showResult(mark.kind, 'dropped');
       } else if (attempt + 1 >= CONFIRM_MAX_POLLS) {
         clearCheckoutMark();
-        this.confirmState.set('timeout');
+        this.showResult(mark.kind, 'timeout');
       } else {
-        this.pollConfirmation(attempt + 1);
+        this.pollConfirmation(attempt + 1, mark);
       }
     }, CONFIRM_POLL_MS);
+  }
+
+  private showResult(kind: CheckoutMark['kind'], state: 'waiting' | 'done' | 'timeout' | 'dropped'): void {
+    this.confirmKind.set(kind);
+    this.confirmState.set(state);
+  }
+
+  private async afterConfirmed(kind: CheckoutMark['kind']): Promise<void> {
+    if (kind === 'subscribe' && this.status() !== 'ACTIVE') {
+      this.confirmState.set('idle');
+    } else {
+      this.showResult(kind, 'done');
+      // El plan nuevo viaja en la sesión (features): sin renovarla, el resto de la app seguiría viendo el viejo.
+      // Un cambio programado no toca el plan hasta el fin del período: no hay sesión que renovar.
+      if (kind !== 'change') await this.auth.refreshSession().catch(() => {});
+    }
+    await this.load();
+  }
+
+  // ---- cambiar de plan
+
+  /** "Más alto" = más caro por mes, con los precios del back: el orden de los planes no se escribe en el front. */
+  private monthlyPrice(tier?: string): number {
+    return this.plans().find(p => p.planTier === tier)?.monthlyAmountArs ?? 0;
+  }
+
+  cardAction(tier?: string): CardAction {
+    const s = this.subscription();
+    const samePeriod = s?.billingPeriod === this.period();
+    if (s?.planTier === tier) return samePeriod ? 'current' : 'period';
+    if (this.monthlyPrice(tier) < this.monthlyPrice(s?.planTier)) return 'downgrade';
+    // Suba + cambio de período a la vez: el back lo rechaza, son dos pasos.
+    return samePeriod ? 'upgrade' : 'upgradeAndPeriod';
+  }
+
+  isPendingChoice(tier?: string): boolean {
+    const pc = this.pending();
+    return pc?.planTier === tier && pc?.billingPeriod === this.period();
+  }
+
+  /** Ya llegó su fecha: se está cobrando (hasta una hora). El back no lo deja cancelar ni reemplazar. */
+  isApplying(pc: PendingSubscriptionChangeResponse): boolean {
+    return !!pc.effectiveAt && new Date(pc.effectiveAt).getTime() <= Date.now();
+  }
+
+  async openPlanChange(planTier: PlanTier): Promise<void> {
+    this.previewLoading.set(planTier);
+    this.changeError.set(null);
+    try {
+      const raw = await this.api.invoke(previewSubscriptionChange, { planTier, billingPeriod: this.period() });
+      this.preview.set(await parseBlob<SubscriptionChangePreviewResponse>(raw));
+    } catch (e: any) {
+      this.changeError.set(extractApiError(e, this.t('plan.change.previewError')));
+    } finally {
+      this.previewLoading.set(null);
+    }
+  }
+
+  closePreview(): void {
+    this.preview.set(null);
+    this.changeError.set(null);
+  }
+
+  async confirmPlanChange(): Promise<void> {
+    const p = this.preview();
+    if (!p) return;
+    this.changeLoading.set(true);
+    this.changeError.set(null);
+    try {
+      const res = await requestPlanChange(this.api, p.planTier as PlanTier, p.billingPeriod as BillingPeriod);
+      // Con checkout, el navegador se va a Mercado Pago: changeLoading queda prendido mientras sale.
+      if (res.checkoutUrl) return;
+      this.preview.set(null);
+      await this.afterConfirmed('change');
+    } catch (e: any) {
+      this.changeError.set(extractApiError(e, this.t('plan.change.error')));
+    }
+    this.changeLoading.set(false);
+  }
+
+  get previewTitle(): string {
+    const p = this.preview();
+    return p ? this.t('plan.change.previewTitle', { plan: this.tierName(p.planTier), period: this.periodName(p.billingPeriod) }) : '';
+  }
+
+  get previewMessage(): string {
+    const p = this.preview();
+    const s = this.subscription();
+    if (!p || !s) return '';
+    const amount = this.price(p.newAmountArs) + this.perPeriod(p.billingPeriod);
+    if (p.changeType === 'UPGRADE') {
+      return [
+        this.t('plan.change.previewUpgrade', {
+          charge: this.price(p.chargeNowArs ?? undefined), days: p.daysRemaining ?? 0, periodDays: p.periodDays ?? 0,
+          date: this.formatDate(p.nextChargeAt), amount,
+        }),
+        p.replacesPendingChange ? this.t('plan.change.upgradeDiscardsPending') : '',
+      ].filter(Boolean).join(' ');
+    }
+    return [
+      this.t('plan.change.previewScheduled', {
+        date: this.formatDate(p.effectiveAt), plan: this.tierName(p.planTier), period: this.periodName(p.billingPeriod),
+        amount, current: this.tierName(s.planTier),
+      }),
+      this.t(p.requiresCheckout ? 'plan.change.previewNeedsCheckout' : 'plan.change.previewNoCharge'),
+      p.replacesPendingChange ? this.t('plan.change.replacesPending') : '',
+      // Mati, 2026-11-16: el aviso va en lo que se cobra más adelante, no en la suba (se paga en el momento).
+      this.t('plan.change.priceMayChange'),
+    ].filter(Boolean).join(' ');
+  }
+
+  get previewConfirmLabel(): string {
+    const p = this.preview();
+    if (p?.changeType === 'UPGRADE') return this.t('plan.change.payNow', { charge: this.price(p.chargeNowArs ?? undefined) });
+    return this.t(p?.requiresCheckout ? 'plan.change.goToCheckout' : 'plan.change.schedule');
+  }
+
+  async cancelPendingChange(): Promise<void> {
+    this.pendingBusy.set(true);
+    this.pendingError.set(null);
+    try {
+      await this.api.invoke(cancelSubscriptionChange);
+      this.confirmState.set('idle');
+      await this.load();
+    } catch (e: any) {
+      this.pendingError.set(extractApiError(e, this.t('plan.change.cancelPendingError')));
+    } finally {
+      this.pendingBusy.set(false);
+    }
+  }
+
+  /** Cambio de período con el checkout sin terminar: pedir lo mismo otra vez devuelve otro checkoutUrl. */
+  async completePendingChange(pc: PendingSubscriptionChangeResponse): Promise<void> {
+    this.pendingBusy.set(true);
+    this.pendingError.set(null);
+    try {
+      if ((await requestPlanChange(this.api, pc.planTier as PlanTier, pc.billingPeriod as BillingPeriod)).checkoutUrl) return;
+      await this.load();
+    } catch (e: any) {
+      this.pendingError.set(extractApiError(e, this.t('plan.change.error')));
+    }
+    this.pendingBusy.set(false);
   }
 
   // ---- cancelar
@@ -176,11 +361,13 @@ export class PlanComponent implements OnInit, OnDestroy {
     }
   }
 
-  /** En mora no hay período pagado que conservar: cancelar baja a prueba en el acto. */
+  /** En mora no hay período pagado que conservar: cancelar baja a prueba en el acto. Cancelar descarta el cambio programado. */
   get cancelMessage(): string {
     const s = this.subscription();
-    if (!s || s.status === 'PAST_DUE' || !s.currentPeriodEnd) return this.t('plan.cancelMessageNow');
-    return this.t('plan.cancelMessage', { plan: this.tierName(s.planTier), date: this.dateTime(s.currentPeriodEnd) });
+    const msg = !s || s.status === 'PAST_DUE' || !s.currentPeriodEnd
+      ? this.t('plan.cancelMessageNow')
+      : this.t('plan.cancelMessage', { plan: this.tierName(s.planTier), date: this.dateTime(s.currentPeriodEnd) });
+    return this.pending() ? msg + ' ' + this.t('plan.change.cancelDiscardsPending') : msg;
   }
 
   // ---- cerrar la cuenta
@@ -215,6 +402,14 @@ export class PlanComponent implements OnInit, OnDestroy {
 
   tierName(tier?: string): string {
     return tier ? this.t('plan.tiers.' + tier) : '—';
+  }
+
+  periodName(period?: string): string {
+    return period ? this.t('plan.periods.' + period) : '';
+  }
+
+  perPeriod(period?: string): string {
+    return this.t(period === 'ANNUAL' ? 'plan.perYear' : 'plan.perMonth');
   }
 
   featureLabel(key: string): string {

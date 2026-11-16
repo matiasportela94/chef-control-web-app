@@ -51,3 +51,9 @@
 .spin { display: inline-block; animation: spin 1s linear infinite; }
 @keyframes spin { to { transform: rotate(360deg); } }
 @media (prefers-reduced-motion: reduce) { .spin { animation: none; } }
+
+.card-note { font-size: 11px; line-height: 1.4; color: var(--text-3); margin-top: 6px; }
+
+.notice-warn { border-color: var(--accent); }
+.pending-warn { font-weight: 600; color: var(--accent); margin-top: 6px; }
+.pending-error { color: var(--red); margin-top: 6px; }
