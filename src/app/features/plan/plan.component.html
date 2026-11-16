@@ -114,102 +114,27 @@
           </div>
         }
 
-        @if (canCancel()) {
-          <button (click)="openCancel()" class="btn-secondary btn-sm" style="margin-top:14px;">
-            <i class="ti ti-x"></i> {{ t('plan.cancelSubscription') }}
-          </button>
-        }
-      </div>
-
-      <!-- Planes -->
-      @if (paidPlans().length) {
-        <div class="data-card" style="padding:18px 20px;">
-          <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:14px;">
-            <p style="font-size:15px;font-weight:600;color:var(--text-1);">{{ t('plan.plans') }}</p>
-            <div class="segmented" role="group">
-              <button type="button" [class.on]="period() === 'MONTHLY'" (click)="period.set('MONTHLY')">{{ t('plan.monthly') }}</button>
-              <button type="button" [class.on]="period() === 'ANNUAL'" (click)="period.set('ANNUAL')">
-                {{ t('plan.annual') }}
-                @if (annualSavingPct() > 0) { <span class="saving">{{ t('plan.annualSaving', { pct: annualSavingPct() }) }}</span> }
-              </button>
-            </div>
-          </div>
-
-          @if (subscribeError()) { <div class="notice notice-danger" style="margin-bottom:12px;">{{ subscribeError() }}</div> }
-          @if (changeError() && !preview()) { <div class="notice notice-danger" style="margin-bottom:12px;">{{ changeError() }}</div> }
-
-          <div class="plan-grid">
-            @for (p of paidPlans(); track p.planTier) {
-              <div class="plan-card" [class.current]="p.planTier === a.plan">
-                <p style="font-size:14px;font-weight:700;color:var(--text-1);">{{ tierName(p.planTier) }}</p>
-                @if (period() === 'MONTHLY') {
-                  <p class="plan-price">{{ price(p.monthlyAmountArs) }}<span>{{ t('plan.perMonth') }}</span></p>
-                  <p class="plan-sub">&nbsp;</p>
-                } @else {
-                  <p class="plan-price">{{ price(p.annualAmountArs) }}<span>{{ t('plan.perYear') }}</span></p>
-                  <p class="plan-sub">{{ t('plan.annualEquivalent', { amount: price((p.annualAmountArs ?? 0) / 12) }) }}</p>
-                }
-                <ul class="plan-features">
-                  @for (f of p.features ?? []; track f) {
-                    <li [class.upcoming]="isUpcoming(f)"><i class="ti ti-check"></i><span>{{ featureLabel(f) }}@if (isUpcoming(f)) { <em>· {{ t('plan.upcoming') }}</em> }</span></li>
-                  }
-                </ul>
-                @if (status() === 'ACTIVE') {
-                  @switch (cardAction(p.planTier)) {
-                    @case ('current') {
-                      <span class="badge badge-soft" style="align-self:flex-start;">{{ t('plan.yourPlan') }}</span>
-                    }
-                    @default {
-                      @if (isPendingChoice(p.planTier)) {
-                        <span class="badge badge-neutral" style="align-self:flex-start;"><i class="ti ti-calendar-event"></i> {{ t('plan.change.pendingBadge') }}</span>
-                      } @else if (isOwner()) {
-                        @switch (cardAction(p.planTier)) {
-                          @case ('upgrade') {
-                            <button class="btn-primary btn-sm" style="width:100%;justify-content:center;"
-                                    [disabled]="previewLoading() !== null" (click)="openPlanChange(p.planTier!)">
-                              <i class="ti" [class.ti-arrow-up]="previewLoading() !== p.planTier" [class.ti-loader-2]="previewLoading() === p.planTier" [class.spin]="previewLoading() === p.planTier"></i>
-                              {{ t('plan.change.upgradeTo', { plan: tierName(p.planTier) }) }}
-                            </button>
-                          }
-                          @case ('upgradeAndPeriod') {
-                            <button class="btn-secondary btn-sm" style="width:100%;justify-content:center;" disabled>
-                              <i class="ti ti-arrow-up"></i> {{ t('plan.change.upgradeTo', { plan: tierName(p.planTier) }) }}
-                            </button>
-                            <p class="card-note">{{ t('plan.change.upgradeAndPeriodHint', {
-                              plan: tierName(p.planTier), current: periodName(subscription()?.billingPeriod), period: periodName(period()) }) }}</p>
-                          }
-                          @default {
-                            <button class="btn-secondary btn-sm" style="width:100%;justify-content:center;"
-                                    [disabled]="previewLoading() !== null" (click)="openPlanChange(p.planTier!)">
-                              @if (previewLoading() === p.planTier) { <i class="ti ti-loader-2 spin"></i> }
-                              {{ cardAction(p.planTier) === 'downgrade'
-                                ? t('plan.change.downgradeTo', { plan: tierName(p.planTier) })
-                                : t('plan.change.switchPeriod', { period: periodName(period()) }) }}
-                            </button>
-                          }
-                        }
-                      }
-                    }
-                  }
-                } @else if (canSubscribe()) {
-                  <button class="btn-primary btn-sm" style="width:100%;justify-content:center;"
-                          [disabled]="subscribing() !== null" (click)="subscribe(p.planTier!)">
-                    @if (subscribing() === p.planTier) { <i class="ti ti-loader-2 spin"></i> } {{ t('plan.subscribe') }}
-                  </button>
-                }
-              </div>
-            }
-          </div>
-
-          @if (!isOwner()) {
-            <p class="hint">{{ t('plan.ownerOnly', { owner: a.ownerName ?? '' }) }}</p>
-          } @else if (status() === 'ACTIVE') {
-            <p class="hint">{{ t('plan.change.hint', { date: formatDate(subscription()?.currentPeriodEnd) }) }}</p>
-          } @else if (status() === 'PAST_DUE') {
-            <p class="hint">{{ t('plan.change.pastDueHint') }}</p>
+        @if (subscribeError() && !plansOpen()) { <div class="notice notice-danger" style="margin-top:14px;">{{ subscribeError() }}</div> }
+        <div class="card-actions">
+          <!-- En mora, pagar con otra tarjeta es el POST /subscription que reemplaza a la PAST_DUE con el mismo plan y período. -->
+          @if (status() === 'PAST_DUE' && isOwner() && subscription(); as s) {
+            <button (click)="payWithOtherCard(s)" class="btn-primary btn-sm" [disabled]="subscribing() !== null">
+              <i class="ti" [class.ti-credit-card]="subscribing() === null" [class.ti-loader-2]="subscribing() !== null" [class.spin]="subscribing() !== null"></i>
+              {{ t('plan.payWithOtherCard') }}
+            </button>
+          }
+          @if (paidPlans().length) {
+            <button (click)="openPlans()" class="btn-sm" [class.btn-primary]="status() !== 'PAST_DUE'" [class.btn-secondary]="status() === 'PAST_DUE'">
+              <i class="ti ti-arrows-exchange"></i> {{ t('plan.changePlan') }}
+            </button>
+          }
+          @if (canCancel()) {
+            <button (click)="openCancel()" class="btn-secondary btn-sm">
+              <i class="ti ti-x"></i> {{ t('plan.cancelSubscription') }}
+            </button>
           }
         </div>
-      }
+      </div>
 
       <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px;">
         <div class="data-card" style="padding:14px 16px;">
@@ -253,6 +178,83 @@
   }
 
 </div>
+
+<!-- Planes: modal propio (action-dialog es para confirmar y drawer es lateral). La vista previa del cambio se abre encima. -->
+@if (plansOpen()) {
+  <div class="modal-backdrop" (click)="closePlans()">
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="plans-title" (click)="$event.stopPropagation()">
+      <div class="modal-head">
+        <p id="plans-title" style="font-size:15px;font-weight:600;color:var(--text-1);">{{ t('plan.plans') }}</p>
+        <button type="button" class="modal-close" (click)="closePlans()" [attr.aria-label]="t('plan.close')" [title]="t('plan.close')">
+          <i class="ti ti-x"></i>
+        </button>
+      </div>
+
+      <div class="modal-body">
+        <div class="segmented" role="group" style="margin-bottom:14px;">
+          <button type="button" [class.on]="period() === 'MONTHLY'" (click)="period.set('MONTHLY')">{{ t('plan.monthly') }}</button>
+          <button type="button" [class.on]="period() === 'ANNUAL'" (click)="period.set('ANNUAL')">
+            {{ t('plan.annual') }}
+            @if (annualSavingPct() > 0) { <span class="saving">{{ t('plan.annualSaving', { pct: annualSavingPct() }) }}</span> }
+          </button>
+        </div>
+
+        @if (subscribeError()) { <div class="notice notice-danger" style="margin-bottom:12px;">{{ subscribeError() }}</div> }
+        @if (changeError() && !preview()) { <div class="notice notice-danger" style="margin-bottom:12px;">{{ changeError() }}</div> }
+
+        <div class="plan-grid">
+          @for (p of paidPlans(); track p.planTier) {
+            <div class="plan-card" [class.current]="hasPlanToChange() && cardAction(p.planTier) === 'current'">
+              <p style="font-size:14px;font-weight:700;color:var(--text-1);">{{ tierName(p.planTier) }}</p>
+              @if (period() === 'MONTHLY') {
+                <p class="plan-price">{{ price(p.monthlyAmountArs) }}<span>{{ t('plan.perMonth') }}</span></p>
+                <p class="plan-sub">&nbsp;</p>
+              } @else {
+                <p class="plan-price">{{ price(p.annualAmountArs) }}<span>{{ t('plan.perYear') }}</span></p>
+                <p class="plan-sub">{{ t('plan.annualEquivalent', { amount: price((p.annualAmountArs ?? 0) / 12) }) }}</p>
+              }
+              <ul class="plan-features">
+                @for (f of p.features ?? []; track f) {
+                  <li [class.upcoming]="isUpcoming(f)"><i class="ti ti-check"></i><span>{{ featureLabel(f) }}@if (isUpcoming(f)) { <em>· {{ t('plan.upcoming') }}</em> }</span></li>
+                }
+              </ul>
+              <!-- ACTIVE o PAST_DUE: se cambia de plan (en mora, deshabilitado). Sin suscripción vigente: se contrata. -->
+              @if (hasPlanToChange()) {
+                @if (cardAction(p.planTier) === 'current') {
+                  <button class="btn-secondary btn-sm card-btn" disabled>{{ t('plan.currentPlanButton') }}</button>
+                } @else if (isPendingChoice(p.planTier)) {
+                  <span class="badge badge-neutral" style="align-self:flex-start;"><i class="ti ti-calendar-event"></i> {{ t('plan.change.pendingBadge') }}</span>
+                } @else if (isOwner()) {
+                  <button class="btn-primary btn-sm card-btn" (click)="openPlanChange(p.planTier!)"
+                          [disabled]="status() !== 'ACTIVE' || cardAction(p.planTier) === 'upgradeAndPeriod' || previewLoading() !== null">
+                    @if (previewLoading() === p.planTier) { <i class="ti ti-loader-2 spin"></i> }
+                    {{ t('plan.change.changePlanCta') }}
+                  </button>
+                  @if (status() === 'ACTIVE' && cardAction(p.planTier) === 'upgradeAndPeriod') {
+                    <p class="card-note">{{ t('plan.change.upgradeAndPeriodHint', {
+                      plan: tierName(p.planTier), current: periodName(subscription()?.billingPeriod), period: periodName(period()) }) }}</p>
+                  }
+                }
+              } @else if (isOwner()) {
+                <button class="btn-primary btn-sm card-btn" [disabled]="subscribing() !== null" (click)="subscribe(p.planTier!)">
+                  @if (subscribing() === p.planTier) { <i class="ti ti-loader-2 spin"></i> } {{ t('plan.subscribe') }}
+                </button>
+              }
+            </div>
+          }
+        </div>
+
+        @if (!isOwner()) {
+          <p class="hint">{{ t('plan.ownerOnly', { owner: account()?.ownerName ?? '' }) }}</p>
+        } @else if (status() === 'ACTIVE') {
+          <p class="hint">{{ t('plan.change.hint', { date: formatDate(subscription()?.currentPeriodEnd) }) }}</p>
+        } @else if (status() === 'PAST_DUE') {
+          <p class="hint">{{ t('plan.change.pastDueHint') }}</p>
+        }
+      </div>
+    </div>
+  </div>
+}
 
 <app-action-dialog
   [visible]="cancelling()"

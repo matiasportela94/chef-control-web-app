@@ -1,4 +1,4 @@
-import { Component, OnDestroy, OnInit, computed, signal } from '@angular/core';
+import { Component, HostListener, OnDestroy, OnInit, computed, signal } from '@angular/core';
 import { Router } from '@angular/router';
 import { Api } from '../../api/api';
 import { getAccount } from '../../api/fn/account-controller/get-account';
@@ -47,6 +47,8 @@ export class PlanComponent implements OnInit, OnDestroy {
   loading = signal(true);
   error   = signal<string | null>(null);
 
+  /** El modal de planes. La vista previa de un cambio (action-dialog) se abre encima, con z-index mayor. */
+  plansOpen      = signal(false);
   period         = signal<BillingPeriod>('MONTHLY');
   subscribing    = signal<string | null>(null);
   subscribeError = signal<string | null>(null);
@@ -88,8 +90,12 @@ export class PlanComponent implements OnInit, OnDestroy {
 
   status = computed(() => this.subscription()?.status ?? null);
 
-  /** Con una suscripción ACTIVE no se contrata otra (el back responde 409): se cambia de plan. */
-  canSubscribe = computed(() => this.isOwner() && this.status() !== 'ACTIVE');
+  /**
+   * Con una suscripción ACTIVE o PAST_DUE las cards del modal cambian de plan (en mora, deshabilitadas: primero se paga).
+   * Sin una vigente (ninguna, PENDING o CANCELLED aunque conserve el plan) se contrata: el back no cambia el plan de una
+   * suscripción que no está ACTIVE.
+   */
+  hasPlanToChange = computed(() => this.status() === 'ACTIVE' || this.status() === 'PAST_DUE');
 
   /** El cambio programado. Con `effectiveAt` vencido ya se está cobrando: no se cancela ni se reemplaza. */
   pending = computed(() => this.subscription()?.pendingChange ?? null);
@@ -103,9 +109,6 @@ export class PlanComponent implements OnInit, OnDestroy {
 
   async ngOnInit(): Promise<void> {
     await this.load();
-    // El selector arranca en el período que se paga, para que la card del plan actual diga "Tu plan".
-    const bp = this.subscription()?.billingPeriod;
-    if (bp === 'MONTHLY' || bp === 'ANNUAL') this.period.set(bp);
     const mark = checkoutMark();
     if (!mark) return;
     const result = this.checkoutResult(mark);
@@ -147,18 +150,47 @@ export class PlanComponent implements OnInit, OnDestroy {
     return parseBlob<T>(raw);
   }
 
+  // ---- modal de planes
+
+  openPlans(): void {
+    // Arranca en el período que se paga, para que se vea cuál es el plan actual.
+    const bp = this.subscription()?.billingPeriod;
+    if (bp === 'MONTHLY' || bp === 'ANNUAL') this.period.set(bp);
+    this.subscribeError.set(null);
+    this.changeError.set(null);
+    this.plansOpen.set(true);
+  }
+
+  closePlans(): void {
+    this.plansOpen.set(false);
+  }
+
+  /**
+   * Con la vista previa abierta, Escape la cierra a ella (lo maneja action-dialog) y el modal queda. Este listener
+   * corre antes que el del diálogo porque el host de este componente se crea antes que sus hijos.
+   */
+  @HostListener('document:keydown.escape')
+  onEscape(): void {
+    if (this.plansOpen() && !this.preview()) this.closePlans();
+  }
+
   // ---- contratar
 
-  async subscribe(planTier: PlanTier): Promise<void> {
+  async subscribe(planTier: PlanTier, period: BillingPeriod = this.period()): Promise<void> {
     this.subscribing.set(planTier);
     this.subscribeError.set(null);
     try {
-      await goToCheckout(this.api, planTier, this.period());
+      await goToCheckout(this.api, planTier, period);
       // subscribing queda en el plan elegido mientras el navegador se va a Mercado Pago.
     } catch (e: any) {
       this.subscribeError.set(extractApiError(e, this.t('plan.subscribeError')));
       this.subscribing.set(null);
     }
+  }
+
+  /** En mora: el POST /subscription reemplaza a la PAST_DUE. Mismo plan y período, otra tarjeta. */
+  payWithOtherCard(s: SubscriptionResponse): void {
+    this.subscribe(s.planTier as PlanTier, s.billingPeriod as BillingPeriod);
   }
 
   // ---- vuelta de Mercado Pago
@@ -269,6 +301,7 @@ export class PlanComponent implements OnInit, OnDestroy {
       // Con checkout, el navegador se va a Mercado Pago: changeLoading queda prendido mientras sale.
       if (res.checkoutUrl) return;
       this.preview.set(null);
+      this.plansOpen.set(false);
       await this.afterConfirmed('change');
     } catch (e: any) {
       this.changeError.set(extractApiError(e, this.t('plan.change.error')));
