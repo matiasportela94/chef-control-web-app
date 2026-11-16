@@ -19,11 +19,30 @@
   @if (!loading() && !error() && account(); as a) {
     <div style="display:flex;flex-direction:column;gap:14px;">
 
-      <!-- Avisos del estado de la suscripción -->
-      @switch (confirmState()) {
-        @case ('waiting') { <div class="notice"><i class="ti ti-loader-2 spin"></i> {{ t('plan.confirming') }}</div> }
-        @case ('done')    { <div class="notice notice-ok"><i class="ti ti-circle-check"></i> {{ t('plan.confirmed', { plan: tierName(subscription()?.planTier) }) }}</div> }
-        @case ('timeout') { <div class="notice"><i class="ti ti-clock"></i> {{ t('plan.confirmTimeout') }}</div> }
+      <!-- Vuelta de Mercado Pago: contratar, subir de plan o autorizar un cambio de período -->
+      @if (confirmKind() === 'upgrade') {
+        @switch (confirmState()) {
+          @case ('waiting') { <div class="notice"><i class="ti ti-loader-2 spin"></i> {{ t('plan.change.upgradeConfirming') }}</div> }
+          @case ('done')    { <div class="notice notice-ok"><i class="ti ti-circle-check"></i> {{ t('plan.change.upgraded', { plan: tierName(subscription()?.planTier) }) }}</div> }
+          @case ('timeout') { <div class="notice"><i class="ti ti-clock"></i> {{ t('plan.change.upgradeTimeout') }}</div> }
+        }
+      } @else if (confirmKind() === 'change') {
+        @switch (confirmState()) {
+          @case ('waiting') { <div class="notice"><i class="ti ti-loader-2 spin"></i> {{ t('plan.change.confirming') }}</div> }
+          @case ('done') {
+            @if (pending(); as pc) {
+              <div class="notice notice-ok"><i class="ti ti-circle-check"></i> {{ t('plan.change.confirmed', { date: formatDate(pc.effectiveAt), plan: tierName(pc.planTier), period: periodName(pc.billingPeriod) }) }}</div>
+            }
+          }
+          @case ('timeout') { <div class="notice"><i class="ti ti-clock"></i> {{ t('plan.change.confirmTimeout') }}</div> }
+          @case ('dropped') { <div class="notice"><i class="ti ti-info-circle"></i> {{ t('plan.change.dropped') }}</div> }
+        }
+      } @else {
+        @switch (confirmState()) {
+          @case ('waiting') { <div class="notice"><i class="ti ti-loader-2 spin"></i> {{ t('plan.confirming') }}</div> }
+          @case ('done')    { <div class="notice notice-ok"><i class="ti ti-circle-check"></i> {{ t('plan.confirmed', { plan: tierName(subscription()?.planTier) }) }}</div> }
+          @case ('timeout') { <div class="notice"><i class="ti ti-clock"></i> {{ t('plan.confirmTimeout') }}</div> }
+        }
       }
       @if (status() === 'PAST_DUE') {
         <div class="notice notice-danger"><i class="ti ti-alert-triangle"></i> {{ t('plan.pastDue', { date: dateTime(a.planExpiresAt) }) }}</div>
@@ -50,7 +69,7 @@
             @if ((status() === 'ACTIVE' || status() === 'PAST_DUE') && subscription(); as s) {
               <p style="font-size:13px;color:var(--text-2);margin-top:6px;">
                 {{ s.billingPeriod === 'ANNUAL' ? t('plan.annual') : t('plan.monthly') }} ·
-                {{ price(s.amountArs) }}{{ s.billingPeriod === 'ANNUAL' ? t('plan.perYear') : t('plan.perMonth') }}
+                {{ price(s.amountArs) }}{{ perPeriod(s.billingPeriod) }}
               </p>
               @if (status() === 'ACTIVE' && s.currentPeriodEnd) {
                 <p style="font-size:12px;color:var(--text-3);margin-top:2px;">{{ t('plan.nextCharge', { date: dateTime(s.currentPeriodEnd) }) }}</p>
@@ -63,6 +82,38 @@
             <p style="font-size:13px;color:var(--text-1);">{{ formatDate(a.createdAt) }}</p>
           </div>
         </div>
+
+        <!-- Cambio programado: rige al fin del período; hasta su fecha se reemplaza o se cancela -->
+        @if (pending(); as pc) {
+          <div class="notice" [class.notice-warn]="pc.awaitingCheckout" style="margin-top:14px;">
+            @if (isApplying(pc)) {
+              <i class="ti ti-loader-2 spin"></i>
+              <span style="min-width:0;">{{ t('plan.change.applying', { plan: tierName(pc.planTier), period: periodName(pc.billingPeriod) }) }}</span>
+            } @else {
+              <i class="ti ti-calendar-event"></i>
+              <div style="min-width:0;">
+                <span>{{ t('plan.change.pending', {
+                  date: formatDate(pc.effectiveAt), plan: tierName(pc.planTier), period: periodName(pc.billingPeriod),
+                  amount: price(pc.amountArs) + perPeriod(pc.billingPeriod) }) }}</span>
+                @if (pc.awaitingCheckout) { <p class="pending-warn">{{ t('plan.change.awaitingCheckout') }}</p> }
+                @if (pendingError()) { <p class="pending-error">{{ pendingError() }}</p> }
+                @if (isOwner()) {
+                  <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;">
+                    @if (pc.awaitingCheckout) {
+                      <button (click)="completePendingChange(pc)" class="btn-primary btn-sm" [disabled]="pendingBusy()">
+                        @if (pendingBusy()) { <i class="ti ti-loader-2 spin"></i> } {{ t('plan.change.completeCheckout') }}
+                      </button>
+                    }
+                    <button (click)="cancelPendingChange()" class="btn-secondary btn-sm" [disabled]="pendingBusy()">
+                      {{ pc.awaitingCheckout ? t('plan.change.discardPending') : t('plan.change.cancelPending') }}
+                    </button>
+                  </div>
+                }
+              </div>
+            }
+          </div>
+        }
+
         @if (canCancel()) {
           <button (click)="openCancel()" class="btn-secondary btn-sm" style="margin-top:14px;">
             <i class="ti ti-x"></i> {{ t('plan.cancelSubscription') }}
@@ -85,6 +136,7 @@
           </div>
 
           @if (subscribeError()) { <div class="notice notice-danger" style="margin-bottom:12px;">{{ subscribeError() }}</div> }
+          @if (changeError() && !preview()) { <div class="notice notice-danger" style="margin-bottom:12px;">{{ changeError() }}</div> }
 
           <div class="plan-grid">
             @for (p of paidPlans(); track p.planTier) {
@@ -102,8 +154,43 @@
                     <li [class.upcoming]="isUpcoming(f)"><i class="ti ti-check"></i><span>{{ featureLabel(f) }}@if (isUpcoming(f)) { <em>· {{ t('plan.upcoming') }}</em> }</span></li>
                   }
                 </ul>
-                @if (status() === 'ACTIVE' && subscription()?.planTier === p.planTier) {
-                  <span class="badge badge-soft" style="align-self:flex-start;">{{ t('plan.yourPlan') }}</span>
+                @if (status() === 'ACTIVE') {
+                  @switch (cardAction(p.planTier)) {
+                    @case ('current') {
+                      <span class="badge badge-soft" style="align-self:flex-start;">{{ t('plan.yourPlan') }}</span>
+                    }
+                    @default {
+                      @if (isPendingChoice(p.planTier)) {
+                        <span class="badge badge-neutral" style="align-self:flex-start;"><i class="ti ti-calendar-event"></i> {{ t('plan.change.pendingBadge') }}</span>
+                      } @else if (isOwner()) {
+                        @switch (cardAction(p.planTier)) {
+                          @case ('upgrade') {
+                            <button class="btn-primary btn-sm" style="width:100%;justify-content:center;"
+                                    [disabled]="previewLoading() !== null" (click)="openPlanChange(p.planTier!)">
+                              <i class="ti" [class.ti-arrow-up]="previewLoading() !== p.planTier" [class.ti-loader-2]="previewLoading() === p.planTier" [class.spin]="previewLoading() === p.planTier"></i>
+                              {{ t('plan.change.upgradeTo', { plan: tierName(p.planTier) }) }}
+                            </button>
+                          }
+                          @case ('upgradeAndPeriod') {
+                            <button class="btn-secondary btn-sm" style="width:100%;justify-content:center;" disabled>
+                              <i class="ti ti-arrow-up"></i> {{ t('plan.change.upgradeTo', { plan: tierName(p.planTier) }) }}
+                            </button>
+                            <p class="card-note">{{ t('plan.change.upgradeAndPeriodHint', {
+                              plan: tierName(p.planTier), current: periodName(subscription()?.billingPeriod), period: periodName(period()) }) }}</p>
+                          }
+                          @default {
+                            <button class="btn-secondary btn-sm" style="width:100%;justify-content:center;"
+                                    [disabled]="previewLoading() !== null" (click)="openPlanChange(p.planTier!)">
+                              @if (previewLoading() === p.planTier) { <i class="ti ti-loader-2 spin"></i> }
+                              {{ cardAction(p.planTier) === 'downgrade'
+                                ? t('plan.change.downgradeTo', { plan: tierName(p.planTier) })
+                                : t('plan.change.switchPeriod', { period: periodName(period()) }) }}
+                            </button>
+                          }
+                        }
+                      }
+                    }
+                  }
                 } @else if (canSubscribe()) {
                   <button class="btn-primary btn-sm" style="width:100%;justify-content:center;"
                           [disabled]="subscribing() !== null" (click)="subscribe(p.planTier!)">
@@ -117,7 +204,9 @@
           @if (!isOwner()) {
             <p class="hint">{{ t('plan.ownerOnly', { owner: a.ownerName ?? '' }) }}</p>
           } @else if (status() === 'ACTIVE') {
-            <p class="hint">{{ t('plan.changePlanHint', { date: dateTime(subscription()?.currentPeriodEnd) }) }}</p>
+            <p class="hint">{{ t('plan.change.hint', { date: formatDate(subscription()?.currentPeriodEnd) }) }}</p>
+          } @else if (status() === 'PAST_DUE') {
+            <p class="hint">{{ t('plan.change.pastDueHint') }}</p>
           }
         </div>
       }
@@ -195,4 +284,16 @@
   [confirmDisabled]="deleteBlocked()"
   (confirm)="confirmDelete()"
   (cancel)="closeDelete()">
+</app-action-dialog>
+
+<app-action-dialog
+  [visible]="preview() !== null"
+  [title]="previewTitle"
+  icon="🔁"
+  [message]="changeError() ?? previewMessage"
+  [confirmLabel]="previewConfirmLabel"
+  [cancelLabel]="t('plan.cancel')"
+  [confirmDisabled]="changeLoading()"
+  (confirm)="confirmPlanChange()"
+  (cancel)="closePreview()">
 </app-action-dialog>
