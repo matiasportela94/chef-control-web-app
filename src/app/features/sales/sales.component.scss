@@ -37,15 +37,21 @@
 .sale-header,
 .sale-row {
   display: grid;
-  grid-template-columns: 1fr 80px 110px 36px;
+  // minmax(0, …): con 1fr a secas la columna no baja del ancho del placeholder del select y, en el drawer de 420 px,
+  // el botón de quitar quedaba cortado fuera del borde (desborde horizontal en escritorio).
+  grid-template-columns: minmax(0, 1fr) 80px 110px 36px;
   gap: 0.5rem;
   align-items: center;
 }
+// Y los hijos también: un app-select toma el ancho del nombre del plato elegido y no deja actuar al ellipsis.
+.sale-row > * { min-width: 0; }
 
 // Below tablet, columns no longer fit side by side — stack fields vertically.
 @media (max-width: 639px) {
   .sale-row {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
     gap: 6px;
   }
+  // El display:grid de arriba le gana al hidden de Tailwind: apiladas, las columnas del encabezado no corresponden.
+  .sale-header { display: none; }
 }
