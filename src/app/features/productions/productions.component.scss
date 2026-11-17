@@ -1,0 +1,30 @@
+.ellipsis { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.field-error { font-size: 11px; color: var(--red); margin-top: 4px; }
+.opt { color: var(--text-3); font-weight: 400; }
+.form-hint { font-size: 11px; line-height: 1.5; color: var(--text-3); }
+.error-box { background: var(--red-bg); border: 1.5px solid var(--red); border-radius: 10px; padding: 12px 16px; font-size: 12px; color: var(--red); }
+.two-cols { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 10px; }
+
+// Cards del teléfono: botón entero, para abrir el detalle con un toque.
+.prod-card { width: 100%; text-align: left; padding: 12px 14px; cursor: pointer; color: inherit; font: inherit; }
+.prod-card-top, .prod-card-bottom { display: flex; align-items: center; justify-content: space-between; gap: 10px; min-width: 0; }
+.prod-card-top { margin-bottom: 8px; }
+.prod-name { font-size: 13px; font-weight: 600; color: var(--text-1); }
+.prod-cost { font-size: 13px; font-weight: 700; color: var(--text-1); white-space: nowrap; }
+.prod-meta { font-size: 11px; color: var(--text-3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+.prod-badges { display: flex; flex-wrap: wrap; gap: 6px; }
+.reversed { opacity: .55; }
+tr.clickable { cursor: pointer; }
+
+.kv {
+  display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 8px 14px; font-size: 12px;
+  span:nth-child(odd) { color: var(--text-3); }
+  span:nth-child(even) { color: var(--text-1); text-align: right; }
+  .strong { font-weight: 700; }
+}
+.notes { font-size: 12px; color: var(--text-2); white-space: pre-line; overflow-wrap: anywhere; }
+.ing-list { display: flex; flex-direction: column; gap: 6px; }
+.ing-item {
+  display: flex; align-items: center; gap: 10px; min-width: 0;
+  border: 1px solid var(--border); border-radius: 10px; padding: 8px 12px;
+}

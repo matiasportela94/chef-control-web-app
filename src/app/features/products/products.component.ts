@@ -30,11 +30,12 @@ import { AuthService } from '../../core/services/auth.service';
 import { extractApiError } from '../../core/utils/api-error';
 import { isFormFieldInvalid } from '../../core/utils/form';
 import { IVA_RATES, formatIvaRate } from '../../core/utils/iva';
+import { PreparationRecipeComponent } from './preparation-recipe/preparation-recipe.component';
 
 @Component({
   selector: 'app-products',
   standalone: true,
-  imports: [ReactiveFormsModule, FormsModule, DecimalPipe, PaginatorComponent, ActionDialogComponent, DrawerComponent, SpinnerComponent, SearchFilterBarComponent, SelectComponent, StepLineChartComponent, CatalogImportComponent],
+  imports: [ReactiveFormsModule, FormsModule, DecimalPipe, PaginatorComponent, ActionDialogComponent, DrawerComponent, SpinnerComponent, SearchFilterBarComponent, SelectComponent, StepLineChartComponent, CatalogImportComponent, PreparationRecipeComponent],
   templateUrl: './products.component.html',
   styleUrl: './products.component.scss'
 })
@@ -105,6 +106,11 @@ export class ProductsComponent implements OnInit {
   saving         = signal(false);
   saveError      = signal<string | null>(null);
 
+  /** "Crear y cargar receta": al reabrir el insumo recién creado, la receta de preparación arranca abierta. */
+  prepStartOpen     = signal(false);
+  /** Para ofrecer "Crear y cargar receta" en el alta: las preparaciones piden la feature de recetas. */
+  canAddPreparation = computed(() => this.auth.hasFeature('RECIPES_AND_FOOD_COST') && this.auth.hasPermission('PRODUCTS_UPDATE'));
+
   deactivating      = signal<ProductResponse | null>(null);
   deactivateLoading = signal(false);
 
@@ -163,7 +169,12 @@ export class ProductsComponent implements OnInit {
     } catch { /* non-critical, form selects stay empty */ }
   }
 
+  isPreparation(p: ProductResponse): boolean {
+    return !!p.preparation;
+  }
+
   openCreate(): void {
+    this.prepStartOpen.set(false);
     this.editingProduct.set(null);
     this.form.get('name')?.enable();
     this.form.reset({ name: '', sku: '', defaultUnitId: '', categoryId: '', minStock: null, maxStock: null,
@@ -174,7 +185,8 @@ export class ProductsComponent implements OnInit {
     this.drawerOpen.set(true);
   }
 
-  openEdit(p: ProductResponse): void {
+  openEdit(p: ProductResponse, prepStartOpen = false): void {
+    this.prepStartOpen.set(prepStartOpen);
     this.editingProduct.set(p);
     this.form.get('name')?.disable();
     this.form.patchValue({
@@ -205,7 +217,8 @@ export class ProductsComponent implements OnInit {
     if (this.drawerOpen()) this.closeDrawer();
   }
 
-  async saveProduct(): Promise<void> {
+  /** Con `continueToRecipe`, después del alta el drawer queda abierto en el insumo nuevo con la receta de preparación. */
+  async saveProduct(continueToRecipe = false): Promise<void> {
     if (this.form.invalid) { this.form.markAllAsTouched(); return; }
     this.saving.set(true);
     this.saveError.set(null);
@@ -228,7 +241,12 @@ export class ProductsComponent implements OnInit {
       if (editing?.id) {
         await this.api.invoke(updateProduct, { id: editing.id, body });
       } else {
-        await this.api.invoke(createProduct, { body });
+        const created = await parseBlob<ProductResponse>(await this.api.invoke(createProduct, { body }) as unknown);
+        if (continueToRecipe && created?.id) {
+          await this.loadProducts();
+          this.openEdit(created, true);
+          return;
+        }
       }
       this.drawerOpen.set(false);
       await this.loadProducts();

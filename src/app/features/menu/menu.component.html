@@ -295,7 +295,9 @@
             <div class="ing-row">
               <i [class]="'ti ' + ingredientCategoryIcon(ctrl.get('productId')?.value)"
                  [style.color]="ingredientCategoryColor(ctrl.get('productId')?.value)"></i>
-              <span class="ing-tag">{{ productName(ctrl.get('productId')?.value) }}</span>
+              <span class="ing-tag">{{ productName(ctrl.get('productId')?.value) }}
+                @if (isPreparation(ctrl.get('productId')?.value)) { <span class="badge badge-neutral prep-badge">{{ t('common.preparation') }}</span> }
+              </span>
               <span class="ing-qty">{{ ctrl.get('quantity')?.value | number:'1.0-2' }} {{ unitAbbr(ctrl.get('unitId')?.value) }}</span>
             </div>
           }

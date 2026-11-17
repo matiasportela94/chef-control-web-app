@@ -381,7 +381,9 @@
                 <div>
                   @for (ing of rc.ingredients; track ing.productId) {
                     <div class="ing-row" style="display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:10px;">
-                      <span style="flex:1;min-width:0;font-size:12px;color:var(--text-1);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{ ing.productName }}</span>
+                      <span style="flex:1;min-width:0;font-size:12px;color:var(--text-1);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{ ing.productName }}
+                        @if (isPreparation(ing)) { <span class="badge badge-neutral prep-badge">{{ t('common.preparation') }}</span> }
+                      </span>
                       <span style="font-size:11px;color:var(--text-2);width:90px;text-align:right;">
                         @if (hasYield(ing)) {
                           <!-- El subtotal se cobra sobre el bruto: sin las dos cantidades el número no cierra. -->

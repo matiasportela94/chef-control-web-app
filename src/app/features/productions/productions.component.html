@@ -1,0 +1,233 @@
+<div class="page-wrap">
+
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">{{ t('productions.title') }}</h1>
+      <p class="page-subtitle">@if (!loading() && !locked) { {{ t('productions.subtitle', { count: total() }) }} }</p>
+    </div>
+    @if (!locked && canCreate) {
+      <button (click)="openForm()" class="btn-primary btn-sm"><i class="ti ti-chef-hat"></i> {{ t('productions.record') }}</button>
+    }
+  </div>
+
+  @if (locked) {
+    <div class="data-card" style="padding:28px 20px;text-align:center;">
+      <i class="ti ti-lock" style="font-size:28px;color:var(--accent);"></i>
+      <p style="font-size:15px;font-weight:600;color:var(--text-1);margin-top:8px;">{{ t('planGate.title') }}</p>
+      <p style="font-size:13px;color:var(--text-3);margin:6px auto 16px;max-width:420px;">{{ t('planGate.preparations') }}</p>
+      @if (canSeePlans) { <a routerLink="/plan" class="btn-primary btn-sm">{{ t('planGate.cta') }}</a> }
+    </div>
+  } @else {
+
+    <div class="segmented" role="group" style="margin-bottom:14px;">
+      <button type="button" [class.on]="automaticFilter() === 'all'" (click)="setFilter('all')">{{ t('productions.filterAll') }}</button>
+      <button type="button" [class.on]="automaticFilter() === 'manual'" (click)="setFilter('manual')">{{ t('productions.filterManual') }}</button>
+      <button type="button" [class.on]="automaticFilter() === 'automatic'" (click)="setFilter('automatic')">{{ t('productions.filterAutomatic') }}</button>
+    </div>
+
+    @if (loading()) { <app-spinner /> }
+
+    @if (!loading() && error()) {
+      <div style="background:var(--red-bg);border:1.5px solid var(--red);border-radius:14px;padding:20px;text-align:center;">
+        <p style="font-size:12px;color:var(--red);margin-bottom:12px;">{{ error() }}</p>
+        <button (click)="load()" class="btn-secondary btn-sm">{{ t('common.retry') }}</button>
+      </div>
+    }
+
+    @if (!loading() && !error()) {
+      @if (productions().length === 0) {
+        <div class="empty-state">
+          <i class="ti ti-chef-hat"></i>
+          <p>{{ t('productions.empty') }}</p>
+          <span style="font-size:12px;color:var(--text-3);margin-bottom:16px;display:block;max-width:440px;margin-inline:auto;">{{ t('productions.emptyHint') }}</span>
+          @if (canCreate && automaticFilter() !== 'automatic') {
+            <button (click)="openForm()" class="btn-primary btn-sm"><i class="ti ti-plus"></i> {{ t('productions.record') }}</button>
+          }
+        </div>
+      } @else {
+        <!-- Teléfono: cards -->
+        <div class="flex md:hidden" style="flex-direction:column;gap:8px;margin-bottom:16px;">
+          @for (p of productions(); track p.id) {
+            <button type="button" class="data-card prod-card" [class.reversed]="p.status === 'REVERSED'" (click)="openDetail(p)">
+              <div class="prod-card-top">
+                <p class="prod-name ellipsis">{{ p.productName ?? '—' }}</p>
+                <p class="prod-cost">{{ formatARS(p.totalCost) }}</p>
+              </div>
+              <div class="prod-card-bottom">
+                <span class="prod-badges">
+                  @if (p.automatic) { <span class="badge badge-neutral">{{ t('productions.automatic') }}</span> }
+                  @if (p.status === 'REVERSED') { <span class="badge badge-red">{{ t('productions.reversed') }}</span> }
+                </span>
+                <span class="prod-meta">{{ formatDatetime(p.producedAt) }} · {{ qty(p.quantity, p.unitId, p.unitName) }}</span>
+              </div>
+            </button>
+          }
+        </div>
+
+        <!-- Escritorio: tabla -->
+        <div class="table-wrap hidden md:block" style="margin-bottom:16px;">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>{{ t('productions.colDate') }}</th>
+                <th>{{ t('productions.colPreparation') }}</th>
+                <th style="text-align:right;">{{ t('productions.colQuantity') }}</th>
+                <th style="text-align:right;">{{ t('productions.colCost') }}</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (p of productions(); track p.id) {
+                <tr class="clickable" [class.reversed]="p.status === 'REVERSED'" (click)="openDetail(p)">
+                  <td style="color:var(--text-2);white-space:nowrap;">{{ formatDatetime(p.producedAt) }}</td>
+                  <td>
+                    <span style="color:var(--text-1);font-weight:600;">{{ p.productName ?? '—' }}</span>
+                    @if (p.automatic) { <span class="badge badge-neutral" style="margin-left:6px;">{{ t('productions.automatic') }}</span> }
+                    @if (p.status === 'REVERSED') { <span class="badge badge-red" style="margin-left:6px;">{{ t('productions.reversed') }}</span> }
+                  </td>
+                  <td style="text-align:right;color:var(--text-2);white-space:nowrap;">{{ qty(p.quantity, p.unitId, p.unitName) }}</td>
+                  <td style="text-align:right;color:var(--text-2);white-space:nowrap;">{{ formatARS(p.totalCost) }}</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+
+        <app-paginator [currentPage]="page()" [totalItems]="total()" [itemsPerPage]="pageSize" (pageChange)="goToPage($event)"></app-paginator>
+      }
+    }
+  }
+</div>
+
+<!-- Registrar -->
+<app-drawer [isOpen]="formOpen()" [title]="t('productions.record')" titleIcon="chef-hat" (closed)="formOpen.set(false)">
+  @if (preparations().length === 0) {
+    <div class="empty-state" style="padding:20px 8px;">
+      <i class="ti ti-chef-hat"></i>
+      <span style="font-size:12px;color:var(--text-3);margin-bottom:16px;display:block;">{{ t('productions.noPreparations') }}</span>
+      <a routerLink="/products" class="btn-secondary btn-sm">{{ t('productions.goToProducts') }}</a>
+    </div>
+  } @else {
+    <form id="production-form" [formGroup]="form" (ngSubmit)="save()" style="display:flex;flex-direction:column;gap:14px;">
+      <div>
+        <label class="field-label">{{ t('productions.formPreparation') }} <span style="color:var(--red);">*</span></label>
+        <app-select formControlName="productId" [options]="preparationOptions()" [placeholder]="t('productions.choosePreparation')"
+                    [invalid]="isInvalid('productId')" (change)="onPreparationChange()"></app-select>
+        @if (isInvalid('productId')) { <p class="field-error">{{ t('productions.required') }}</p> }
+      </div>
+
+      <div class="two-cols">
+        <div>
+          <label class="field-label">{{ t('productions.formQuantity') }} <span style="color:var(--red);">*</span></label>
+          <input formControlName="quantity" type="number" min="0.001" step="any" inputmode="decimal" placeholder="0"
+                 class="field-input" [class.input-error]="isInvalid('quantity')">
+          @if (isInvalid('quantity')) { <p class="field-error">{{ t('productions.invalidQuantity') }}</p> }
+        </div>
+        <div>
+          <label class="field-label">{{ t('productions.formUnit') }} <span style="color:var(--red);">*</span></label>
+          <app-select formControlName="unitId" [options]="unitOptions()" placeholder="—" [invalid]="isInvalid('unitId')"
+                      [disabled]="unitOptions().length === 0"></app-select>
+          @if (isInvalid('unitId')) { <p class="field-error">{{ t('productions.required') }}</p> }
+        </div>
+      </div>
+
+      <div class="two-cols">
+        <div>
+          <label class="field-label">{{ t('productions.formProducedAt') }}</label>
+          <input formControlName="producedAt" type="date" class="field-input" [class.input-error]="isInvalid('producedAt')">
+        </div>
+        <div>
+          <label class="field-label">{{ t('productions.formExpiration') }} <span class="opt">{{ t('productions.optional') }}</span></label>
+          <input formControlName="expirationDate" type="date" class="field-input">
+        </div>
+      </div>
+
+      <div>
+        <label class="field-label">{{ t('productions.formNotes') }} <span class="opt">{{ t('productions.optional') }}</span></label>
+        <textarea formControlName="notes" rows="2" class="field-textarea"></textarea>
+      </div>
+
+      <p class="form-hint">{{ t('productions.formHint') }}</p>
+
+      @if (saveError()) { <div class="error-box">{{ saveError() }}</div> }
+    </form>
+  }
+
+  <div drawer-footer class="panel-footer">
+    <button type="button" (click)="formOpen.set(false)" class="btn-secondary btn-sm">{{ t('common.cancel') }}</button>
+    @if (preparations().length) {
+      <button type="submit" form="production-form" [disabled]="saving()" class="btn-primary btn-sm" style="flex:1;justify-content:center;">
+        @if (saving()) { <span class="loader"></span> } {{ t('productions.record') }}
+      </button>
+    }
+  </div>
+</app-drawer>
+
+<!-- Detalle -->
+<app-drawer [isOpen]="!!detail()" [title]="t('productions.detailTitle')" [subtitle]="detail()?.productName ?? ''" titleIcon="chef-hat"
+            (closed)="closeDetail()">
+  @if (detail(); as d) {
+    <div style="display:flex;flex-direction:column;gap:14px;">
+      <div class="prod-badges">
+        @if (d.automatic) { <span class="badge badge-neutral">{{ t('productions.automatic') }}</span> }
+        @if (d.status === 'REVERSED') { <span class="badge badge-red">{{ t('productions.reversed') }}</span> }
+      </div>
+      @if (origin(d); as o) { <p class="form-hint" style="margin-top:-6px;">{{ o }}</p> }
+
+      <div class="kv">
+        <span>{{ t('productions.colDate') }}</span><span>{{ formatDatetime(d.producedAt) }}</span>
+        <span>{{ t('productions.colQuantity') }}</span><span>{{ qty(d.quantity, d.unitId, d.unitName) }}</span>
+        @if (d.expirationDate) { <span>{{ t('productions.formExpiration') }}</span><span>{{ formatDateOnly(d.expirationDate) }}</span> }
+        <span>{{ t('productions.costPerUnit', { unit: unitLabel(d.unitId, d.unitName) }) }}</span><span>{{ formatARS(d.costPerUnit) }}</span>
+        <span>{{ t('productions.totalCost') }}</span><span class="strong">{{ formatARS(d.totalCost) }}</span>
+      </div>
+
+      @if (d.notes) {
+        <div><p class="field-label">{{ t('productions.formNotes') }}</p><p class="notes">{{ d.notes }}</p></div>
+      }
+
+      @if (detailLoading()) { <app-spinner /> }
+      @if (detailError()) { <div class="error-box">{{ detailError() }}</div> }
+      @if (d.ingredients?.length) {
+        <div>
+          <p class="field-label">{{ t('productions.ingredients') }}</p>
+          <div class="ing-list">
+            @for (i of d.ingredients; track i.productId) {
+              <div class="ing-item">
+                <div style="min-width:0;flex:1;">
+                  <p class="ellipsis" style="color:var(--text-1);font-size:12px;">{{ i.productName }}</p>
+                  <p style="font-size:11px;color:var(--text-3);">
+                    {{ qty(i.quantity, i.unitId, i.unitName) }}
+                    @if (i.standardWaste) { · {{ t('productions.standardWaste', { qty: qty(i.standardWaste, i.unitId, i.unitName) }) }} }
+                  </p>
+                </div>
+                <span style="font-size:12px;color:var(--text-1);font-weight:500;white-space:nowrap;">{{ formatARS(i.totalCost) }}</span>
+              </div>
+            }
+          </div>
+        </div>
+      }
+    </div>
+  }
+  <div drawer-footer class="panel-footer">
+    <button type="button" (click)="closeDetail()" class="btn-secondary btn-sm" style="flex:1;justify-content:center;">{{ t('common.close') }}</button>
+    @if (canReverse && detail()?.status === 'ACTIVE') {
+      <button type="button" (click)="openReverse()" class="btn-danger btn-sm" style="flex:1;justify-content:center;">
+        <i class="ti ti-arrow-back-up"></i> {{ t('productions.reverse') }}
+      </button>
+    }
+  </div>
+</app-drawer>
+
+<app-action-dialog
+  [visible]="reverseOpen()"
+  [title]="t('productions.reverseTitle')"
+  icon="⚠️"
+  tone="danger"
+  [message]="reverseError() ?? t('productions.reverseMessage')"
+  [itemTitle]="(detail()?.productName ?? '') + ' · ' + qty(detail()?.quantity, detail()?.unitId, detail()?.unitName)"
+  [confirmLabel]="t('productions.reverse')"
+  [cancelLabel]="t('common.cancel')"
+  [confirmDisabled]="reversing()"
+  (confirm)="confirmReverse()"
+  (cancel)="reverseOpen.set(false)">
+</app-action-dialog>

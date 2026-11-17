@@ -12,7 +12,8 @@
     "search": "Search",
     "filter": "Filter",
     "noResults": "No results",
-    "close": "Close"
+    "close": "Close",
+    "preparation": "Prep"
   },
   "nav": {
     "dashboard": "Dashboard",
@@ -29,7 +30,8 @@
     "foodCost": "Food Cost",
     "users": "Users",
     "logout": "Log out",
-    "iva": "VAT"
+    "iva": "VAT",
+    "productions": "Production"
   },
   "errors": {
     "INVALID_CREDENTIALS": "Invalid email or password",
@@ -120,7 +122,12 @@
     "AI_AUDIO_TOO_LARGE": "The audio is too long: record up to 2 minutes",
     "AI_AUDIO_FORMAT_NOT_SUPPORTED": "We can't read the audio this browser recorded. Type the message instead.",
     "AI_TRANSCRIPTION_FAILED": "The audio couldn't be turned into text. Try again or type it.",
-    "AI_TRANSCRIPTION_NOT_CONFIGURED": "Voice dictation isn't available right now. Type the message instead."
+    "AI_TRANSCRIPTION_NOT_CONFIGURED": "Voice dictation isn't available right now. Type the message instead.",
+    "PREPARATION_CYCLE": "A prep can't contain itself, directly or through another prep",
+    "PRODUCT_NOT_A_PREPARATION": "That item isn't a prep: add a prep recipe to it in Items",
+    "PRODUCTION_NOT_FOUND": "The production doesn't exist or was deleted",
+    "PRODUCTION_ALREADY_REVERSED": "That production was already reversed",
+    "IMPORT_PREPARATION_CYCLE": "The prep contains itself, directly or through another prep"
   },
   "ai": {
     "title": "Quick entry",
@@ -237,7 +244,32 @@
     "yieldUnreliableBody": "Purchase cost is exact all the way back: it comes from the movement ledger, which is immutable. What started being recorded that day is the yield.",
     "iva": "VAT",
     "ivaNotSet": "Not set",
-    "ivaHint": "The VAT rate the supplier invoices it with. Suggested when you record a purchase."
+    "ivaHint": "The VAT rate the supplier invoices it with. Suggested when you record a purchase.",
+    "prep": {
+      "title": "Prep recipe",
+      "hint": "If you make this item in the kitchen (a sauce, a stock, a dough), enter what it's made of and how much one batch yields. Its cost comes from its ingredients.",
+      "add": "Add prep recipe",
+      "yield": "Yield per batch",
+      "ingredients": "Ingredients for one batch",
+      "ingredient": "Item",
+      "addIngredient": "Add ingredient",
+      "save": "Save recipe",
+      "saved": "Recipe saved.",
+      "remove": "Remove recipe",
+      "removeTitle": "Remove the prep recipe",
+      "removeMessage": "The item becomes a regular one and keeps its stock. Productions already recorded don't change.",
+      "batchCost": "One batch ({qty} {unit})",
+      "unitCost": "Per {unit}",
+      "costTitle": "Cost",
+      "costUnavailable": "The cost shows up once its ingredients have a recorded purchase.",
+      "saveFirst": "Save the item to add its prep recipe.",
+      "createAndRecipe": "Create and add recipe",
+      "loadError": "The prep recipe couldn't be loaded.",
+      "saveError": "The recipe couldn't be saved.",
+      "removeError": "The recipe couldn't be removed.",
+      "invalid": "Check the batch yield and that every ingredient has an item, quantity and unit.",
+      "selfIngredient": "A prep can't contain itself."
+    }
   },
   "maintenance": {
     "title": "No connection to the system",
@@ -268,7 +300,10 @@
     "netShort": "excl. VAT {amount}"
   },
   "stock": {
-    "standardYieldWaste": "Standard yield waste"
+    "standardYieldWaste": "Standard yield waste",
+    "production": "Production",
+    "productionAutomatic": "Production (automatic)",
+    "productionWaste": "Production standard waste"
   },
   "landing": {
     "login": "Log in",
@@ -486,7 +521,8 @@
     "foodCost": "Recipes and food cost are included from the Starter plan.",
     "cta": "See plans",
     "toastTitle": "Not included in your plan",
-    "ai": "Quick entry with AI is included from the Starter plan."
+    "ai": "Quick entry with AI is included from the Starter plan.",
+    "preparations": "Preps and production are included from the Starter plan."
   },
   "profile": {
     "title": "My profile",
@@ -523,7 +559,7 @@
   "import": {
     "title": "Import from Excel",
     "button": "Import",
-    "productsOnlyPlan": "Your plan doesn't include recipes: only the Insumos sheet is imported. Recipes are included from the Starter plan.",
+    "productsOnlyPlan": "Your plan doesn't include recipes or preps: only the Insumos sheet is imported. They're included from the Starter plan.",
     "productsOnlyPermission": "Your user can't create or edit dishes: only the Insumos sheet is imported.",
     "step1": "1. Download the template",
     "step1Hint": "It has a sheet for products, one for recipes, the list of units and instructions with examples.",
@@ -541,7 +577,10 @@
       "menuItemsCreated": "new dishes",
       "recipesCreated": "new recipes",
       "recipesReplaced": "replaced recipes",
-      "recipesUnchanged": "unchanged recipes"
+      "recipesUnchanged": "unchanged recipes",
+      "preparationsCreated": "new preps",
+      "preparationsReplaced": "replaced preps",
+      "preparationsUnchanged": "unchanged preps"
     },
     "errorsTitle": "To fix ({count})",
     "errorsHint": "Nothing is saved while the file has errors. Fix it and choose it again.",
@@ -561,7 +600,8 @@
     "tooManyRows": "The {sheet} sheet has more than {max} rows. Split it into several files.",
     "sheets": {
       "PRODUCTS": "Insumos",
-      "RECIPES": "Recetas"
+      "RECIPES": "Recetas",
+      "PREPARATIONS": "Preparaciones"
     },
     "columns": {
       "name": "Nombre",
@@ -574,7 +614,11 @@
       "section": "Paso del menú",
       "ingredient": "Ingrediente",
       "quantity": "Cantidad (para 1 plato)",
-      "ivaPercentage": "IVA %"
+      "ivaPercentage": "IVA %",
+      "preparation": "Preparación",
+      "yieldQuantity": "Rinde",
+      "yieldUnit": "Unidad del rinde",
+      "batchQuantity": "Cantidad (para la tanda)"
     },
     "template": {
       "fileName": "chef-control-template.xlsx",
@@ -583,13 +627,16 @@
       "unitName": "Unit",
       "unitAbbreviation": "Abbreviation",
       "unitsNote": "Write the unit exactly as it appears here, by name or abbreviation and without plural.",
-      "instructions": "How to fill in the template\n• Insumos (products) sheet: one row per product. Nombre and Unidad are required (marked with *).\n• Unidad: the name or abbreviation, as they appear in the Unidades sheet.\n• Categoría: created if it does not exist.\n• Rendimiento %: how much of what you buy is usable. 90 = 900 g out of 1 kg.\n• IVA % (optional): the VAT rate the product is invoiced with: 0, 2.5, 5, 10.5, 21 or 27. \"21\", \"10,5\" or \"21%\" all work. Empty = not set.\n• Recetas (recipes) sheet: one row per ingredient. Sale price and menu section go in the first row of each dish.\n• Cantidad: what ONE dish takes, in the unit of that row.\n• The ingredient must be an existing product or one in the Insumos sheet.\n• If the dish already exists, its recipe is replaced by the file's; price and menu section don't change.\n• Numbers can be written as 1.234,5 or 1,5.\n• Don't leave examples or notes in the Insumos and Recetas sheets: everything there is imported.",
+      "instructions": "How to fill in the template\n• Insumos (products) sheet: one row per product. Nombre and Unidad are required (marked with *).\n• Unidad: the name or abbreviation, as they appear in the Unidades sheet.\n• Categoría: created if it does not exist.\n• Rendimiento %: how much of what you buy is usable. 90 = 900 g out of 1 kg.\n• IVA % (optional): the VAT rate the product is invoiced with: 0, 2.5, 5, 10.5, 21 or 27. \"21\", \"10,5\" or \"21%\" all work. Empty = not set.\n• Preparaciones (preps) sheet: what you make in the kitchen and use in dishes (a sauce, a stock, a dough). One row per ingredient; the batch yield and its unit go in the first row of each prep.\n• The prep is created as a product, or gets the recipe if the product already exists. It can contain other preps.\n• Recetas (recipes) sheet: one row per ingredient. Sale price and menu section go in the first row of each dish.\n• Cantidad: in Recetas, what ONE dish takes; in Preparaciones, what one batch takes. In the unit of that row.\n• The ingredient must be an existing product or one in the Insumos or Preparaciones sheets.\n• If a dish or a prep already has a different recipe, you choose which ones to replace in the preview; price and menu section don't change.\n• Numbers can be written as 1.234,5 or 1,5.\n• Don't leave examples or notes in the Insumos, Preparaciones and Recetas sheets: everything there is imported.",
       "exampleProducts": "Insumos sheet example",
       "exampleProduct1": "Potato | kg | Vegetables | 10 | 90 | 10,5",
       "exampleProduct2": "Sunflower oil | l | Pantry | 5 | | 21",
       "exampleRecipes": "Recetas sheet example",
       "exampleRecipe1": "French fries | 6.500 | Sides | Potato | 300 | g",
-      "exampleRecipe2": "French fries | | | Sunflower oil | 50 | ml"
+      "exampleRecipe2": "French fries | | | Sunflower oil | 50 | ml",
+      "examplePreparations": "Example of the Preparaciones sheet",
+      "examplePreparation1": "Mayonesa base | 1 | kg | Huevo | 4 | u",
+      "examplePreparation2": "Mayonesa base | | | Aceite de girasol | 800 | ml"
     },
     "unreadableNumber": "Not a number. Write it like 1.234,5 or 1,5.",
     "ai": {
@@ -613,7 +660,13 @@
       "title": "These {count} dishes already have a different recipe",
       "titleOne": "This dish already has a different recipe",
       "hint": "Tick the ones you want to replace with the recipe in the file. The rest keep the one they have. Price and menu course don't change."
-    }
+    },
+    "replacePrep": {
+      "title": "These {count} preps already have a different recipe",
+      "titleOne": "This prep already has a different recipe",
+      "hint": "Tick the ones you want to replace with the recipe in the file. The rest keep the one they have."
+    },
+    "preparationsOnlyPermission": "Your user can't edit items: the Preparaciones sheet isn't imported."
   },
   "restaurants": {
     "title": "Restaurants",
@@ -778,5 +831,49 @@
       "totalWithIva": "Total (with VAT data)",
       "withoutIva": "Without VAT data ({count})"
     }
+  },
+  "productions": {
+    "title": "Production",
+    "subtitle": "{count} productions",
+    "record": "Record production",
+    "empty": "No productions recorded",
+    "emptyHint": "When you make a batch of a prep (a sauce, a stock, a dough), record it here: its ingredients are deducted and the prep adds stock with its cost.",
+    "noPreparations": "There are no preps yet. In Items, add a prep recipe to the item you make in the kitchen.",
+    "goToProducts": "Go to Items",
+    "filterAll": "All",
+    "filterManual": "Recorded",
+    "filterAutomatic": "Automatic",
+    "automatic": "Automatic",
+    "automaticHint": "Recorded by the system when the prep was used without stock.",
+    "reversed": "Reversed",
+    "colDate": "Date",
+    "colPreparation": "Prep",
+    "colQuantity": "Quantity",
+    "colCost": "Cost",
+    "formPreparation": "Prep",
+    "formQuantity": "Quantity",
+    "formUnit": "Unit",
+    "formExpiration": "Expires",
+    "formProducedAt": "Date",
+    "formNotes": "Notes",
+    "optional": "(opt.)",
+    "required": "Required",
+    "invalidQuantity": "Invalid quantity",
+    "choosePreparation": "Choose a prep",
+    "formHint": "The recipe's ingredients are deducted (first bought, first used) and the prep adds stock with that cost. If an ingredient is another prep without stock, it's produced automatically.",
+    "saveError": "The production couldn't be recorded.",
+    "loadError": "Productions couldn't be loaded.",
+    "detailError": "The production couldn't be loaded.",
+    "detailTitle": "Production",
+    "ingredients": "Ingredients used",
+    "standardWaste": "waste {qty}",
+    "costPerUnit": "Cost per {unit}",
+    "totalCost": "Total cost",
+    "fromSale": "Requested by a sale",
+    "fromProduction": "Requested by another production",
+    "reverse": "Reverse",
+    "reverseTitle": "Reverse the production",
+    "reverseMessage": "The ingredients go back to stock and the prep is deducted. This can't be undone.",
+    "reverseError": "The production couldn't be reversed."
   }
 }

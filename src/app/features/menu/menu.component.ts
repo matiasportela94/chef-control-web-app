@@ -199,8 +199,9 @@ export class MenuComponent implements OnInit {
   products   = signal<ProductResponse[]>([]);
   units      = signal<UnitResponse[]>([]);
 
+  /** Las preparaciones (F17) se marcan: en una receta, "Mayonesa base" se costea con sus propios ingredientes. */
   productOptions = computed<SelectOption[]>(() =>
-    this.products().map(p => ({ value: p.id ?? '', label: p.name ?? '' }))
+    this.products().map(p => ({ value: p.id ?? '', label: this.isPreparation(p.id) ? `${p.name} · ${this.t('common.preparation')}` : (p.name ?? '') }))
   );
   unitOptions = computed<SelectOption[]>(() =>
     this.units().map(u => ({ value: u.id ?? '', label: u.abbreviation ?? '' }))
@@ -919,6 +920,10 @@ export class MenuComponent implements OnInit {
   }
 
   goToPage(p: number): void { this.page.set(p); }
+
+  isPreparation(id?: string): boolean {
+    return !!this.products().find(p => p.id === id)?.preparation;
+  }
 
   productName(id: string): string {
     return this.products().find(p => p.id === id)?.name ?? '—';

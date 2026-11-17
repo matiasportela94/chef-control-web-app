@@ -56,6 +56,11 @@ export class FoodCostComponent implements OnInit {
   }
 
   /** Solo se muestran las dos cantidades cuando el rendimiento cambia algo. */
+  /** La línea de una preparación (F17): su costo sale de sus propios ingredientes. */
+  isPreparation(ing: IngredientCost): boolean {
+    return !!ing.preparation;
+  }
+
   hasYield(ing: IngredientCost): boolean {
     return ing.yieldPercentage != null && ing.yieldPercentage !== 100 && ing.grossQuantity != null;
   }

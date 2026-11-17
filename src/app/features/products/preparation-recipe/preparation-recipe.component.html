@@ -1,0 +1,98 @@
+<div class="sec-div">{{ t('products.prep.title') }}</div>
+
+@if (locked) {
+  <div class="prep-locked">
+    <i class="ti ti-lock"></i>
+    <span>{{ t('planGate.preparations') }} @if (canSeePlans) { <a routerLink="/plan" class="inline-link">{{ t('planGate.cta') }}</a> }</span>
+  </div>
+} @else if (!editing()) {
+  <p class="field-hint">{{ t('products.prep.hint') }}</p>
+  @if (canEdit) {
+    <button type="button" class="btn-secondary btn-sm" style="align-self:flex-start;" (click)="start()">
+      <i class="ti ti-chef-hat"></i> {{ t('products.prep.add') }}
+    </button>
+  }
+} @else if (loading()) {
+  <div class="prep-skeleton"></div>
+} @else {
+  <div [formGroup]="form" class="prep">
+    <div>
+      <label class="field-label">{{ t('products.prep.yield') }} <span style="color:var(--red);">*</span></label>
+      <div class="yield-row">
+        <input formControlName="yieldQuantity" type="number" min="0.001" step="any" inputmode="decimal" placeholder="0"
+               class="field-input prep-yield" [class.input-error]="isYieldInvalid()">
+        <span class="prep-suffix">{{ yieldUnit }}</span>
+      </div>
+    </div>
+
+    <div>
+      <label class="field-label">{{ t('products.prep.ingredients') }}</label>
+      <div formArrayName="items" class="prep-items">
+        <!-- track por control: con $index, al quitar una fila del medio la reusada queda atada al grupo borrado -->
+        @for (item of items.controls; track item; let i = $index) {
+          <div [formGroupName]="i" class="prep-item">
+            <app-select formControlName="productId" [options]="productOptions" [placeholder]="t('products.prep.ingredient')" compact
+                        [invalid]="isItemInvalid(i, 'productId')" (change)="onItemProductChange(i)"></app-select>
+            <input formControlName="quantity" type="number" min="0.001" step="any" inputmode="decimal" placeholder="0"
+                   class="field-input prep-qty" [class.input-error]="isItemInvalid(i, 'quantity')">
+            <app-select formControlName="unitId" [options]="unitOptions" placeholder="U." compact class="prep-unit"
+                        [invalid]="isItemInvalid(i, 'unitId')"></app-select>
+            <button type="button" (click)="removeItem(i)" class="btn-icon prep-remove" [title]="t('common.delete')" [attr.aria-label]="t('common.delete')"
+                    [disabled]="items.length === 1"><i class="ti ti-x"></i></button>
+          </div>
+        }
+      </div>
+      <button type="button" class="prep-add" (click)="addItem()"><i class="ti ti-plus"></i> {{ t('products.prep.addIngredient') }}</button>
+    </div>
+
+    @if (cost(); as c) {
+      <div class="prep-cost">
+        <p class="field-label">{{ t('products.prep.costTitle') }}</p>
+        @if (c.batchCost != null) {
+          <div class="prep-cost-row"><span>{{ t('products.prep.batchCost', { qty: formatNum(c.yieldQuantity), unit: yieldUnit || (c.unitName ?? '') }) }}</span><strong>{{ formatARS(c.batchCost) }}</strong></div>
+          <div class="prep-cost-row"><span>{{ t('products.prep.unitCost', { unit: yieldUnit || (c.unitName ?? '') }) }}</span><strong>{{ formatARS(c.unitCost) }}</strong></div>
+          @for (ing of c.ingredients ?? []; track ing.productId) {
+            <div class="prep-cost-line">
+              <span class="ellipsis">{{ ing.productName }}@if (ing.preparation) { <span class="badge badge-neutral prep-badge">{{ t('common.preparation') }}</span> }</span>
+              <span>{{ formatARS(ing.totalCost) }}</span>
+            </div>
+          }
+        } @else {
+          <p class="field-hint">{{ t('products.prep.costUnavailable') }}</p>
+        }
+      </div>
+    }
+
+    @if (error()) { <div class="prep-error">{{ error() }}</div> }
+    @if (saved() && !error()) { <p class="prep-saved"><i class="ti ti-circle-check"></i> {{ t('products.prep.saved') }}</p> }
+
+    @if (canEdit) {
+      <div class="prep-actions">
+        <button type="button" class="btn-primary btn-sm" (click)="save()" [disabled]="saving()">
+          @if (saving()) { <span class="loader"></span> } {{ t('products.prep.save') }}
+        </button>
+        @if (isPreparation()) {
+          <button type="button" class="prep-remove-recipe" (click)="removeOpen.set(true)" [disabled]="saving()">
+            <i class="ti ti-trash"></i> {{ t('products.prep.remove') }}
+          </button>
+        }
+      </div>
+    }
+  </div>
+}
+
+@if (error() && !editing()) { <div class="prep-error">{{ error() }}</div> }
+
+<app-action-dialog
+  [visible]="removeOpen()"
+  [title]="t('products.prep.removeTitle')"
+  icon="⚠️"
+  tone="danger"
+  [message]="t('products.prep.removeMessage')"
+  [itemTitle]="product.name ?? ''"
+  [confirmLabel]="t('products.prep.remove')"
+  [cancelLabel]="t('common.cancel')"
+  [confirmDisabled]="saving()"
+  (confirm)="confirmRemove()"
+  (cancel)="removeOpen.set(false)">
+</app-action-dialog>

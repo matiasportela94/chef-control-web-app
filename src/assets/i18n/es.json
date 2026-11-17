@@ -12,7 +12,8 @@
     "search": "Buscar",
     "filter": "Filtrar",
     "noResults": "Sin resultados",
-    "close": "Cerrar"
+    "close": "Cerrar",
+    "preparation": "Preparación"
   },
   "nav": {
     "dashboard": "Panel",
@@ -29,7 +30,8 @@
     "foodCost": "Food Cost",
     "users": "Usuarios",
     "logout": "Salir",
-    "iva": "IVA"
+    "iva": "IVA",
+    "productions": "Producción"
   },
   "errors": {
     "INVALID_CREDENTIALS": "Email o contraseña incorrectos",
@@ -120,7 +122,12 @@
     "AI_AUDIO_TOO_LARGE": "El audio es demasiado largo: grabá hasta 2 minutos",
     "AI_AUDIO_FORMAT_NOT_SUPPORTED": "No podemos leer el audio que grabó este navegador. Escribí el mensaje.",
     "AI_TRANSCRIPTION_FAILED": "No se pudo pasar el audio a texto. Probá de nuevo o escribilo.",
-    "AI_TRANSCRIPTION_NOT_CONFIGURED": "El dictado por voz no está disponible por ahora. Escribí el mensaje."
+    "AI_TRANSCRIPTION_NOT_CONFIGURED": "El dictado por voz no está disponible por ahora. Escribí el mensaje.",
+    "PREPARATION_CYCLE": "Una preparación no puede llevarse a sí misma, ni a través de otra preparación",
+    "PRODUCT_NOT_A_PREPARATION": "Ese insumo no es una preparación: cargale una receta de preparación en Insumos",
+    "PRODUCTION_NOT_FOUND": "La producción no existe o fue borrada",
+    "PRODUCTION_ALREADY_REVERSED": "Esa producción ya estaba revertida",
+    "IMPORT_PREPARATION_CYCLE": "La preparación se lleva a sí misma, directo o a través de otra preparación"
   },
   "ai": {
     "title": "Entrada rápida",
@@ -237,7 +244,32 @@
     "yieldUnreliableBody": "El costo de compra sí es exacto desde siempre: sale del historial de movimientos, que es inmutable. Lo que empezó a registrarse ese día es el rendimiento.",
     "iva": "IVA",
     "ivaNotSet": "Sin cargar",
-    "ivaHint": "La alícuota con la que te lo factura el proveedor. Se propone al cargar una compra."
+    "ivaHint": "La alícuota con la que te lo factura el proveedor. Se propone al cargar una compra.",
+    "prep": {
+      "title": "Receta de preparación",
+      "hint": "Si este insumo lo hacés en la cocina (una salsa, un fondo, una masa), cargá con qué se hace y cuánto rinde una tanda. Su costo sale de sus ingredientes.",
+      "add": "Cargar receta de preparación",
+      "yield": "Rinde por tanda",
+      "ingredients": "Ingredientes de una tanda",
+      "ingredient": "Insumo",
+      "addIngredient": "Agregar ingrediente",
+      "save": "Guardar receta",
+      "saved": "Receta guardada.",
+      "remove": "Quitar receta",
+      "removeTitle": "Quitar la receta de preparación",
+      "removeMessage": "El insumo vuelve a ser común y conserva su stock. Las producciones ya registradas no cambian.",
+      "batchCost": "Una tanda ({qty} {unit})",
+      "unitCost": "Por {unit}",
+      "costTitle": "Costo",
+      "costUnavailable": "El costo aparece cuando sus ingredientes tengan una compra cargada.",
+      "saveFirst": "Guardá el insumo para cargarle la receta de preparación.",
+      "createAndRecipe": "Crear y cargar receta",
+      "loadError": "No se pudo cargar la receta de preparación.",
+      "saveError": "No se pudo guardar la receta.",
+      "removeError": "No se pudo quitar la receta.",
+      "invalid": "Revisá lo que rinde la tanda y que cada ingrediente tenga insumo, cantidad y unidad.",
+      "selfIngredient": "Una preparación no puede llevarse a sí misma."
+    }
   },
   "maintenance": {
     "title": "Sin conexión con el sistema",
@@ -268,7 +300,10 @@
     "netShort": "sin IVA {amount}"
   },
   "stock": {
-    "standardYieldWaste": "Merma estándar"
+    "standardYieldWaste": "Merma estándar",
+    "production": "Producción",
+    "productionAutomatic": "Producción (automática)",
+    "productionWaste": "Merma estándar de producción"
   },
   "landing": {
     "login": "Iniciar sesión",
@@ -486,7 +521,8 @@
     "foodCost": "Recetas y food cost están incluidos desde el plan Starter.",
     "cta": "Ver planes",
     "toastTitle": "Función no incluida en tu plan",
-    "ai": "La entrada rápida con IA está incluida desde el plan Starter."
+    "ai": "La entrada rápida con IA está incluida desde el plan Starter.",
+    "preparations": "Las preparaciones y la producción están incluidas desde el plan Starter."
   },
   "profile": {
     "title": "Mi perfil",
@@ -523,7 +559,7 @@
   "import": {
     "title": "Importar desde Excel",
     "button": "Importar",
-    "productsOnlyPlan": "Tu plan no incluye recetas: se importa solo la hoja Insumos. Las recetas están desde el plan Starter.",
+    "productsOnlyPlan": "Tu plan no incluye recetas ni preparaciones: se importa solo la hoja Insumos. Están desde el plan Starter.",
     "productsOnlyPermission": "Tu usuario no puede crear ni editar platos: se importa solo la hoja Insumos.",
     "step1": "1. Descargá la plantilla",
     "step1Hint": "Tiene una hoja para insumos, otra para recetas, la lista de unidades y las instrucciones con ejemplos.",
@@ -541,7 +577,10 @@
       "menuItemsCreated": "platos nuevos",
       "recipesCreated": "recetas nuevas",
       "recipesReplaced": "recetas reemplazadas",
-      "recipesUnchanged": "recetas sin cambios"
+      "recipesUnchanged": "recetas sin cambios",
+      "preparationsCreated": "preparaciones nuevas",
+      "preparationsReplaced": "preparaciones reemplazadas",
+      "preparationsUnchanged": "preparaciones sin cambios"
     },
     "errorsTitle": "Para corregir ({count})",
     "errorsHint": "No se guarda nada mientras el archivo tenga errores. Corregilo y volvé a elegirlo.",
@@ -561,7 +600,8 @@
     "tooManyRows": "La hoja {sheet} tiene más de {max} filas. Dividila en varios archivos.",
     "sheets": {
       "PRODUCTS": "Insumos",
-      "RECIPES": "Recetas"
+      "RECIPES": "Recetas",
+      "PREPARATIONS": "Preparaciones"
     },
     "columns": {
       "name": "Nombre",
@@ -574,7 +614,11 @@
       "section": "Paso del menú",
       "ingredient": "Ingrediente",
       "quantity": "Cantidad (para 1 plato)",
-      "ivaPercentage": "IVA %"
+      "ivaPercentage": "IVA %",
+      "preparation": "Preparación",
+      "yieldQuantity": "Rinde",
+      "yieldUnit": "Unidad del rinde",
+      "batchQuantity": "Cantidad (para la tanda)"
     },
     "template": {
       "fileName": "plantilla-chef-control.xlsx",
@@ -583,13 +627,16 @@
       "unitName": "Unidad",
       "unitAbbreviation": "Abreviatura",
       "unitsNote": "Escribí la unidad tal cual figura acá, con el nombre o la abreviatura y sin plural (\"litros\" no sirve: es \"Litro\" o \"l\").",
-      "instructions": "Cómo completar la plantilla\n• Hoja Insumos: una fila por insumo. Nombre y Unidad son obligatorios (los marcados con *). Un insumo que ya existe no se modifica.\n• Unidad: el nombre o la abreviatura tal cual figuran en la hoja Unidades, sin plural.\n• Categoría: si no existe, se crea.\n• Rendimiento %: cuánto queda útil de lo que comprás. 90 = de 1 kg quedan 900 g.\n• IVA % (opcional): la alícuota con la que te factura el insumo: 0, 2,5, 5, 10,5, 21 o 27. Sirve \"21\", \"10,5\" o \"21%\". Vacío = sin cargar.\n• Hoja Recetas: una fila por ingrediente. El precio de venta y el paso del menú van en la primera fila de cada plato.\n• Cantidad: lo que lleva UN plato, en la unidad de esa fila.\n• El ingrediente tiene que ser un insumo que ya exista o que esté en la hoja Insumos.\n• Si el plato ya existe, su receta se reemplaza por la del archivo; el precio y el paso del menú no cambian.\n• Los números pueden ir como 1.234,5 o 1,5.\n• No dejes ejemplos ni notas en las hojas Insumos y Recetas: todo lo que esté ahí se importa.",
+      "instructions": "Cómo completar la plantilla\n• Hoja Insumos: una fila por insumo. Nombre y Unidad son obligatorios (los marcados con *). Un insumo que ya existe no se modifica.\n• Unidad: el nombre o la abreviatura tal cual figuran en la hoja Unidades, sin plural.\n• Categoría: si no existe, se crea.\n• Rendimiento %: cuánto queda útil de lo que comprás. 90 = de 1 kg quedan 900 g.\n• IVA % (opcional): la alícuota con la que te factura el insumo: 0, 2,5, 5, 10,5, 21 o 27. Sirve \"21\", \"10,5\" o \"21%\". Vacío = sin cargar.\n• Hoja Preparaciones: lo que hacés en la cocina y usás en los platos (una salsa, un fondo, una masa). Una fila por ingrediente; cuánto rinde la tanda y en qué unidad van en la primera fila de cada preparación.\n• La preparación se crea como insumo, o se le carga la receta si el insumo ya existe. Puede llevar otras preparaciones.\n• Hoja Recetas: una fila por ingrediente. El precio de venta y el paso del menú van en la primera fila de cada plato.\n• Cantidad: en Recetas, lo que lleva UN plato; en Preparaciones, lo que lleva una tanda. En la unidad de esa fila.\n• El ingrediente tiene que ser un insumo que ya exista o que esté en las hojas Insumos o Preparaciones.\n• Si un plato o una preparación ya tienen otra receta, en la vista previa elegís cuáles reemplazar; el precio y el paso del menú no cambian.\n• Los números pueden ir como 1.234,5 o 1,5.\n• No dejes ejemplos ni notas en las hojas Insumos, Preparaciones y Recetas: todo lo que esté ahí se importa.",
       "exampleProducts": "Ejemplo de la hoja Insumos",
       "exampleProduct1": "Papa | kg | Verduras | 10 | 90 | 10,5",
       "exampleProduct2": "Aceite de girasol | l | Almacén | 5 | | 21",
       "exampleRecipes": "Ejemplo de la hoja Recetas",
       "exampleRecipe1": "Papas fritas | 6.500 | Guarniciones | Papa | 300 | g",
-      "exampleRecipe2": "Papas fritas | | | Aceite de girasol | 50 | ml"
+      "exampleRecipe2": "Papas fritas | | | Aceite de girasol | 50 | ml",
+      "examplePreparations": "Ejemplo de la hoja Preparaciones",
+      "examplePreparation1": "Mayonesa base | 1 | kg | Huevo | 4 | u",
+      "examplePreparation2": "Mayonesa base | | | Aceite de girasol | 800 | ml"
     },
     "unreadableNumber": "No es un número. Escribilo como 1.234,5 o 1,5.",
     "ai": {
@@ -613,7 +660,13 @@
       "title": "Estos {count} platos ya tienen otra receta",
       "titleOne": "Este plato ya tiene otra receta",
       "hint": "Tildá los que querés reemplazar por la receta del archivo. Los demás conservan la que tienen. El precio y el paso del menú no cambian."
-    }
+    },
+    "replacePrep": {
+      "title": "Estas {count} preparaciones ya tienen otra receta",
+      "titleOne": "Esta preparación ya tiene otra receta",
+      "hint": "Tildá las que querés reemplazar por la receta del archivo. Las demás conservan la que tienen."
+    },
+    "preparationsOnlyPermission": "Tu usuario no puede editar insumos: la hoja Preparaciones no se importa."
   },
   "restaurants": {
     "title": "Restaurantes",
@@ -778,5 +831,49 @@
       "totalWithIva": "Total (con datos de IVA)",
       "withoutIva": "Sin datos de IVA ({count})"
     }
+  },
+  "productions": {
+    "title": "Producción",
+    "subtitle": "{count} producciones",
+    "record": "Registrar producción",
+    "empty": "Sin producciones registradas",
+    "emptyHint": "Cuando hagas una tanda de una preparación (una salsa, un fondo, una masa), registrala acá: se descuentan sus ingredientes y la preparación suma stock con su costo.",
+    "noPreparations": "Todavía no hay preparaciones. En Insumos, cargale una receta de preparación al insumo que hacés en la cocina.",
+    "goToProducts": "Ir a Insumos",
+    "filterAll": "Todas",
+    "filterManual": "Registradas",
+    "filterAutomatic": "Automáticas",
+    "automatic": "Automática",
+    "automaticHint": "La registró el sistema al usar la preparación sin stock.",
+    "reversed": "Revertida",
+    "colDate": "Fecha",
+    "colPreparation": "Preparación",
+    "colQuantity": "Cantidad",
+    "colCost": "Costo",
+    "formPreparation": "Preparación",
+    "formQuantity": "Cantidad",
+    "formUnit": "Unidad",
+    "formExpiration": "Vence",
+    "formProducedAt": "Fecha",
+    "formNotes": "Notas",
+    "optional": "(opc.)",
+    "required": "Campo requerido",
+    "invalidQuantity": "Cantidad inválida",
+    "choosePreparation": "Elegí una preparación",
+    "formHint": "Se descuentan los ingredientes de la receta (lo comprado primero sale primero) y la preparación suma stock con ese costo. Si un ingrediente es otra preparación sin stock, se produce sola.",
+    "saveError": "No se pudo registrar la producción.",
+    "loadError": "No se pudieron cargar las producciones.",
+    "detailError": "No se pudo cargar la producción.",
+    "detailTitle": "Producción",
+    "ingredients": "Ingredientes usados",
+    "standardWaste": "merma {qty}",
+    "costPerUnit": "Costo por {unit}",
+    "totalCost": "Costo total",
+    "fromSale": "La pidió una venta",
+    "fromProduction": "La pidió otra producción",
+    "reverse": "Revertir",
+    "reverseTitle": "Revertir la producción",
+    "reverseMessage": "Los ingredientes vuelven al stock y se descuenta la preparación. No se puede deshacer.",
+    "reverseError": "No se pudo revertir la producción."
   }
 }

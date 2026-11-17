@@ -17,6 +17,8 @@ import { listUnits } from '../../api/fn/unit-controller/list-units';
 import { UnitResponse } from '../../api/models/unit-response';
 import { parseBlob } from '../../core/utils/parse-blob';
 import { formatDatetime, formatNum } from '../../core/utils/format';
+import { getProduction } from '../../api/fn/production-controller/get-production';
+import { ProductionResponse } from '../../api/models/production-response';
 import { PaginatorComponent } from '../../shared/components/paginator/paginator.component';
 import { SpinnerComponent } from '../../shared/components/spinner/spinner.component';
 
@@ -73,6 +75,9 @@ export class StockComponent implements OnInit {
   page     = signal(1);
   pageSize = 50;
   total    = signal(0);
+
+  /** Producciones automáticas de la página, para la etiqueta "Producción (automática)". */
+  automaticProductions = signal<ReadonlySet<string>>(new Set());
 
   private readonly el = inject(ElementRef);
 
@@ -170,11 +175,25 @@ export class StockComponent implements OnInit {
       const res = await parseBlob<PagedResponseStockMovementResponse>(raw.body as unknown);
       this.movements.set(res.content ?? []);
       this.total.set(res.totalElements ?? 0);
+      void this.loadAutomaticProductions(res.content ?? []);
     } catch {
       this.movementsError.set('No se pudieron cargar los movimientos.');
     } finally {
       this.movementsLoading.set(false);
     }
+  }
+
+  /**
+   * El movimiento no dice si la producción fue automática: se pide cada producción de la página (sin repetir). Si alguna
+   * falla, queda la etiqueta "Producción" a secas.
+   */
+  private async loadAutomaticProductions(movements: StockMovementResponse[]): Promise<void> {
+    const ids = [...new Set(movements.filter(m => m.referenceType === 'production' && m.type === 'PRODUCTION' && m.referenceId)
+      .map(m => m.referenceId!))];
+    if (!ids.length) { this.automaticProductions.set(new Set()); return; }
+    const results = await Promise.allSettled(ids.map(async id =>
+      parseBlob<ProductionResponse>(await this.api.invoke(getProduction, { id }) as unknown)));
+    this.automaticProductions.set(new Set(results.flatMap(r => r.status === 'fulfilled' && r.value.automatic && r.value.id ? [r.value.id] : [])));
   }
 
   async goToPage(p: number): Promise<void> {
@@ -202,9 +221,16 @@ export class StockComponent implements OnInit {
    * es el rendimiento del producto. Sin distinguirla, el historial muestra "Merma" al lado
    * de cada venta y parece que la cocina está tirando comida.
    */
-  typeLabel(movement?: { type?: string; referenceType?: string }): string {
+  typeLabel(movement?: { type?: string; referenceType?: string; referenceId?: string }): string {
     if (movement?.type === 'WASTE' && movement.referenceType === 'sale_item') {
       return this.i18n.t('stock.standardYieldWaste');
+    }
+    // La merma estándar de una producción (los ingredientes que se pierden al limpiar) cuelga de la producción.
+    if (movement?.type === 'WASTE' && movement.referenceType === 'production') {
+      return this.i18n.t('stock.productionWaste');
+    }
+    if (movement?.type === 'PRODUCTION') {
+      return this.i18n.t(movement.referenceId && this.automaticProductions().has(movement.referenceId) ? 'stock.productionAutomatic' : 'stock.production');
     }
     const map: Record<string, string> = {
       PURCHASE:    'Compra',

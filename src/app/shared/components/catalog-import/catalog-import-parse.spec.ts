@@ -1,11 +1,11 @@
 import { ImportLabels, buildInterpretSheets, normalizeHeader, parseArNumber, parseCatalogWorkbook } from './catalog-import-parse';
 
 const labels: ImportLabels = {
-  sheets: { PRODUCTS: 'Insumos', RECIPES: 'Recetas' },
+  sheets: { PRODUCTS: 'Insumos', PREPARATIONS: 'Preparaciones', RECIPES: 'Recetas' },
   columns: {
     name: 'Nombre', unit: 'Unidad', category: 'Categoría', minStock: 'Stock mínimo', yieldPercentage: 'Rendimiento %', ivaPercentage: 'IVA %',
     menuItem: 'Plato', price: 'Precio de venta', section: 'Paso del menú', ingredient: 'Ingrediente',
-    quantity: 'Cantidad (para 1 plato)',
+    quantity: 'Cantidad (para 1 plato)', preparation: 'Preparación', yieldQuantity: 'Rinde', yieldUnit: 'Unidad del rinde',
   },
 };
 
@@ -105,6 +105,21 @@ describe('parseCatalogWorkbook', () => {
     expect(parseCatalogWorkbook([{ sheet: 'Hoja1', data: [['x']] }], labels, true).problems[0].key).toBe('import.noSheets');
     expect(parseCatalogWorkbook([{ sheet: 'Insumos', data: [['Nombre', 'Unidad']] }], labels, true).problems[0].key)
       .toBe('import.empty');
+  });
+
+  it('lee la hoja Preparaciones solo si se pide, con el rinde en la primera fila y "Cantidad (para la tanda)"', () => {
+    const book = [{ sheet: 'Preparaciones', data: [
+      ['Preparación*', 'Rinde', 'Unidad del rinde', 'Ingrediente*', 'Cantidad (para la tanda)*', 'Unidad*'],
+      ['Mayonesa base', '1,5', 'kg', 'Huevo', 4, 'u'],
+      ['Mayonesa base', null, null, 'Aceite', 800, 'ml'],
+    ] }];
+    expect(parseCatalogWorkbook(book, labels, true).problems[0].key).toBe('import.noSheets');
+    const parsed = parseCatalogWorkbook(book, labels, true, true);
+    expect(parsed.problems).toEqual([]);
+    expect(parsed.preparations).toEqual([
+      { row: 2, preparation: 'Mayonesa base', yieldQuantity: 1.5, yieldUnit: 'kg', ingredient: 'Huevo', quantity: 4, unit: 'u' },
+      { row: 3, preparation: 'Mayonesa base', ingredient: 'Aceite', quantity: 800, unit: 'ml' },
+    ] as any);
   });
 
   it('corta antes de mandar si hay más filas que el tope del backend', () => {

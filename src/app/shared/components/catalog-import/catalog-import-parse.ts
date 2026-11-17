@@ -9,9 +9,10 @@
 import { ImportRowError } from '../../../api/models/import-row-error';
 import { ProductImportRow } from '../../../api/models/product-import-row';
 import { RecipeImportRow } from '../../../api/models/recipe-import-row';
+import { PreparationImportRow } from '../../../api/models/preparation-import-row';
 
 /** Los valores de `ImportRowError.sheet` del backend. */
-export type ImportSheet = 'PRODUCTS' | 'RECIPES';
+export type ImportSheet = 'PRODUCTS' | 'PREPARATIONS' | 'RECIPES';
 
 /** Un problema del archivo entero (falta una hoja o una columna, demasiadas filas): clave i18n + valores. */
 export interface ImportProblem {
@@ -29,17 +30,20 @@ type Cell = string | number | boolean | Date | null | undefined;
 
 export const PRODUCT_FIELDS = ['name', 'unit', 'category', 'minStock', 'yieldPercentage', 'ivaPercentage'] as const;
 export const RECIPE_FIELDS = ['menuItem', 'price', 'section', 'ingredient', 'quantity', 'unit'] as const;
+/** Una fila por ingrediente; el rinde (y su unidad) en la primera fila de cada preparación, como el precio en Recetas. */
+export const PREPARATION_FIELDS = ['preparation', 'yieldQuantity', 'yieldUnit', 'ingredient', 'quantity', 'unit'] as const;
 export const REQUIRED_FIELDS: Record<ImportSheet, readonly string[]> = {
   PRODUCTS: ['name', 'unit'],
+  PREPARATIONS: ['preparation', 'ingredient', 'quantity', 'unit'],
   RECIPES: ['menuItem', 'ingredient', 'quantity', 'unit'],
 };
-const NUMERIC_FIELDS = new Set(['minStock', 'yieldPercentage', 'ivaPercentage', 'price', 'quantity']);
+const NUMERIC_FIELDS = new Set(['minStock', 'yieldPercentage', 'ivaPercentage', 'price', 'quantity', 'yieldQuantity']);
 
 /** Código propio del front (el back nunca lo devuelve): un número escrito como texto que no se puede leer. */
 export const UNREADABLE_NUMBER = 'UNREADABLE_NUMBER';
 
 /** Los mismos topes que el backend: pasado eso responde 400 y no tiene sentido subir el archivo. */
-export const MAX_ROWS: Record<ImportSheet, number> = { PRODUCTS: 1000, RECIPES: 3000 };
+export const MAX_ROWS: Record<ImportSheet, number> = { PRODUCTS: 1000, PREPARATIONS: 1000, RECIPES: 3000 };
 
 /** "Stock mínimo", "stock minimo*" y "STOCK MÍNIMO" son la misma columna. Lo que va entre paréntesis no cuenta. */
 export function normalizeHeader(value: unknown): string {
@@ -134,34 +138,43 @@ function parseSheet<T extends { row?: number }>(
 
 export interface ParsedCatalog {
   products: ProductImportRow[];
+  preparations: PreparationImportRow[];
   recipes: RecipeImportRow[];
   errors: ImportRowError[];
   problems: ImportProblem[];
 }
 
-/** Arma las filas a mandar. Sin `withRecipes` (el plan no incluye recetas) la hoja de recetas ni se lee. */
+/**
+ * Arma las filas a mandar. Sin `withRecipes` / `withPreparations` (el plan o los permisos no alcanzan) esas hojas ni se
+ * leen: el back rechazaría la request entera.
+ */
 export function parseCatalogWorkbook(
-  sheets: { sheet: string; data: Cell[][] }[], labels: ImportLabels, withRecipes: boolean
+  sheets: { sheet: string; data: Cell[][] }[], labels: ImportLabels, withRecipes: boolean, withPreparations = false
 ): ParsedCatalog {
   const find = (sheet: ImportSheet) =>
     sheets.find(s => normalizeHeader(s.sheet) === normalizeHeader(labels.sheets[sheet]))?.data;
   const productsData = find('PRODUCTS');
+  const preparationsData = withPreparations ? find('PREPARATIONS') : undefined;
   const recipesData = withRecipes ? find('RECIPES') : undefined;
 
-  if (!productsData && !recipesData) {
-    const names = withRecipes ? `${labels.sheets.PRODUCTS}, ${labels.sheets.RECIPES}` : labels.sheets.PRODUCTS;
-    return { products: [], recipes: [], errors: [], problems: [{ key: 'import.noSheets', params: { sheets: names } }] };
+  if (!productsData && !preparationsData && !recipesData) {
+    const read: ImportSheet[] = ['PRODUCTS', ...(withPreparations ? ['PREPARATIONS' as const] : []), ...(withRecipes ? ['RECIPES' as const] : [])];
+    return { products: [], preparations: [], recipes: [], errors: [],
+             problems: [{ key: 'import.noSheets', params: { sheets: read.map(s => labels.sheets[s]).join(', ') } }] };
   }
 
   const products = productsData ? parseSheet<ProductImportRow>(productsData, 'PRODUCTS', PRODUCT_FIELDS, labels) : null;
+  const preparations = preparationsData
+    ? parseSheet<PreparationImportRow>(preparationsData, 'PREPARATIONS', PREPARATION_FIELDS, labels) : null;
   const recipes = recipesData ? parseSheet<RecipeImportRow>(recipesData, 'RECIPES', RECIPE_FIELDS, labels) : null;
   const parsed: ParsedCatalog = {
     products: products?.rows ?? [],
+    preparations: preparations?.rows ?? [],
     recipes: recipes?.rows ?? [],
-    errors: [...(products?.errors ?? []), ...(recipes?.errors ?? [])],
-    problems: [...(products?.problems ?? []), ...(recipes?.problems ?? [])],
+    errors: [...(products?.errors ?? []), ...(preparations?.errors ?? []), ...(recipes?.errors ?? [])],
+    problems: [...(products?.problems ?? []), ...(preparations?.problems ?? []), ...(recipes?.problems ?? [])],
   };
-  if (!parsed.problems.length && !parsed.products.length && !parsed.recipes.length) {
+  if (!parsed.problems.length && !parsed.products.length && !parsed.preparations.length && !parsed.recipes.length) {
     parsed.problems.push({ key: 'import.empty' });
   }
   return parsed;

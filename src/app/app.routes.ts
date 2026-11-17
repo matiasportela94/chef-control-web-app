@@ -44,6 +44,11 @@ export const routes: Routes = [
         loadComponent: () => import('./features/suppliers/suppliers.component').then(m => m.SuppliersComponent)
       },
       {
+        path: 'productions',
+        canActivate: [permissionGuard('PRODUCTIONS_VIEW')],
+        loadComponent: () => import('./features/productions/productions.component').then(m => m.ProductionsComponent)
+      },
+      {
         path: 'stock',
         loadComponent: () => import('./features/stock/stock.component').then(m => m.StockComponent)
       },
