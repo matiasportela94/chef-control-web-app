@@ -33,8 +33,11 @@
 .plan-card {
   display: flex; flex-direction: column; gap: 4px; min-width: 0;
   border: 1.5px solid var(--border); border-radius: 14px; padding: 16px;
-  &.current { border-color: var(--accent); }
+  &.current { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 8%, var(--bg-card)); }
 }
+.card-btn { width: 100%; justify-content: center; }
+// "Plan actual" está deshabilitado pero se lee como etiqueta: con la opacidad de un disabled se perdía en el tema claro.
+.plan-card.current .card-btn:disabled { opacity: 1; color: var(--accent); border-color: var(--accent); background: transparent; }
 .plan-price {
   font-size: 24px; font-weight: 700; color: var(--text-1); margin-top: 4px;
   span { font-size: 12px; font-weight: 500; color: var(--text-3); margin-left: 2px; }
@@ -57,3 +60,28 @@
 .notice-warn { border-color: var(--accent); }
 .pending-warn { font-weight: 600; color: var(--accent); margin-top: 6px; }
 .pending-error { color: var(--red); margin-top: 6px; }
+
+.card-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; }
+
+// Modal de planes. Mobile-first: casi toda la pantalla, scroll adentro, cards en una columna (.plan-grid).
+// z-index 400: arriba del drawer (300) y abajo de action-dialog (450), que es la vista previa del cambio.
+.modal-backdrop {
+  position: fixed; inset: 0; z-index: 400; background: rgba(0, 0, 0, .6);
+  display: flex; align-items: center; justify-content: center; padding: 2vh 2vw;
+}
+.modal {
+  width: 100%; max-width: min(1040px, 96vw); max-height: 96vh; max-height: 96dvh;
+  display: flex; flex-direction: column; min-width: 0;
+  background: var(--bg-card); border-radius: 18px; overflow: hidden; box-shadow: 0 20px 60px rgba(0, 0, 0, .2);
+}
+.modal-head {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  padding: 12px 16px; border-bottom: 1px solid var(--border);
+}
+.modal-close {
+  display: inline-flex; align-items: center; justify-content: center; width: 36px; height: 36px; flex-shrink: 0;
+  background: none; border: 0; border-radius: 8px; cursor: pointer; color: var(--text-3); font-size: 18px;
+  &:hover { background: var(--bg-input); color: var(--text-1); }
+}
+.modal-body { overflow-y: auto; overscroll-behavior: contain; padding: 16px; }
+@media (min-width: 640px) { .modal-body { padding: 18px 20px; } }
