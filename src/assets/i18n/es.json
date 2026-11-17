@@ -188,8 +188,7 @@
     "undoUntil": "Podés deshacerlo hasta las {time}",
     "undone": "Deshecho",
     "undoError": "No se pudo deshacer.",
-    "confirmError": "No se pudo registrar.",
-    "failed": "La IA no pudo interpretar el mensaje en este momento. Probá de nuevo en un rato o usá el formulario."
+    "confirmError": "No se pudo registrar."
   },
   "menu": {
     "carta": "Carta",

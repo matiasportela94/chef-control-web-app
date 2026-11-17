@@ -188,8 +188,7 @@
     "undoUntil": "You can undo it until {time}",
     "undone": "Undone",
     "undoError": "It could not be undone.",
-    "confirmError": "It could not be recorded.",
-    "failed": "The AI could not interpret the message right now. Try again later or use the form."
+    "confirmError": "It could not be recorded."
   },
   "menu": {
     "carta": "Menu",

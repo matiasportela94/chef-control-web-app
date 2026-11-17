@@ -162,10 +162,9 @@ export class AiInputComponent implements OnDestroy {
       const res = await parseBlob<ChatResponse>(await this.api.invoke(sendChatMessage, { body: { message: turn.text } }) as unknown);
       this.receive(turn.id, res);
       this.patch(turn.id, { status: 'done' });
-    } catch (e: any) {
-      // El texto de AI_INTERPRETATION_FAILED es el del import (habla del archivo y la plantilla).
-      const error = e?.error?.errorCode === 'AI_INTERPRETATION_FAILED' ? this.t('ai.failed') : extractApiError(e, this.t('ai.error'));
-      this.patch(turn.id, { status: 'error', error });
+    } catch (e) {
+      // Un fallo del modelo llega como 200 NOT_UNDERSTOOD; acá cae lo demás (red, sesión, plan).
+      this.patch(turn.id, { status: 'error', error: extractApiError(e, this.t('ai.error')) });
     }
     this.scrollToEnd();
   }
@@ -216,7 +215,7 @@ export class AiInputComponent implements OnDestroy {
     this.patchAction(turn.id, id, { undoing: true, undoError: undefined });
     try {
       const res = await parseBlob<ChatActionResponse>(await this.api.invoke(undoChatAction, { actionId: id }) as unknown);
-      this.patchAction(turn.id, id, { undoneAt: res?.undoneAt ?? new Date().toISOString() });
+      this.patchAction(turn.id, id, { undoneAt: res.undoneAt });
       this.aiRefresh.notify();
     } catch (e: any) {
       const code = e?.error?.errorCode;
