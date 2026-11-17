@@ -1,11 +1,10 @@
 import { Component, EventEmitter, Input, OnDestroy, Output, signal } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
 import { FormsModule } from '@angular/forms';
-import { firstValueFrom } from 'rxjs';
 import { Api } from '../../../api/api';
-import { ApiConfiguration } from '../../../api/api-configuration';
 import { interpret as interpretText } from '../../../api/fn/ai-controller/interpret';
 import { execute as executeIntent } from '../../../api/fn/ai-controller/execute';
+import { transcribeAudio } from '../../../api/fn/ai-controller/transcribe-audio';
+import { TranscriptionResponse } from '../../../api/models/transcription-response';
 import { InterpretResponse as InterpretTextResponse } from '../../../api/models/interpret-response';
 import { ExecuteResponse as ExecuteIntentResponse } from '../../../api/models/execute-response';
 import { parseBlob } from '../../../core/utils/parse-blob';
@@ -61,8 +60,7 @@ export class AiInputComponent implements OnDestroy {
     { icon: 'ti-clipboard-check', label: 'Actualizar stock / conteo',   prompt: 'Hicimos conteo: tenemos 12kg de papa, 8kg de pollo' },
   ] as const;
 
-  constructor(private api: Api, private aiRefresh: AiRefreshService, private auth: AuthService, private i18n: I18nService,
-              private http: HttpClient, private apiConfig: ApiConfiguration) {}
+  constructor(private api: Api, private aiRefresh: AiRefreshService, private auth: AuthService, private i18n: I18nService) {}
 
   t(key: string, params?: Record<string, string | number>): string {
     return this.i18n.t(key, params);
@@ -123,10 +121,9 @@ export class AiInputComponent implements OnDestroy {
     if (!audio.size) { this.voiceError.set(this.t('ai.voice.nothingRecorded')); return; }
     this.transcribing.set(true);
     try {
-      const form = new FormData();
-      form.append('audio', audio, audio.type.includes('mp4') ? 'dictado.mp4' : 'dictado.webm');
-      // ponytail: POST /ai/transcribe a mano hasta que el back publique el spec; después, la función generada.
-      const res = await firstValueFrom(this.http.post<{ text?: string }>(`${this.apiConfig.rootUrl}/ai/transcribe`, form));
+      // Un File para que la parte lleve nombre; el back reconoce el formato por los bytes, no por el nombre.
+      const file = new File([audio], audio.type.includes('mp4') ? 'dictado.mp4' : 'dictado.webm', { type: audio.type });
+      const res = await parseBlob<TranscriptionResponse>(await this.api.invoke(transcribeAudio, { body: { audio: file } }) as unknown);
       if (run !== this.voiceRun) return;
       const text = res?.text?.trim();
       if (!text) { this.voiceError.set(this.t('ai.voice.nothingHeard')); return; }
