@@ -1,0 +1,229 @@
+<div class="page-wrap">
+
+  <div class="page-header">
+    <div style="min-width:0;">
+      <h1 class="page-title">{{ t('iva.title') }}</h1>
+      <p class="page-subtitle">{{ showSales() ? t('iva.subtitleRi') : t('iva.subtitle') }}</p>
+    </div>
+    <button (click)="downloadExcel()" class="btn-secondary btn-sm" [disabled]="!purchases() || loading() || downloading()"
+            [title]="t('iva.download')">
+      @if (downloading()) { <i class="ti ti-loader-2 spin"></i> } @else { <i class="ti ti-file-spreadsheet"></i> }
+      {{ t('iva.download') }}
+    </button>
+  </div>
+
+  <!-- Período -->
+  <div class="data-card" style="padding:16px;margin-bottom:16px;">
+    <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px;">
+      @for (p of periods; track p.key) {
+        <button (click)="applyPeriod(p)" class="btn-sm"
+                [class.btn-primary]="isPeriod(p)" [class.btn-secondary]="!isPeriod(p)">
+          {{ t(p.key) }}
+        </button>
+      }
+    </div>
+    <div class="range">
+      <div>
+        <label class="field-label">{{ t('iva.from') }}</label>
+        <input type="date" [ngModel]="from()" (ngModelChange)="from.set($event); onDateChange()" class="field-input">
+      </div>
+      <div>
+        <label class="field-label">{{ t('iva.to') }}</label>
+        <input type="date" [ngModel]="to()" (ngModelChange)="to.set($event); onDateChange()" class="field-input">
+      </div>
+    </div>
+    @if (!validRange()) {
+      <p style="font-size:11px;color:var(--red);margin-top:8px;">{{ t('iva.invalidRange') }}</p>
+    }
+  </div>
+
+  @if (!isRi()) {
+    <p class="note"><i class="ti ti-info-circle"></i> {{ t('iva.notRiNote') }}</p>
+  }
+
+  @if (downloadError()) {
+    <div class="notice notice-danger" style="margin-bottom:12px;">{{ downloadError() }}</div>
+  }
+
+  @if (loading() && !purchases()) { <app-spinner /> }
+
+  @if (!loading() && error()) {
+    <div style="background:var(--red-bg);border:1.5px solid var(--red);border-radius:14px;padding:20px;text-align:center;">
+      <p style="font-size:12px;color:var(--red);margin-bottom:12px;">{{ error() }}</p>
+      <button (click)="load()" class="btn-secondary btn-sm">{{ t('common.retry') }}</button>
+    </div>
+  }
+
+  @if (purchases(); as p) {
+    <div [style.opacity]="loading() ? .5 : 1">
+
+      <!-- Saldo: solo RI con ventas y compras -->
+      @if (showSales() && sales(); as s) {
+        @let b = balance() ?? 0;
+        <div class="data-card balance" [class.to-pay]="b > 0" [class.in-favor]="b < 0">
+          <p class="section-title">{{ balanceLabel(b) }}</p>
+          <p class="balance-value">{{ formatARS(abs(b)) }}</p>
+          <p class="balance-calc">
+            {{ t('iva.balanceCalc', { sales: formatARS(s.ivaTotal), purchases: formatARS(p.ivaTotal) }) }}
+          </p>
+          <p class="disclaimer"><i class="ti ti-alert-circle"></i> {{ t('iva.disclaimer') }}</p>
+        </div>
+
+        <!-- Ventas: débito fiscal -->
+        <h2 class="section-head">{{ t('iva.salesSection') }}</h2>
+        <ng-container *ngTemplateOutlet="totals; context: { $implicit: s }" />
+        @if (salesWithoutIva(); as w) {
+          <div class="notice" style="margin-bottom:16px;">
+            <i class="ti ti-info-circle"></i>
+            <span>{{ t(w.saleCount === 1 ? 'iva.salesWithoutIvaOne' : 'iva.salesWithoutIvaMany', { count: w.saleCount ?? 0, total: formatARS(w.total) }) }}</span>
+          </div>
+        }
+        <p class="section-title" style="margin:0 0 8px;">{{ t('iva.salesList') }}</p>
+        @if (!s.sales?.length) {
+          <div class="data-card empty-state" style="margin-bottom:24px;"><i class="ti ti-receipt-tax"></i><p>{{ t('iva.noSales') }}</p></div>
+        } @else {
+          <div class="flex md:hidden" style="flex-direction:column;gap:8px;margin-bottom:24px;">
+            @for (r of s.sales; track r.id) {
+              <div class="data-card" style="padding:12px 14px;">
+                <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px;">
+                  <p style="font-weight:600;color:var(--text-1);font-size:13px;">{{ formatDate(r.soldAt) }}</p>
+                  <p style="font-weight:600;color:var(--text-1);font-size:13px;white-space:nowrap;">{{ formatARS(r.total) }}</p>
+                </div>
+                @if (r.ivaPercentage != null) {
+                  <p style="font-size:11px;color:var(--text-3);margin-top:6px;">
+                    {{ t('iva.saleCardLine', { rate: rateLabel(r.ivaPercentage), net: formatARS(r.netTotal), iva: formatARS(r.ivaTotal) }) }}
+                  </p>
+                } @else {
+                  <span class="badge badge-neutral" style="margin-top:6px;">{{ t('iva.noIvaData') }}</span>
+                }
+              </div>
+            }
+          </div>
+          <div class="table-wrap hidden md:block" style="margin-bottom:24px;">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>{{ t('iva.colDate') }}</th>
+                  <th>{{ t('iva.rate') }}</th>
+                  <th style="text-align:right;">{{ t('iva.net') }}</th>
+                  <th style="text-align:right;">{{ t('iva.iva') }}</th>
+                  <th style="text-align:right;">{{ t('iva.total') }}</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (r of s.sales; track r.id) {
+                  <tr>
+                    <td style="font-weight:600;color:var(--text-1);white-space:nowrap;">{{ formatDate(r.soldAt) }}</td>
+                    <td style="color:var(--text-2);">
+                      @if (r.ivaPercentage == null) { <span class="badge badge-neutral">{{ t('iva.noIvaData') }}</span> }
+                      @else { {{ rateLabel(r.ivaPercentage) }} }
+                    </td>
+                    <td class="num">{{ formatARS(r.netTotal) }}</td>
+                    <td class="num">{{ formatARS(r.ivaTotal) }}</td>
+                    <td class="num" style="font-weight:600;color:var(--text-1);">{{ formatARS(r.total) }}</td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        }
+
+        <h2 class="section-head">{{ t('iva.purchasesSection') }}</h2>
+      }
+
+      <!-- Compras: crédito fiscal -->
+      <ng-container *ngTemplateOutlet="totals; context: { $implicit: p }" />
+      @if (purchasesWithoutIva(); as w) {
+        <div class="notice" style="margin-bottom:16px;">
+          <i class="ti ti-info-circle"></i>
+          <span>{{ t(w.purchaseCount === 1 ? 'iva.purchasesWithoutIvaOne' : 'iva.purchasesWithoutIvaMany',
+                     { count: w.purchaseCount ?? 0, total: formatARS(w.total) }) }}</span>
+        </div>
+      }
+      <p class="section-title" style="margin:0 0 8px;">{{ t('iva.purchasesList') }}</p>
+      @if (!p.purchases?.length) {
+        <div class="data-card empty-state"><i class="ti ti-receipt-tax"></i><p>{{ t('iva.noPurchases') }}</p></div>
+      } @else {
+        <div class="flex md:hidden" style="flex-direction:column;gap:8px;">
+          @for (r of p.purchases; track r.id) {
+            <div class="data-card" style="padding:12px 14px;">
+              <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px;">
+                <div style="min-width:0;">
+                  <p style="font-weight:600;color:var(--text-1);font-size:13px;">{{ formatDate(r.purchasedAt) }}</p>
+                  <p class="ellipsis" style="font-size:11px;color:var(--text-3);">{{ r.supplierName ?? '—' }}</p>
+                </div>
+                <p style="font-weight:600;color:var(--text-1);font-size:13px;white-space:nowrap;">{{ formatARS(r.total) }}</p>
+              </div>
+              @if (r.pricesIncludeIva != null) {
+                <p style="font-size:11px;color:var(--text-3);margin-top:6px;">
+                  {{ t('iva.purchaseCardLine', { net: formatARS(r.netTotal), iva: formatARS(r.ivaTotal) }) }}
+                </p>
+              } @else {
+                <span class="badge badge-neutral" style="margin-top:6px;">{{ t('iva.noIvaData') }}</span>
+              }
+            </div>
+          }
+        </div>
+        <div class="table-wrap hidden md:block">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>{{ t('iva.colDate') }}</th>
+                <th>{{ t('iva.colSupplier') }}</th>
+                <th>{{ t('iva.colPrices') }}</th>
+                <th style="text-align:right;">{{ t('iva.net') }}</th>
+                <th style="text-align:right;">{{ t('iva.iva') }}</th>
+                <th style="text-align:right;">{{ t('iva.total') }}</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (r of p.purchases; track r.id) {
+                <tr>
+                  <td style="font-weight:600;color:var(--text-1);white-space:nowrap;">{{ formatDate(r.purchasedAt) }}</td>
+                  <td class="ellipsis" style="color:var(--text-2);max-width:260px;">{{ r.supplierName ?? '—' }}</td>
+                  <td style="color:var(--text-2);">
+                    @if (r.pricesIncludeIva == null) {
+                      <span class="badge badge-neutral">{{ t('iva.noIvaData') }}</span>
+                    } @else {
+                      {{ r.pricesIncludeIva ? t('iva.withIva') : t('iva.withoutIva') }}
+                    }
+                  </td>
+                  <td class="num">{{ formatARS(r.netTotal) }}</td>
+                  <td class="num">{{ formatARS(r.ivaTotal) }}</td>
+                  <td class="num" style="font-weight:600;color:var(--text-1);">{{ formatARS(r.total) }}</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      }
+    </div>
+  }
+
+</div>
+
+<!-- Neto / IVA / total y desglose por alícuota: el mismo bloque para ventas y compras -->
+<ng-template #totals let-r>
+  <div class="kpis">
+    <div class="data-card kpi"><p class="section-title">{{ t('iva.net') }}</p><p class="kpi-value">{{ formatARS(r.netTotal) }}</p></div>
+    <div class="data-card kpi"><p class="section-title">{{ t('iva.iva') }}</p><p class="kpi-value accent">{{ formatARS(r.ivaTotal) }}</p></div>
+    <div class="data-card kpi"><p class="section-title">{{ t('iva.total') }}</p><p class="kpi-value">{{ formatARS(r.total) }}</p></div>
+  </div>
+  <div class="data-card" style="padding:16px;margin-bottom:16px;">
+    <p class="section-title">{{ t('iva.byRate') }}</p>
+    @if (r.byRate?.length) {
+      <div class="rate-row rate-head">
+        <span>{{ t('iva.rate') }}</span><span>{{ t('iva.net') }}</span><span>{{ t('iva.iva') }}</span>
+      </div>
+      @for (b of r.byRate; track b.ivaPercentage) {
+        <div class="rate-row">
+          <span style="color:var(--text-1);font-weight:600;">{{ rateLabel(b.ivaPercentage) }}</span>
+          <span>{{ formatARS(b.netAmount) }}</span>
+          <span>{{ formatARS(b.ivaAmount) }}</span>
+        </div>
+      }
+    } @else {
+      <p style="font-size:12px;color:var(--text-3);">{{ t('iva.noData') }}</p>
+    }
+  </div>
+</ng-template>

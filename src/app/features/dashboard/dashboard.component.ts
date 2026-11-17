@@ -1,6 +1,6 @@
 import { Component, OnInit, DestroyRef, inject, signal, computed } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { DatePipe, PercentPipe } from '@angular/common';
+import { DatePipe, DecimalPipe, PercentPipe } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { Api } from '../../api/api';
 import { AiRefreshService } from '../../core/services/ai-refresh.service';
@@ -10,14 +10,14 @@ import { DashboardResponse } from '../../api/models/dashboard-response';
 import { AlertResponse } from '../../api/models/alert-response';
 import { PagedResponseAlertResponse } from '../../api/models/paged-response-alert-response';
 import { parseBlob } from '../../core/utils/parse-blob';
-import { formatARS } from '../../core/utils/format';
+import { formatARS, formatPct } from '../../core/utils/format';
 import { SpinnerComponent } from '../../shared/components/spinner/spinner.component';
 import { I18nService } from '../../core/services/i18n.service';
 
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [DatePipe, PercentPipe, RouterLink, SpinnerComponent],
+  imports: [DatePipe, DecimalPipe, PercentPipe, RouterLink, SpinnerComponent],
   templateUrl: './dashboard.component.html',
   styleUrl: './dashboard.component.scss'
 })
@@ -31,13 +31,11 @@ export class DashboardComponent implements OnInit {
 
   readonly today = new Date();
 
-  foodCostPct = computed(() => {
-    const k = this.data()?.kpis;
-    if (!k) return null;
-    const cost  = Number(k.salesCostThisMonth  ?? 0);
-    const sales = Number(k.salesTotalThisMonth ?? 0);
-    return sales > 0 ? (cost / sales) : null;
-  });
+  /**
+   * Food cost del mes, del back y EN PORCENTAJE (30.00, no 0,30); null sin ventas. No se calcula acá: en un RI va
+   * sobre la venta sin IVA, y salesTotal* es lo cobrado (con IVA).
+   */
+  foodCostPct = computed(() => this.data()?.kpis?.foodCostPercentageThisMonth ?? null);
 
   salesPct = computed(() => this.pctChange(
     this.data()?.kpis?.salesTotalThisMonth,
@@ -54,17 +52,11 @@ export class DashboardComponent implements OnInit {
     this.data()?.kpis?.wasteTotalArsLastMonth
   ));
 
+  /** Diferencia en puntos porcentuales contra el mes anterior (31 % vs 28 % = +3 pts). Antes era una variación relativa. */
   foodCostPctDelta = computed(() => {
     const k = this.data()?.kpis;
-    if (!k) return null;
-    const curCost  = Number(k.salesCostThisMonth  ?? 0);
-    const curSales = Number(k.salesTotalThisMonth ?? 0);
-    const prevCost  = Number(k.salesCostLastMonth  ?? 0);
-    const prevSales = Number(k.salesTotalLastMonth ?? 0);
-    const cur  = curSales  > 0 ? curCost  / curSales  : null;
-    const prev = prevSales > 0 ? prevCost / prevSales : null;
-    if (cur === null || prev === null || prev === 0) return null;
-    return (cur - prev) / Math.abs(prev);
+    const cur = k?.foodCostPercentageThisMonth, prev = k?.foodCostPercentageLastMonth;
+    return cur == null || prev == null ? null : cur - prev;
   });
 
   private pctChange(current?: number, previous?: number): number | null {
@@ -130,4 +122,5 @@ export class DashboardComponent implements OnInit {
   }
 
   readonly formatARS = formatARS;
+  readonly formatPct = formatPct;
 }

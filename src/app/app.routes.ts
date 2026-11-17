@@ -35,9 +35,9 @@ export const routes: Routes = [
         loadComponent: () => import('./features/purchases/purchases.component').then(m => m.PurchasesComponent)
       },
       {
-        path: 'purchase-iva',
+        path: 'iva',
         canActivate: [permissionGuard('PURCHASES_VIEW')],
-        loadComponent: () => import('./features/purchase-iva/purchase-iva.component').then(m => m.PurchaseIvaComponent)
+        loadComponent: () => import('./features/iva/iva.component').then(m => m.IvaComponent)
       },
       {
         path: 'suppliers',

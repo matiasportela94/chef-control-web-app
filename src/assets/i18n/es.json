@@ -29,7 +29,7 @@
     "foodCost": "Food Cost",
     "users": "Usuarios",
     "logout": "Salir",
-    "purchaseIva": "IVA de compras"
+    "iva": "IVA"
   },
   "errors": {
     "INVALID_CREDENTIALS": "Email o contraseña incorrectos",
@@ -231,7 +231,9 @@
     "colFoodCost": "Food cost",
     "noChanges": "Sin cambios en el período",
     "unreliableBefore": "Los datos anteriores al {date} no son confiables",
-    "unreliableBody": "El historial empezó a registrarse ese día. Para fechas anteriores se muestra el valor que había al arrancar, no el que realmente regía."
+    "unreliableBody": "El historial empezó a registrarse ese día. Para fechas anteriores se muestra el valor que había al arrancar, no el que realmente regía.",
+    "netHint": "sobre {amount} sin IVA",
+    "netShort": "sin IVA {amount}"
   },
   "stock": {
     "standardYieldWaste": "Merma estándar"
@@ -577,8 +579,8 @@
     },
     "taxNotSet": "Sin definir",
     "taxHint": "Cambia cómo se costean las compras: un Responsable Inscripto recupera el IVA, así que el costo es el neto; en Monotributo el IVA es parte del costo. También define si las facturas se cargan con IVA o sin IVA por defecto.",
-    "toRiTitle": "El food cost va a bajar",
-    "toRiBody": "Desde que guardes, las compras nuevas se costean sin IVA (por el neto). Las compras que ya cargaste no cambian.",
+    "toRiTitle": "El food cost se va a calcular sin IVA",
+    "toRiBody": "Desde que guardes, las compras nuevas se costean sin IVA (por el neto) y el food cost se mide sobre la venta sin IVA, así que el porcentaje va a cambiar. Las compras que ya cargaste no cambian.",
     "timezone": "Zona horaria",
     "timezoneHint": "Vacío usa la zona horaria por defecto.",
     "saveChanges": "Guardar cambios",
@@ -590,7 +592,9 @@
     "deleteHelper": "En la cuenta solo queda una línea de auditoría diciendo que este local se eliminó.",
     "deleteInputLabel": "Escribí el nombre del restaurante para confirmar",
     "deleteConfirm": "Eliminar definitivamente",
-    "deleteError": "Error al eliminar el restaurante"
+    "deleteError": "Error al eliminar el restaurante",
+    "salesIva": "IVA de las ventas",
+    "salesIvaHint": "La alícuota con la que facturás lo que vendés (los precios de la carta la incluyen). El food cost se calcula sobre el precio sin IVA."
   },
   "purchases": {
     "title": "Compras",
@@ -657,21 +661,33 @@
     "reverseNote": "Los movimientos de stock existentes no se modifican — se crearán nuevos movimientos de reversión en el ledger. Después se abrirá el formulario de carga pre-llenado para que puedas ingresar los datos correctos.",
     "reverseConfirm": "Revertir y corregir"
   },
-  "purchaseIva": {
-    "title": "IVA de compras",
+  "iva": {
+    "title": "IVA",
     "subtitle": "Neto, IVA y total de las facturas de compra del período. No incluye compras revertidas.",
+    "subtitleRi": "IVA de ventas (débito), de compras (crédito) y el saldo estimado del período. No incluye lo revertido.",
+    "notRiNote": "Las ventas y el saldo de IVA se muestran en locales Responsable Inscripto: un monotributista no liquida IVA.",
     "thisMonth": "Este mes",
     "lastMonth": "Mes anterior",
     "from": "Desde",
     "to": "Hasta",
     "invalidRange": "La fecha \"desde\" tiene que ser anterior a \"hasta\".",
+    "balanceToPay": "IVA a pagar",
+    "balanceInFavor": "Saldo a favor",
+    "balanceZero": "Sin saldo de IVA",
+    "balanceCalc": "IVA ventas {sales} − IVA compras {purchases}",
+    "disclaimer": "Es una estimación con lo cargado en Chef Control. No incluye otros gastos con IVA (servicios, alquiler), percepciones, retenciones ni el saldo a favor de meses anteriores. No es la declaración jurada.",
+    "salesSection": "Ventas · débito fiscal",
+    "purchasesSection": "Compras · crédito fiscal",
     "net": "Neto",
     "iva": "IVA",
     "total": "Total",
     "byRate": "Por alícuota",
     "rate": "Alícuota",
     "rateNone": "Sin IVA",
-    "purchases": "Compras del período",
+    "noData": "Sin datos en el período.",
+    "salesList": "Ventas del período",
+    "purchasesList": "Compras del período",
+    "noSales": "No hay ventas en el período.",
     "noPurchases": "No hay compras en el período.",
     "colDate": "Fecha",
     "colSupplier": "Proveedor",
@@ -679,20 +695,29 @@
     "withIva": "Con IVA",
     "withoutIva": "Sin IVA",
     "noIvaData": "Sin datos de IVA",
-    "cardLine": "Neto {net} · IVA {iva}",
-    "withoutIvaOne": "1 compra sin datos de IVA por {total}: se cargó antes de registrar el IVA y no suma en los totales.",
-    "withoutIvaMany": "{count} compras sin datos de IVA por {total}: se cargaron antes de registrar el IVA y no suman en los totales.",
+    "purchaseCardLine": "Neto {net} · IVA {iva}",
+    "saleCardLine": "{rate} · Neto {net} · IVA {iva}",
+    "purchasesWithoutIvaOne": "1 compra sin datos de IVA por {total}: se cargó antes de registrar el IVA y no suma en los totales.",
+    "purchasesWithoutIvaMany": "{count} compras sin datos de IVA por {total}: se cargaron antes de registrar el IVA y no suman en los totales.",
+    "salesWithoutIvaOne": "1 venta sin datos de IVA por {total}: se cargó antes de registrar el IVA y no suma en los totales.",
+    "salesWithoutIvaMany": "{count} ventas sin datos de IVA por {total}: se cargaron antes de registrar el IVA y no suman en los totales.",
     "yes": "Sí",
     "no": "No",
     "download": "Descargar Excel",
     "downloadError": "No se pudo generar el Excel.",
-    "loadError": "No se pudo cargar el IVA de compras.",
+    "loadError": "No se pudo cargar el IVA del período.",
     "excel": {
-      "fileName": "iva-compras-{from}-a-{to}.xlsx",
+      "fileName": "iva-{from}-a-{to}.xlsx",
+      "sheetSummary": "Resumen",
       "sheetPurchases": "Compras",
-      "sheetByRate": "Por alícuota",
+      "sheetPurchasesByRate": "Compras por alícuota",
+      "sheetSales": "Ventas",
+      "sheetSalesByRate": "Ventas por alícuota",
+      "period": "Período",
+      "salesIva": "IVA ventas (débito fiscal)",
+      "purchasesIva": "IVA compras (crédito fiscal)",
       "colPricesIncludeIva": "Precios con IVA",
-      "totalWithIva": "Total (compras con datos de IVA)",
+      "totalWithIva": "Total (con datos de IVA)",
       "withoutIva": "Sin datos de IVA ({count})"
     }
   }

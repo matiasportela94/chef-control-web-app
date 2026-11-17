@@ -1,0 +1,60 @@
+.ellipsis { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.num { text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; color: var(--text-2); }
+
+// Mobile-first: desde/hasta uno abajo del otro; en pantallas anchas, al lado.
+.range { display: grid; grid-template-columns: 1fr; gap: 10px; }
+@media (min-width: 480px) { .range { grid-template-columns: repeat(2, minmax(0, 200px)); } }
+
+// Mobile-first: en el teléfono, filas compactas (etiqueta a la izquierda, importe a la derecha); con dos secciones,
+// tres tarjetas altas por sección hacían la página interminable. En pantallas anchas, tres tarjetas.
+.kpis { display: grid; grid-template-columns: 1fr; gap: 6px; margin-bottom: 16px; }
+.kpi {
+  display: flex; align-items: baseline; justify-content: space-between; gap: 12px; padding: 10px 14px; min-width: 0;
+  .section-title { margin: 0; }
+}
+.kpi-value {
+  font-size: 17px; font-weight: 700; color: var(--text-1); font-variant-numeric: tabular-nums;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  &.accent { color: var(--accent); }
+}
+@media (min-width: 640px) {
+  .kpis { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+  .kpi { display: block; padding: 14px 16px; .section-title { margin-bottom: 8px; } }
+  .kpi-value { font-size: 20px; }
+}
+
+.rate-row {
+  display: grid; grid-template-columns: minmax(56px, .6fr) 1fr 1fr; gap: 8px; align-items: center;
+  padding: 7px 0; border-top: 1px solid var(--border); font-size: 12px; color: var(--text-2);
+  span:not(:first-child) { text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; }
+}
+.rate-head { border-top: 0; padding-top: 0; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .6px; color: var(--text-3); }
+
+.notice {
+  display: flex; align-items: flex-start; gap: 8px;
+  font-size: 13px; line-height: 1.45; color: var(--text-2);
+  background: var(--bg-input); border: 1px solid var(--border); border-radius: 12px; padding: 12px 14px;
+  i { font-size: 16px; margin-top: 1px; flex-shrink: 0; color: var(--accent); }
+}
+.notice-danger { background: var(--red-bg); border-color: var(--red); color: var(--red); }
+
+.spin { display: inline-block; animation: spin 1s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { .spin { animation: none; } }
+
+.note { display: flex; gap: 6px; align-items: flex-start; font-size: 12px; line-height: 1.45; color: var(--text-3); margin: -4px 0 16px; i { flex-shrink: 0; margin-top: 1px; } }
+.section-head { font-size: 15px; font-weight: 700; color: var(--text-1); margin: 4px 0 10px; }
+
+// Saldo: el número que importa, arriba. Naranja a pagar, verde a favor.
+.balance {
+  padding: 16px; margin-bottom: 24px; border: 1.5px solid var(--border);
+  &.to-pay { border-color: var(--accent); .balance-value { color: var(--accent); } }
+  &.in-favor { border-color: #16a34a; .balance-value { color: #16a34a; } }
+}
+.balance-value { font-size: 26px; font-weight: 800; color: var(--text-1); font-variant-numeric: tabular-nums; }
+.balance-calc { font-size: 12px; color: var(--text-2); margin-top: 4px; }
+.disclaimer {
+  display: flex; gap: 6px; align-items: flex-start; margin-top: 12px; padding-top: 10px; border-top: 1px solid var(--border);
+  font-size: 11px; line-height: 1.45; color: var(--text-3);
+  i { flex-shrink: 0; margin-top: 1px; }
+}

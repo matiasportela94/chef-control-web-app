@@ -29,7 +29,7 @@
     "foodCost": "Food Cost",
     "users": "Users",
     "logout": "Log out",
-    "purchaseIva": "Purchase VAT"
+    "iva": "VAT"
   },
   "errors": {
     "INVALID_CREDENTIALS": "Invalid email or password",
@@ -231,7 +231,9 @@
     "colFoodCost": "Food cost",
     "noChanges": "No changes in this period",
     "unreliableBefore": "Data before {date} isn't reliable",
-    "unreliableBody": "History started being recorded that day. For earlier dates you see the value at that moment, not what was actually in effect."
+    "unreliableBody": "History started being recorded that day. For earlier dates you see the value at that moment, not what was actually in effect.",
+    "netHint": "on {amount} without VAT",
+    "netShort": "excl. VAT {amount}"
   },
   "stock": {
     "standardYieldWaste": "Standard yield waste"
@@ -577,8 +579,8 @@
     },
     "taxNotSet": "Not set",
     "taxHint": "Changes how purchases are costed: a Responsable Inscripto recovers VAT, so the cost is the net amount; under Monotributo VAT is part of the cost. It also sets whether invoices are entered with or without VAT by default.",
-    "toRiTitle": "Food cost will go down",
-    "toRiBody": "Once you save, new purchases are costed without VAT (at net). Purchases already recorded do not change.",
+    "toRiTitle": "Food cost will be calculated without VAT",
+    "toRiBody": "Once you save, new purchases are costed without VAT (at net) and food cost is measured on sales without VAT, so the percentage will change. Purchases already recorded do not change.",
     "timezone": "Time zone",
     "timezoneHint": "Leave empty to use the default time zone.",
     "saveChanges": "Save changes",
@@ -590,7 +592,9 @@
     "deleteHelper": "Only an audit line saying this location was deleted remains in the account.",
     "deleteInputLabel": "Type the restaurant name to confirm",
     "deleteConfirm": "Delete permanently",
-    "deleteError": "Could not delete the restaurant"
+    "deleteError": "Could not delete the restaurant",
+    "salesIva": "Sales VAT",
+    "salesIvaHint": "The VAT rate you invoice your sales with (menu prices include it). Food cost is calculated on the price without VAT."
   },
   "purchases": {
     "title": "Purchases",
@@ -657,21 +661,33 @@
     "reverseNote": "Existing stock movements are not modified — new reversal movements are added to the ledger. Then the purchase form opens prefilled so you can enter the correct data.",
     "reverseConfirm": "Reverse and correct"
   },
-  "purchaseIva": {
-    "title": "Purchase VAT",
+  "iva": {
+    "title": "VAT",
     "subtitle": "Net, VAT and total of the purchase invoices in the period. Reversed purchases are not included.",
+    "subtitleRi": "Sales VAT (output), purchase VAT (input) and the estimated balance for the period. Reversals are not included.",
+    "notRiNote": "Sales and the VAT balance are shown for Responsable Inscripto locations: Monotributo does not file VAT.",
     "thisMonth": "This month",
     "lastMonth": "Last month",
     "from": "From",
     "to": "To",
     "invalidRange": "The \"from\" date must be before \"to\".",
+    "balanceToPay": "VAT to pay",
+    "balanceInFavor": "VAT credit",
+    "balanceZero": "No VAT balance",
+    "balanceCalc": "Sales VAT {sales} − purchase VAT {purchases}",
+    "disclaimer": "This is an estimate based on what is recorded in Chef Control. It does not include other expenses with VAT (services, rent), perceptions, withholdings or credit from previous months. It is not the tax return.",
+    "salesSection": "Sales · output VAT",
+    "purchasesSection": "Purchases · input VAT",
     "net": "Net",
     "iva": "VAT",
     "total": "Total",
     "byRate": "By rate",
     "rate": "Rate",
     "rateNone": "No VAT",
-    "purchases": "Purchases in the period",
+    "noData": "No data in the period.",
+    "salesList": "Sales in the period",
+    "purchasesList": "Purchases in the period",
+    "noSales": "No sales in the period.",
     "noPurchases": "No purchases in the period.",
     "colDate": "Date",
     "colSupplier": "Supplier",
@@ -679,20 +695,29 @@
     "withIva": "VAT included",
     "withoutIva": "VAT excluded",
     "noIvaData": "No VAT data",
-    "cardLine": "Net {net} · VAT {iva}",
-    "withoutIvaOne": "1 purchase without VAT data for {total}: it was recorded before VAT was tracked and is not in the totals.",
-    "withoutIvaMany": "{count} purchases without VAT data for {total}: they were recorded before VAT was tracked and are not in the totals.",
+    "purchaseCardLine": "Net {net} · VAT {iva}",
+    "saleCardLine": "{rate} · Net {net} · VAT {iva}",
+    "purchasesWithoutIvaOne": "1 purchase without VAT data for {total}: it was recorded before VAT was tracked and is not in the totals.",
+    "purchasesWithoutIvaMany": "{count} purchases without VAT data for {total}: they were recorded before VAT was tracked and are not in the totals.",
+    "salesWithoutIvaOne": "1 sale without VAT data for {total}: it was recorded before VAT was tracked and is not in the totals.",
+    "salesWithoutIvaMany": "{count} sales without VAT data for {total}: they were recorded before VAT was tracked and are not in the totals.",
     "yes": "Yes",
     "no": "No",
     "download": "Download Excel",
     "downloadError": "Could not generate the Excel file.",
-    "loadError": "Could not load purchase VAT.",
+    "loadError": "Could not load the VAT for the period.",
     "excel": {
-      "fileName": "purchase-vat-{from}-to-{to}.xlsx",
+      "fileName": "vat-{from}-to-{to}.xlsx",
+      "sheetSummary": "Summary",
       "sheetPurchases": "Purchases",
-      "sheetByRate": "By rate",
+      "sheetPurchasesByRate": "Purchases by rate",
+      "sheetSales": "Sales",
+      "sheetSalesByRate": "Sales by rate",
+      "period": "Period",
+      "salesIva": "Sales VAT (output)",
+      "purchasesIva": "Purchase VAT (input)",
       "colPricesIncludeIva": "VAT included",
-      "totalWithIva": "Total (purchases with VAT data)",
+      "totalWithIva": "Total (with VAT data)",
       "withoutIva": "Without VAT data ({count})"
     }
   }

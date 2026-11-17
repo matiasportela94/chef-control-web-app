@@ -68,11 +68,7 @@ export class PurchasesComponent implements OnInit {
     value: String(r), label: r === 0 ? this.t('purchases.ivaNone') : this.t('purchases.ivaOption', { rate: formatIvaRate(r) }),
   })));
 
-  /** Condición fiscal del local activo, de la sesión. Una sesión de antes de que existiera el dato la toma como sin definir. */
-  readonly taxCondition = computed(() => {
-    const u = this.auth.currentUser();
-    return u?.restaurants.find(r => r.id === u.restaurantId)?.taxCondition ?? null;
-  });
+  readonly taxCondition = computed(() => this.auth.taxCondition());
   readonly canEditRestaurants = computed(() => this.auth.hasPermission('RESTAURANTS_UPDATE'));
 
   createOpen = signal(false);

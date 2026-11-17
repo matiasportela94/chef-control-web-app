@@ -569,6 +569,9 @@ html, body {
   background: var(--bg-card);
 }
 
+/* ── NET HINT: "sobre $ X sin IVA" (food cost de un Responsable Inscripto, que va sobre la venta sin IVA) ── */
+.net-hint { font-size: 10px; line-height: 1.35; color: var(--text-3); margin-top: 2px; font-variant-numeric: tabular-nums; }
+
 /* ── COST BOX ── */
 .cost-box {
   display: flex;

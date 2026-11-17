@@ -321,6 +321,9 @@
             </span>
           </div>
         }
+        @if (isRi() && recipeCost()!.netPrice != null) {
+          <p class="net-hint" style="text-align:right;padding:0 2px;">{{ t('foodCost.netHint', { amount: formatARS(recipeCost()!.netPrice) }) }}</p>
+        }
       }
 
     </div>
@@ -508,6 +511,9 @@
             {{ recipeCost()!.foodCostPercentage! | number:'1.1-1' }}%
           </span>
         </div>
+      }
+      @if (isRi() && recipeCost()!.netPrice != null) {
+        <p class="net-hint" style="text-align:right;padding:0 2px;">{{ t('foodCost.netHint', { amount: formatARS(recipeCost()!.netPrice) }) }}</p>
       }
     }
 

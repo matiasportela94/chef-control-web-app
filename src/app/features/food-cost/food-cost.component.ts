@@ -145,7 +145,10 @@ export class FoodCostComponent implements OnInit {
   /** El plan no incluye food cost: la pantalla muestra a qué plan pasar en vez de rebotar con 403. */
   readonly locked: boolean;
 
-  constructor(private api: Api, private i18n: I18nService, auth: AuthService) {
+  /** En un RI el food cost va sobre la venta sin IVA: al lado del precio o del ingreso se dice sobre cuánto. */
+  readonly isRi = computed(() => this.auth.isResponsableInscripto());
+
+  constructor(private api: Api, private i18n: I18nService, private auth: AuthService) {
     this.locked = !auth.hasFeature('RECIPES_AND_FOOD_COST');
   }
 

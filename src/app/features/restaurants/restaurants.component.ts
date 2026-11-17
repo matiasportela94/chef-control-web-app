@@ -15,13 +15,15 @@ import { DrawerComponent } from '../../shared/components/drawer/drawer.component
 import { SpinnerComponent } from '../../shared/components/spinner/spinner.component';
 import { isFormFieldInvalid } from '../../core/utils/form';
 import { I18nService } from '../../core/services/i18n.service';
+import { IVA_RATES, formatIvaRate } from '../../core/utils/iva';
+import { SelectComponent, SelectOption } from '../../shared/components/select/select.component';
 
 type TaxCondition = NonNullable<RestaurantResponse['taxCondition']>;
 
 @Component({
   selector: 'app-restaurants',
   standalone: true,
-  imports: [ReactiveFormsModule, ActionDialogComponent, DrawerComponent, SpinnerComponent],
+  imports: [ReactiveFormsModule, ActionDialogComponent, DrawerComponent, SpinnerComponent, SelectComponent],
   templateUrl: './restaurants.component.html',
   styleUrl: './restaurants.component.scss'
 })
@@ -55,7 +57,15 @@ export class RestaurantsComponent implements OnInit {
       timezone: [''],
       // Una vez definida no vuelve a "sin definir": el back toma null como "no cambiar".
       taxCondition: [null as TaxCondition | null],
+      // Alícuota con la que factura sus ventas (solo cuenta en RI). El back nunca la devuelve en null: default 21.
+      salesIvaPercentage: ['21'],
     });
+  }
+
+  readonly salesIvaOptions: SelectOption[] = IVA_RATES.map(r => ({ value: String(r), label: formatIvaRate(r) }));
+
+  get isRiSelected(): boolean {
+    return this.form.get('taxCondition')?.value === 'RESPONSABLE_INSCRIPTO';
   }
 
   t(key: string, params?: Record<string, string | number>): string {
@@ -104,14 +114,15 @@ export class RestaurantsComponent implements OnInit {
 
   openCreate(): void {
     this.editing.set(null);
-    this.form.reset({ name: '', timezone: '', taxCondition: null });
+    this.form.reset({ name: '', timezone: '', taxCondition: null, salesIvaPercentage: '21' });
     this.saveError.set(null);
     this.drawerOpen.set(true);
   }
 
   openEdit(r: RestaurantResponse): void {
     this.editing.set(r);
-    this.form.reset({ name: r.name ?? '', timezone: r.timezone ?? '', taxCondition: r.taxCondition ?? null });
+    this.form.reset({ name: r.name ?? '', timezone: r.timezone ?? '', taxCondition: r.taxCondition ?? null,
+                      salesIvaPercentage: String(r.salesIvaPercentage ?? 21) });
     this.saveError.set(null);
     this.drawerOpen.set(true);
   }
@@ -133,6 +144,8 @@ export class RestaurantsComponent implements OnInit {
       name: raw.name.trim(),
       timezone: raw.timezone?.trim() || undefined,
       taxCondition: raw.taxCondition ?? undefined,
+      // Solo se manda en RI: en Monotributo no se usa (en el POST, sin el campo el back pone 21; en el PUT, no cambia).
+      ...(raw.taxCondition === 'RESPONSABLE_INSCRIPTO' ? { salesIvaPercentage: +raw.salesIvaPercentage } : {}),
     };
     try {
       const r = this.editing();

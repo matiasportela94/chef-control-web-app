@@ -234,6 +234,9 @@ export class MenuComponent implements OnInit {
   cartaForm: FormGroup;
   sectionForm: FormGroup;
 
+  /** En un RI el food cost va sobre el precio sin IVA: se dice sobre cuánto. */
+  readonly isRi = computed(() => this.auth.isResponsableInscripto());
+
   constructor(private api: Api, private fb: FormBuilder, private i18n: I18nService, private auth: AuthService) {
     this.cartaForm = this.fb.group({
       name: ['', Validators.required],
@@ -274,8 +277,8 @@ export class MenuComponent implements OnInit {
     await Promise.all([this.loadCartas(), this.loadSections(), this.loadMenuItems(), this.loadFormData()]);
   }
 
-  t(key: string): string {
-    return this.i18n.t(key);
+  t(key: string, params?: Record<string, string | number>): string {
+    return this.i18n.t(key, params);
   }
 
   itemsLabel(): string {

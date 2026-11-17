@@ -91,6 +91,13 @@
         <p style="font-size:11px;color:var(--text-3);margin-top:6px;">{{ t('restaurants.taxNotSet') }}</p>
       }
       <p style="font-size:11px;color:var(--text-3);margin-top:6px;line-height:1.45;">{{ t('restaurants.taxHint') }}</p>
+      @if (isRiSelected) {
+        <div style="margin-top:12px;">
+          <label class="field-label">{{ t('restaurants.salesIva') }}</label>
+          <app-select formControlName="salesIvaPercentage" [options]="salesIvaOptions" style="max-width:200px;"></app-select>
+          <p style="font-size:11px;color:var(--text-3);margin-top:6px;line-height:1.45;">{{ t('restaurants.salesIvaHint') }}</p>
+        </div>
+      }
       @if (switchingToRi) {
         <div style="display:flex;align-items:flex-start;gap:10px;border:1.5px solid var(--accent);border-radius:12px;padding:12px 14px;margin-top:10px;">
           <i class="ti ti-info-circle" style="color:var(--accent);font-size:18px;flex-shrink:0;line-height:1.2;"></i>

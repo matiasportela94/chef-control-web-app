@@ -1,4 +1,4 @@
-import { Injectable, signal } from '@angular/core';
+import { Injectable, computed, signal } from '@angular/core';
 import { Api } from '../../api/api';
 import { login } from '../../api/fn/auth-controller/login';
 import { register } from '../../api/fn/auth-controller/register';
@@ -36,6 +36,16 @@ export interface CurrentUser {
 @Injectable({ providedIn: 'root' })
 export class AuthService {
   readonly currentUser = signal<CurrentUser | null>(this.loadUser());
+
+  /**
+   * Condición fiscal del local activo, de la sesión (null = sin definir, o una sesión de antes del dato).
+   * Queda vieja si se cambia en /restaurants, que por eso llama a refreshSession() al guardar el local activo.
+   */
+  readonly taxCondition = computed(() => {
+    const u = this.currentUser();
+    return u?.restaurants.find(r => r.id === u.restaurantId)?.taxCondition ?? null;
+  });
+  readonly isResponsableInscripto = computed(() => this.taxCondition() === 'RESPONSABLE_INSCRIPTO');
 
   constructor(private api: Api) {}
 
