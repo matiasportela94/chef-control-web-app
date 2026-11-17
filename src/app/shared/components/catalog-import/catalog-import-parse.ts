@@ -166,3 +166,49 @@ export function parseCatalogWorkbook(
   }
   return parsed;
 }
+
+// ── "Interpretar con IA": el Excel del cliente, sin plantilla ─────────────────
+
+export interface InterpretSheet {
+  name: string;
+  rows: { ref: number; cells: (string | number | null)[] }[];
+}
+
+/** De dónde salió cada ref: la hoja y la fila del Excel del cliente, para mostrar los errores ahí. */
+export interface RowRef { sheet: string; row: number }
+
+/** Topes del back para la IA: filas con datos (lo mide contra la salida del modelo) y hojas. Pasados, responde 400. */
+export const MAX_INTERPRET_ROWS = 300;
+export const MAX_INTERPRET_SHEETS = 20;
+
+/**
+ * Todas las hojas tal cual, sin filas vacías. Cada fila lleva un `ref` global (no se repite entre hojas): la IA
+ * lo devuelve como `row` y los errores del dryRun se traducen con `refs` a la hoja y la fila del cliente.
+ * Las celdas vacías del final se cortan: no dicen nada y cuestan tokens.
+ */
+export function buildInterpretSheets(sheets: { sheet: string; data: Cell[][] }[]):
+    { sheets: InterpretSheet[]; refs: Map<number, RowRef>; rowCount: number } {
+  const refs = new Map<number, RowRef>();
+  const out: InterpretSheet[] = [];
+  let ref = 0;
+  for (const s of sheets) {
+    const rows: InterpretSheet['rows'] = [];
+    s.data.forEach((cells, i) => {
+      if (isEmptyRow(cells)) return;
+      const values = cells.map(interpretCell);
+      while (values.length && values[values.length - 1] === null) values.pop();
+      refs.set(++ref, { sheet: s.sheet, row: i + 1 });
+      rows.push({ ref, cells: values });
+    });
+    if (rows.length) out.push({ name: s.sheet, rows });
+  }
+  return { sheets: out, refs, rowCount: ref };
+}
+
+function interpretCell(value: Cell): string | number | null {
+  if (value === null || value === undefined) return null;
+  if (typeof value === 'number') return Number.isFinite(value) ? value : null;
+  if (value instanceof Date) return value.toISOString().slice(0, 10);
+  if (typeof value === 'string') return value.trim() ? value : null;
+  return String(value);
+}

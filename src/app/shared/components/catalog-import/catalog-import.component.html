@@ -20,17 +20,24 @@
     <!-- 2. Archivo -->
     <div class="step">
       <p class="step-title">{{ t('import.step2') }}</p>
-      <label class="btn-secondary btn-sm file-btn" [class.disabled]="step() === 'checking' || step() === 'saving'">
+      <label class="btn-secondary btn-sm file-btn" [class.disabled]="busy()">
         <i class="ti ti-upload"></i> {{ t('import.chooseFile') }}
         <input type="file" accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-               (change)="onFile($event)" [disabled]="step() === 'checking' || step() === 'saving'" hidden>
+               (change)="onFile($event)" [disabled]="busy()" hidden>
       </label>
       @if (fileName()) { <p class="file-name ellipsis"><i class="ti ti-file"></i> {{ fileName() }}</p> }
+      <!-- Aunque se haya reconocido algo de la plantilla, el usuario puede pedir que lo lea la IA -->
+      @if (fileName() && !busy() && !aiOffer() && !aiRefs()) {
+        <button type="button" class="link-btn" (click)="aiOffer.set(true)">{{ t('import.ai.otherFormat') }}</button>
+      }
     </div>
   }
 
   @if (step() === 'checking') {
     <p class="hint"><i class="ti ti-loader-2 spin"></i> {{ t('import.checking') }}</p>
+  }
+  @if (step() === 'interpreting') {
+    <div class="notice"><i class="ti ti-loader-2 spin"></i><span>{{ t('import.ai.interpreting') }}</span></div>
   }
   @for (problem of problems(); track $index) {
     <div class="notice notice-danger"><i class="ti ti-alert-triangle"></i><span>{{ problem }}</span></div>
@@ -39,9 +46,42 @@
     <div class="notice notice-danger"><i class="ti ti-alert-triangle"></i><span>{{ requestError() }}</span></div>
   }
 
+  <!-- IA: el archivo no es la plantilla, o el usuario dijo que su Excel tiene otro formato -->
+  @if (aiOffer() && !busy() && step() !== 'done') {
+    @switch (aiBlockedBy()) {
+      @case ('plan') {
+        <div class="notice"><i class="ti ti-sparkles"></i>
+          <span>{{ t('import.ai.upsell') }} @if (canSeePlans) { <a routerLink="/plan" class="inline-link">{{ t('import.ai.seePlans') }}</a> }</span>
+        </div>
+      }
+      @case ('permission') {
+        <div class="notice"><i class="ti ti-lock"></i><span>{{ t('import.ai.noPermission') }}</span></div>
+      }
+      @default {
+        <div class="ai-offer">
+          <p class="hint">{{ t('import.ai.offer') }}</p>
+          <button type="button" (click)="interpretWithAi()" class="btn-primary btn-sm">
+            <i class="ti ti-sparkles"></i> {{ t('import.ai.interpret') }}
+          </button>
+        </div>
+      }
+    }
+  }
+
   <!-- 3. Vista previa / resultado -->
   @if ((step() === 'preview' || step() === 'saving' || step() === 'done') && result(); as r) {
     <p class="step-title" style="margin-top:18px;">{{ step() === 'done' ? t('import.resultTitle') : t('import.previewTitle') }}</p>
+    @if (aiRefs() && step() !== 'done') {
+      <div class="notice"><i class="ti ti-sparkles"></i><span>{{ t('import.ai.review') }}</span></div>
+    }
+    @if (warnings().length && step() !== 'done') {
+      <div class="notice notice-warn"><i class="ti ti-alert-circle"></i>
+        <div class="warnings">
+          <strong>{{ t('import.ai.warningsTitle') }}</strong>
+          <ul>@for (warning of warnings(); track $index) { <li>{{ warning }}</li> }</ul>
+        </div>
+      </div>
+    }
     <div class="counters">
       <div class="counter"><span>{{ r.productsCreated ?? 0 }}</span>{{ t('import.counters.productsCreated') }}</div>
       <div class="counter"><span>{{ r.productsExisting ?? 0 }}</span>{{ t('import.counters.productsExisting') }}</div>
@@ -56,6 +96,15 @@
     @if (hasRecipes() && step() !== 'done') {
       <div class="notice"><i class="ti ti-info-circle"></i><span>{{ t('import.replaceWarning') }}</span></div>
     }
+    @if (proposed().length && step() !== 'done') {
+      <p class="step-title" style="margin-top:14px;">{{ t('import.ai.proposedTitle', { count: proposed().length }) }}</p>
+      <p class="hint">{{ t('import.ai.proposedHint') }}</p>
+      <div class="proposed-list">
+        @for (p of proposed(); track $index) {
+          <div class="proposed-item"><span class="ellipsis">{{ p.name }}</span><span class="proposed-unit">{{ p.unit }}</span></div>
+        }
+      </div>
+    }
   }
 
   @if (errors().length) {
@@ -65,7 +114,7 @@
       @for (error of shownErrors(); track $index) {
         <div class="error-card">
           <div class="error-head">
-            <span class="badge badge-red">{{ t('import.sheets.' + error.sheet) }} · {{ t('import.row', { row: error.row ?? '' }) }}</span>
+            <span class="badge badge-red error-place">{{ errorPlace(error) }}</span>
             @if (columnLabel(error); as column) { <span class="error-column ellipsis">{{ column }}</span> }
           </div>
           <p class="error-message">{{ errorMessage(error) }}</p>
@@ -80,7 +129,7 @@
     @if (step() === 'done') {
       <button type="button" (click)="close()" class="btn-primary btn-sm">{{ t('common.close') }}</button>
     } @else {
-      <button type="button" (click)="close()" class="btn-secondary btn-sm" [disabled]="step() === 'saving'">{{ t('common.cancel') }}</button>
+      <button type="button" (click)="close()" class="btn-secondary btn-sm" [disabled]="busy()">{{ t('common.cancel') }}</button>
       <button type="button" (click)="confirm()" class="btn-primary btn-sm"
               [disabled]="step() !== 'preview' || !result() || errors().length > 0">
         @if (step() === 'saving') { <i class="ti ti-loader-2 spin"></i> }

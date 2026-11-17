@@ -105,7 +105,9 @@
     "SUBSCRIPTION_CHANGE_NOT_FOUND": "No hay un cambio de plan programado.",
     "SUBSCRIPTION_CHANGE_IN_PROGRESS": "Tu cambio de plan ya se está aplicando: no se puede cancelar ni reemplazar.",
     "SUBSCRIPTION_NOT_ACTIVE": "No tenés una suscripción activa: para elegir un plan, suscribite.",
-    "INVALID_IVA_PERCENTAGE": "La alícuota de IVA no es válida. Las posibles son 0; 2,5; 5; 10,5; 21 y 27 %."
+    "INVALID_IVA_PERCENTAGE": "La alícuota de IVA no es válida. Las posibles son 0; 2,5; 5; 10,5; 21 y 27 %.",
+    "AI_SPREADSHEET_TOO_LARGE": "El Excel es demasiado grande para que la IA lo lea de una vez. Dividilo en varios archivos más chicos.",
+    "AI_INTERPRETATION_FAILED": "La IA no pudo interpretar el archivo en este momento. Probá de nuevo en un rato o usá la plantilla."
   },
   "ai": {
     "title": "Entrada rápida",
@@ -556,7 +558,24 @@
       "exampleRecipe1": "Papas fritas | 6.500 | Guarniciones | Papa | 300 | g",
       "exampleRecipe2": "Papas fritas | | | Aceite de girasol | 50 | ml"
     },
-    "unreadableNumber": "No es un número. Escribilo como 1.234,5 o 1,5."
+    "unreadableNumber": "No es un número. Escribilo como 1.234,5 o 1,5.",
+    "ai": {
+      "otherFormat": "¿Tu Excel tiene otro formato?",
+      "offer": "Si no es nuestra plantilla, la IA puede leer tu Excel y armar los insumos y las recetas. Después revisás todo antes de guardar.",
+      "interpret": "Interpretar con IA",
+      "upsell": "Con Starter, la IA entiende tu propio Excel.",
+      "seePlans": "Ver planes",
+      "noPermission": "Tu usuario no tiene permiso para usar la IA. Usá la plantilla o pedile el permiso a quien administra la cuenta.",
+      "interpreting": "Interpretando tu Excel con IA… Puede tardar hasta medio minuto: no cierres el panel.",
+      "review": "Lo armó la IA a partir de tu Excel. Revisá la vista previa antes de confirmar.",
+      "warningsTitle": "La IA avisa:",
+      "tooManyRows": "Tu Excel tiene más de {max} filas con datos. Dividilo en varios archivos.",
+      "nothingFound": "La IA no encontró insumos ni recetas en el archivo.",
+      "error": "No pudimos interpretar el archivo. Probá de nuevo.",
+      "tooManySheets": "Tu Excel tiene más de {max} hojas con datos. Dejá solo las de insumos y recetas.",
+      "proposedTitle": "Insumos propuestos por la IA ({count})",
+      "proposedHint": "Tus recetas los usan y no están en tu catálogo ni en el Excel: se crean al confirmar. Si alguno ya existe con otro nombre, corregí la receta en tu Excel y volvé a elegirlo."
+    }
   },
   "restaurants": {
     "title": "Restaurantes",

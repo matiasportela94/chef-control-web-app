@@ -105,7 +105,9 @@
     "SUBSCRIPTION_CHANGE_NOT_FOUND": "There is no scheduled plan change.",
     "SUBSCRIPTION_CHANGE_IN_PROGRESS": "Your plan change is already being applied: it can't be cancelled or replaced.",
     "SUBSCRIPTION_NOT_ACTIVE": "You don't have an active subscription: subscribe to choose a plan.",
-    "INVALID_IVA_PERCENTAGE": "Invalid VAT rate. Valid rates are 0, 2.5, 5, 10.5, 21 and 27%."
+    "INVALID_IVA_PERCENTAGE": "Invalid VAT rate. Valid rates are 0, 2.5, 5, 10.5, 21 and 27%.",
+    "AI_SPREADSHEET_TOO_LARGE": "The Excel is too large for the AI to read at once. Split it into smaller files.",
+    "AI_INTERPRETATION_FAILED": "The AI couldn't interpret the file right now. Try again later or use the template."
   },
   "ai": {
     "title": "Quick entry",
@@ -556,7 +558,24 @@
       "exampleRecipe1": "French fries | 6.500 | Sides | Potato | 300 | g",
       "exampleRecipe2": "French fries | | | Sunflower oil | 50 | ml"
     },
-    "unreadableNumber": "Not a number. Write it like 1.234,5 or 1,5."
+    "unreadableNumber": "Not a number. Write it like 1.234,5 or 1,5.",
+    "ai": {
+      "otherFormat": "Does your Excel have a different format?",
+      "offer": "If it isn't our template, the AI can read your Excel and build the products and recipes. You review everything before saving.",
+      "interpret": "Interpret with AI",
+      "upsell": "With Starter, the AI understands your own Excel.",
+      "seePlans": "See plans",
+      "noPermission": "Your user isn't allowed to use the AI. Use the template or ask your account admin for the permission.",
+      "interpreting": "Interpreting your Excel with AI… It can take up to half a minute: don't close the panel.",
+      "review": "The AI built this from your Excel. Review the preview before confirming.",
+      "warningsTitle": "The AI notes:",
+      "tooManyRows": "Your Excel has more than {max} rows with data. Split it into several files.",
+      "nothingFound": "The AI didn't find products or recipes in the file.",
+      "error": "We couldn't interpret the file. Please try again.",
+      "tooManySheets": "Your Excel has more than {max} sheets with data. Keep only the products and recipes ones.",
+      "proposedTitle": "Products proposed by the AI ({count})",
+      "proposedHint": "Your recipes use them and they're not in your catalog or the Excel: they're created when you confirm. If one already exists under another name, fix the recipe in your Excel and choose it again."
+    }
   },
   "restaurants": {
     "title": "Restaurants",

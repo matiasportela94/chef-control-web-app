@@ -1,4 +1,4 @@
-import { ImportLabels, normalizeHeader, parseArNumber, parseCatalogWorkbook } from './catalog-import-parse';
+import { ImportLabels, buildInterpretSheets, normalizeHeader, parseArNumber, parseCatalogWorkbook } from './catalog-import-parse';
 
 const labels: ImportLabels = {
   sheets: { PRODUCTS: 'Insumos', RECIPES: 'Recetas' },
@@ -111,5 +111,22 @@ describe('parseCatalogWorkbook', () => {
     const rows = Array.from({ length: 1001 }, (_, i) => [`P${i}`, 'kg']);
     const parsed = parseCatalogWorkbook([{ sheet: 'Insumos', data: [['Nombre', 'Unidad'], ...rows] }], labels, true);
     expect(parsed.problems).toEqual([{ key: 'import.tooManyRows', params: { sheet: 'Insumos', max: 1000 } }]);
+  });
+});
+
+describe('buildInterpretSheets', () => {
+  it('numera las filas con datos en todas las hojas y recuerda de dónde salió cada una', () => {
+    const { sheets, refs, rowCount } = buildInterpretSheets([
+      { sheet: 'Stock', data: [['Producto', 'Precio'], [null, null], ['Papa', 1200.5, null, null]] },
+      { sheet: 'Vacía', data: [[null], ['  ']] },
+      { sheet: 'Platos', data: [[null], ['Puré', '1.500', true]] },
+    ]);
+    expect(rowCount).toBe(3);
+    expect(sheets).toEqual([
+      { name: 'Stock', rows: [{ ref: 1, cells: ['Producto', 'Precio'] }, { ref: 2, cells: ['Papa', 1200.5] }] },
+      { name: 'Platos', rows: [{ ref: 3, cells: ['Puré', '1.500', 'true'] }] },
+    ]);
+    expect(refs.get(2)).toEqual({ sheet: 'Stock', row: 3 });
+    expect(refs.get(3)).toEqual({ sheet: 'Platos', row: 2 });
   });
 });

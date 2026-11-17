@@ -1,7 +1,10 @@
 import { Component, EventEmitter, Input, Output, computed, signal } from '@angular/core';
+import { RouterLink } from '@angular/router';
 import { Api } from '../../../api/api';
 import { listUnits } from '../../../api/fn/unit-controller/list-units';
 import { importCatalog } from '../../../api/fn/catalog-import-controller/import-catalog';
+import { interpretCatalogSpreadsheet } from '../../../api/fn/ai-controller/interpret-catalog-spreadsheet';
+import { InterpretCatalogResult } from '../../../api/models/interpret-catalog-result';
 import { CatalogImportResult } from '../../../api/models/catalog-import-result';
 import { ImportRowError } from '../../../api/models/import-row-error';
 import { ProductImportRow } from '../../../api/models/product-import-row';
@@ -14,7 +17,8 @@ import { getErrorMessage } from '../../../core/utils/error-messages';
 import { parseBlob } from '../../../core/utils/parse-blob';
 import { DrawerComponent } from '../drawer/drawer.component';
 import {
-  ImportLabels, PRODUCT_FIELDS, RECIPE_FIELDS, REQUIRED_FIELDS, UNREADABLE_NUMBER, parseCatalogWorkbook
+  ImportLabels, MAX_INTERPRET_ROWS, MAX_INTERPRET_SHEETS, PRODUCT_FIELDS, RECIPE_FIELDS, REQUIRED_FIELDS, RowRef, UNREADABLE_NUMBER,
+  buildInterpretSheets, parseCatalogWorkbook
 } from './catalog-import-parse';
 
 /** Más que esto no se dibuja: con 500 errores la lista no se lee igual, y el primero ya dice qué corregir. */
@@ -24,11 +28,14 @@ const MAX_ERRORS_SHOWN = 50;
  * "Importar desde Excel": insumos y recetas desde la plantilla. El .xlsx se lee en el navegador y viaja como
  * JSON; primero en prueba (dryRun) para mostrar qué va a pasar, y recién al confirmar se guarda.
  * Las librerías de Excel se cargan al usarlas, no con la pantalla.
+ *
+ * Si el archivo no es la plantilla, la IA puede interpretarlo: devuelve las mismas filas que arma la plantilla
+ * y de ahí sigue el camino de siempre (dryRun, vista previa, confirmar).
  */
 @Component({
   selector: 'app-catalog-import',
   standalone: true,
-  imports: [DrawerComponent],
+  imports: [DrawerComponent, RouterLink],
   templateUrl: './catalog-import.component.html',
   styleUrl: './catalog-import.component.scss'
 })
@@ -38,7 +45,7 @@ export class CatalogImportComponent {
   /** Se guardó algo: la pantalla que lo abrió refresca su lista. */
   @Output() imported = new EventEmitter<void>();
 
-  step = signal<'pick' | 'checking' | 'preview' | 'saving' | 'done'>('pick');
+  step = signal<'pick' | 'checking' | 'interpreting' | 'preview' | 'saving' | 'done'>('pick');
   fileName = signal<string | null>(null);
   problems = signal<string[]>([]);
   requestError = signal<string | null>(null);
@@ -46,6 +53,25 @@ export class CatalogImportComponent {
   errors = signal<ImportRowError[]>([]);
   templateLoading = signal(false);
   hasRecipes = signal(false);
+  /** Ofrecer la IA: el archivo no es la plantilla, o el usuario dijo que su Excel tiene otro formato. */
+  aiOffer = signal(false);
+  warnings = signal<string[]>([]);
+  /**
+   * Insumos que la IA propone porque una receta los usa y no están ni en el catálogo ni en el Excel (un Excel
+   * con solo recetas). Se muestran aparte y se suman a los insumos recién para el dryRun y la confirmación.
+   */
+  proposed = signal<ProductImportRow[]>([]);
+  /** Con IA, el `row` de cada fila es un ref nuestro: acá está a qué hoja y fila del cliente corresponde. */
+  aiRefs = signal<Map<number, RowRef> | null>(null);
+
+  readonly aiBlockedBy = computed<'plan' | 'permission' | null>(() => {
+    if (!this.auth.hasFeature('AI_INTERPRETER')) return 'plan';
+    if (!this.auth.hasPermission('AI_USE')) return 'permission';
+    return null;
+  });
+  /** `/plan` pide ACCOUNT_VIEW: sin eso el link rebotaría. */
+  get canSeePlans(): boolean { return this.auth.hasPermission('ACCOUNT_VIEW'); }
+  readonly busy = computed(() => ['checking', 'interpreting', 'saving'].includes(this.step()));
 
   /** Las recetas piden el plan y crear/editar platos; sin eso el back las rechaza entera (403): no se mandan. */
   readonly recipesBlockedBy = computed<'plan' | 'permission' | null>(() => {
@@ -58,6 +84,7 @@ export class CatalogImportComponent {
   readonly hiddenErrors = computed(() => Math.max(0, this.errors().length - MAX_ERRORS_SHOWN));
 
   private payload: { products: ProductImportRow[]; recipes: RecipeImportRow[] } | null = null;
+  private sheetsRead: { sheet: string; data: any[][] }[] | null = null;
 
   constructor(private api: Api, private auth: AuthService, private i18n: I18nService) {}
 
@@ -72,7 +99,7 @@ export class CatalogImportComponent {
   }
 
   close(): void {
-    if (this.step() === 'saving') return;
+    if (this.busy()) return;
     this.reset();
     this.closed.emit();
   }
@@ -84,7 +111,12 @@ export class CatalogImportComponent {
     this.requestError.set(null);
     this.result.set(null);
     this.errors.set([]);
+    this.warnings.set([]);
+    this.proposed.set([]);
+    this.aiOffer.set(false);
+    this.aiRefs.set(null);
     this.payload = null;
+    this.sheetsRead = null;
   }
 
   async downloadTemplate(): Promise<void> {
@@ -143,7 +175,8 @@ export class CatalogImportComponent {
     let parsed;
     try {
       const { default: readXlsxFile } = await import('read-excel-file/browser');
-      parsed = parseCatalogWorkbook(await readXlsxFile(file) as any, this.labels, this.recipesEnabled());
+      this.sheetsRead = await readXlsxFile(file) as any;
+      parsed = parseCatalogWorkbook(this.sheetsRead!, this.labels, this.recipesEnabled());
     } catch {
       this.requestError.set(this.t('import.readError'));
       this.step.set('pick');
@@ -151,6 +184,8 @@ export class CatalogImportComponent {
     }
     if (parsed.problems.length) {
       this.problems.set(parsed.problems.map(p => this.t(p.key, p.params)));
+      // No se reconocen las hojas o columnas de la plantilla: puede ser el Excel propio del cliente.
+      this.aiOffer.set(parsed.problems.some(p => p.key === 'import.noSheets' || p.key === 'import.missingColumns'));
       this.step.set('pick');
       return;
     }
@@ -163,6 +198,59 @@ export class CatalogImportComponent {
     }
 
     this.payload = { products: parsed.products, recipes: parsed.recipes };
+    await this.check();
+  }
+
+  /** La IA arma las filas a partir del Excel del cliente; después es el import de siempre. */
+  async interpretWithAi(): Promise<void> {
+    if (!this.sheetsRead || this.busy() || this.aiBlockedBy()) return;
+    const request = buildInterpretSheets(this.sheetsRead);
+    this.problems.set([]);
+    this.requestError.set(null);
+    this.errors.set([]);
+    this.result.set(null);
+    if (!request.rowCount) {
+      this.problems.set([this.t('import.empty')]);
+      return;
+    }
+    if (request.rowCount > MAX_INTERPRET_ROWS) {
+      this.problems.set([this.t('import.ai.tooManyRows', { max: MAX_INTERPRET_ROWS })]);
+      return;
+    }
+    if (request.sheets.length > MAX_INTERPRET_SHEETS) {
+      this.problems.set([this.t('import.ai.tooManySheets', { max: MAX_INTERPRET_SHEETS })]);
+      return;
+    }
+    this.step.set('interpreting');
+    let interpretation: InterpretCatalogResult;
+    try {
+      // El spec tipa las celdas como {} y no admite null; el back sí (una celda vacía en el medio de la fila).
+      interpretation = await parseBlob<InterpretCatalogResult>(
+        await this.api.invoke(interpretCatalogSpreadsheet, { body: { sheets: request.sheets as any } }) as unknown);
+    } catch (e) {
+      this.requestError.set(extractApiError(e, this.t('import.ai.error')));
+      this.step.set('pick');
+      return;
+    }
+    this.aiRefs.set(request.refs);
+    this.aiOffer.set(false);
+    this.warnings.set(interpretation.warnings ?? []);
+    const recipes = this.recipesEnabled() ? interpretation.recipes ?? [] : [];
+    // Sin recetas no hay a quién le hagan falta: no se proponen.
+    const proposed = recipes.length ? interpretation.proposedProducts ?? [] : [];
+    this.proposed.set(proposed);
+    this.payload = { products: [...(interpretation.products ?? []), ...proposed], recipes };
+    this.hasRecipes.set(recipes.length > 0);
+    if (!this.payload.products.length && !recipes.length) {
+      this.problems.set([this.t('import.ai.nothingFound')]);
+      this.step.set('pick');
+      return;
+    }
+    await this.check();
+  }
+
+  private async check(): Promise<void> {
+    this.step.set('checking');
     try {
       const res = await this.send(true);
       this.result.set(res);
@@ -211,5 +299,12 @@ export class CatalogImportComponent {
 
   columnLabel(error: ImportRowError): string | null {
     return error.field ? this.t(`import.columns.${error.field}`) : null;
+  }
+
+  /** "Insumos · fila 12", o con IA, la hoja y la fila del Excel del cliente. */
+  errorPlace(error: ImportRowError): string {
+    const ref = error.row != null ? this.aiRefs()?.get(error.row) : undefined;
+    if (ref) return `${ref.sheet} · ${this.t('import.row', { row: ref.row })}`;
+    return `${this.t('import.sheets.' + error.sheet)} · ${this.t('import.row', { row: error.row ?? '' })}`;
   }
 }

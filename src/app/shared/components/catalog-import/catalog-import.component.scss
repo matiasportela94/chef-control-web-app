@@ -37,3 +37,25 @@
 .spin { display: inline-block; animation: spin 1s linear infinite; }
 @keyframes spin { to { transform: rotate(360deg); } }
 @media (prefers-reduced-motion: reduce) { .spin { animation: none; } }
+
+.link-btn {
+  display: block; margin-top: 10px; padding: 0; background: none; border: 0; cursor: pointer;
+  font-family: inherit; font-size: 12px; font-weight: 600; color: var(--accent); text-decoration: underline;
+}
+.inline-link { color: var(--accent); font-weight: 600; text-decoration: underline; }
+.ai-offer { margin-bottom: 14px; padding: 12px; border: 1px dashed var(--accent); border-radius: 12px; }
+.notice-warn { border-color: var(--accent); }
+.warnings {
+  min-width: 0;
+  ul { margin: 4px 0 0 16px; list-style: disc; }
+  li { margin-top: 2px; }
+}
+// El nombre de una hoja del cliente puede ser largo: no empuja la columna fuera de la card.
+.error-place { min-width: 0; max-width: 70%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; display: inline-block; }
+
+.proposed-list { display: flex; flex-direction: column; gap: 6px; margin-bottom: 12px; }
+.proposed-item {
+  display: flex; align-items: center; justify-content: space-between; gap: 10px; min-width: 0;
+  font-size: 12px; color: var(--text-1); border: 1px solid var(--border); border-radius: 10px; padding: 8px 12px;
+}
+.proposed-unit { flex-shrink: 0; font-size: 11px; color: var(--text-3); }
