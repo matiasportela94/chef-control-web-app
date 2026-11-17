@@ -1,7 +1,86 @@
+// ---- plan sin la IA
+.plan-gate {
+  padding: 28px 8px; text-align: center;
+  > i { font-size: 28px; color: var(--accent); }
+}
+.plan-gate-title { font-size: 15px; font-weight: 600; color: var(--text-1); margin-top: 8px; }
+.plan-gate-text { font-size: 13px; color: var(--text-3); margin: 6px auto 16px; max-width: 420px; }
+
+// ---- sin mensajes todavía
+.empty { display: flex; flex-direction: column; gap: 6px; }
+.empty-hint { font-size: 13px; line-height: 1.5; color: var(--text-2); margin-bottom: 10px; }
+.section-label { font-size: 10px; font-weight: 600; color: var(--text-3); text-transform: uppercase; letter-spacing: .06em; margin-bottom: 2px; }
+.example {
+  width: 100%; display: flex; align-items: center; gap: 10px; padding: 10px 12px; min-height: 44px;
+  background: var(--bg-input); border: 1.5px solid var(--border); border-radius: 10px;
+  cursor: pointer; text-align: left; color: inherit; transition: border-color .15s;
+  &:hover { border-color: var(--accent); }
+  > i:first-child { color: var(--accent); font-size: 15px; flex-shrink: 0; }
+  span { font-size: 12px; color: var(--text-2); min-width: 0; }
+}
+.example-chevron { margin-left: auto; font-size: 12px; color: var(--text-3); }
+
+// ---- historial: el mensaje a la derecha, cómo quedó debajo
+.chat { display: flex; flex-direction: column; gap: 8px; }
+.msg-user {
+  align-self: flex-end; max-width: 85%; margin-top: 6px;
+  padding: 9px 12px; border-radius: 14px 14px 4px 14px;
+  background: color-mix(in srgb, var(--accent) 16%, var(--bg-card)); color: var(--text-1);
+  font-size: 13px; line-height: 1.45; white-space: pre-wrap; overflow-wrap: anywhere;
+}
+.msg-reply {
+  align-self: stretch; display: flex; flex-direction: column; gap: 8px; min-width: 0;
+  padding: 12px; border-radius: 4px 14px 14px 14px;
+  background: var(--bg-input); border: 1.5px solid var(--border);
+}
+.reply-text {
+  display: flex; align-items: flex-start; gap: 8px;
+  font-size: 13px; line-height: 1.5; color: var(--text-1); white-space: pre-wrap; overflow-wrap: anywhere;
+  > i { flex-shrink: 0; font-size: 16px; margin-top: 1px; color: var(--text-3); }
+  > span { min-width: 0; }
+  &.status-REGISTERED > i { color: #16a34a; }
+  &.status-NEEDS_CONFIRMATION > i { color: #d97706; }
+}
+.reply-list { display: flex; flex-direction: column; gap: 6px; list-style: none; margin: 0; padding: 0; }
+// Lo registrado: una fila por entidad, cada una con su "Deshacer"
+.action {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px;
+  padding: 8px 10px; border-radius: 10px; background: var(--bg-card); border: 1px solid var(--border);
+  &.undone .action-summary { text-decoration: line-through; color: var(--text-3); }
+}
+.action-summary { flex: 1 1 160px; min-width: 0; font-size: 12px; line-height: 1.45; color: var(--text-2); overflow-wrap: anywhere; }
+.action-undo { flex-shrink: 0; min-height: 32px; }
+.action-error { flex-basis: 100%; }
+// Lo que se va a registrar si se confirma
+.proposal {
+  display: flex; flex-direction: column; gap: 2px;
+  padding: 8px 10px; border-radius: 10px; background: var(--bg-card); border: 1px dashed var(--border-strong);
+}
+.proposal-item { font-size: 12px; line-height: 1.45; color: var(--text-2); overflow-wrap: anywhere; }
+.reply-skip { color: #b45309; strong { font-weight: 600; } }
+:host-context([data-theme="dark"]) .reply-skip { color: #fbbf24; }
+.reply-line {
+  display: flex; align-items: flex-start; gap: 6px; font-size: 12px; line-height: 1.45; overflow-wrap: anywhere;
+  i { flex-shrink: 0; margin-top: 2px; font-size: 14px; }
+}
+.reply-error { color: var(--red); }
+.reply-muted { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--text-3); }
+.reply-actions { display: flex; flex-wrap: wrap; gap: 6px; }
+
+// ---- caja para escribir
+.composer {
+  padding: 12px 16px calc(12px + env(safe-area-inset-bottom)); border-top: 1px solid var(--border); background: var(--bg-card);
+  display: flex; flex-direction: column; gap: 10px;
+}
+// Crece con el texto donde el navegador lo sabe hacer (Chrome); en Safari queda en 2 líneas con scroll.
+.composer-box { min-height: 64px; max-height: 30vh; field-sizing: content; resize: none; }
+.composer-row { display: flex; align-items: center; gap: 12px; }
+.composer-send { margin-left: auto; flex-shrink: 0; padding: 12px 16px; }
+.composer-close { flex: 1; justify-content: center; }
+
 // Dictado. El botón es grande a propósito: lo toca un cocinero con las manos ocupadas o sucias.
-.voice { display: flex; flex-direction: column; align-items: center; gap: 10px; padding: 6px 0 2px; }
 .voice-btn {
-  width: 76px; height: 76px; border-radius: 50%; border: none; cursor: pointer;
+  width: 76px; height: 76px; flex-shrink: 0; border-radius: 50%; border: none; cursor: pointer;
   display: flex; align-items: center; justify-content: center;
   background: var(--accent); color: #fff; font-size: 34px;
   box-shadow: 0 6px 20px color-mix(in srgb, var(--accent) 35%, transparent);
@@ -15,7 +94,7 @@
   100% { box-shadow: 0 0 0 18px transparent; }
 }
 @media (prefers-reduced-motion: reduce) { .voice-btn.recording { animation: none; } }
-.voice-label { font-size: 13px; color: var(--text-2); text-align: center; }
+.voice-label { flex: 1; min-width: 0; font-size: 12px; line-height: 1.4; color: var(--text-2); }
 .voice-time { font-weight: 700; color: var(--red); font-variant-numeric: tabular-nums; margin-right: 4px; }
 .voice-error {
   display: flex; align-items: flex-start; gap: 6px; font-size: 12px; line-height: 1.45; color: var(--red);

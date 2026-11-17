@@ -1,45 +1,80 @@
-import { Component, EventEmitter, Input, OnDestroy, Output, signal } from '@angular/core';
+import { Component, ElementRef, EventEmitter, Injector, Input, OnDestroy, Output, ViewChild, afterNextRender, computed, signal } from '@angular/core';
+import { DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { Api } from '../../../api/api';
-import { interpret as interpretText } from '../../../api/fn/ai-controller/interpret';
-import { execute as executeIntent } from '../../../api/fn/ai-controller/execute';
 import { transcribeAudio } from '../../../api/fn/ai-controller/transcribe-audio';
 import { TranscriptionResponse } from '../../../api/models/transcription-response';
-import { InterpretResponse as InterpretTextResponse } from '../../../api/models/interpret-response';
-import { ExecuteResponse as ExecuteIntentResponse } from '../../../api/models/execute-response';
+import { ChatActionResponse, ChatOperationItem, ChatResponse, ChatSkip, confirmChatOperations, sendChatMessage, undoChatAction } from './ai-chat-api';
 import { parseBlob } from '../../../core/utils/parse-blob';
 import { extractApiError } from '../../../core/utils/api-error';
+import { getErrorMessage } from '../../../core/utils/error-messages';
+import { formatARS, formatNum } from '../../../core/utils/format';
 import { AiRefreshService } from '../../../core/services/ai-refresh.service';
 import { AuthService } from '../../../core/services/auth.service';
 import { I18nService } from '../../../core/services/i18n.service';
 import { DrawerComponent } from '../drawer/drawer.component';
 
-const EXECUTABLE_INTENTS = new Set(['purchase', 'waste', 'sale', 'stock_adjustment']);
 /** Se corta solo a los 2 min. A 64 kbps son ~1 MB, lejos del tope del back (4 MB, AI_AUDIO_TOO_LARGE). */
 const MAX_RECORDING_SECONDS = 120;
 const AUDIO_BITS_PER_SECOND = 64000;
 /** Chrome y Android graban webm; Safari de iOS, mp4. El primero que soporte el navegador. */
 const AUDIO_TYPES = ['audio/webm;codecs=opus', 'audio/webm', 'audio/mp4'];
 
+/** Pasado el plazo, o si la cargó otro, deshacer pide el permiso de borrar de su pantalla. */
+const UNDO_PERMISSION: Record<string, string> = {
+  PURCHASE: 'PURCHASES_DELETE', WASTE: 'STOCK_DELETE', STOCK_ADJUSTMENT: 'STOCK_DELETE',
+  SALE: 'SALES_DELETE', PRODUCTION: 'PRODUCTIONS_DELETE',
+};
+
+const STATUS_ICON: Record<string, string> = {
+  REGISTERED: 'ti-circle-check', NEEDS_CONFIRMATION: 'ti-help-circle', NOT_REGISTERED: 'ti-circle-x',
+  NOT_SUPPORTED: 'ti-info-circle', NOT_UNDERSTOOD: 'ti-question-mark',
+};
+
+/** `deadline`: hasta cuándo se deshace sin permiso, en el reloj de este navegador (ver `track`). */
+interface ChatAction extends ChatActionResponse {
+  deadline: number;
+  undoing?: boolean;
+  undoError?: string;
+  /** El back dijo que no (CHAT_UNDO_NOT_ALLOWED): reintentar no sirve, aunque la sesión diga que hay permiso. */
+  undoBlocked?: boolean;
+}
+
+/** Un mensaje del usuario y cómo quedó. Cada uno se entiende solo: la IA no ve los anteriores. */
+interface ChatTurn {
+  id: number;
+  text: string;
+  status: 'pending' | 'done' | 'error';
+  error?: string;
+  response?: ChatResponse;
+  actions?: ChatAction[];
+  confirming?: boolean;
+  confirmError?: string;
+  cancelled?: boolean;
+}
+
 @Component({
   selector: 'app-ai-input',
   standalone: true,
-  imports: [FormsModule, DrawerComponent, RouterLink],
+  imports: [FormsModule, DrawerComponent, RouterLink, DatePipe],
   templateUrl: './ai-input.component.html',
   styleUrl: './ai-input.component.scss',
 })
 export class AiInputComponent implements OnDestroy {
   @Input() isOpen = false;
   @Output() closed = new EventEmitter<void>();
+  @ViewChild('box') private box?: ElementRef<HTMLTextAreaElement>;
+  @ViewChild('end') private end?: ElementRef<HTMLElement>;
 
-  message        = '';
-  clarification  = '';
-  loading        = signal(false);
-  confirming     = signal(false);
-  error          = signal<string | null>(null);
-  result         = signal<InterpretTextResponse | null>(null);
-  executeResult  = signal<ExecuteIntentResponse | null>(null);
+  message = '';
+  /** El historial vive mientras viva el shell: salir a /login (logout o cambio de local) lo descarta. */
+  turns   = signal<ChatTurn[]>([]);
+  sending = computed(() => this.turns().some(t => t.status === 'pending'));
+  private nextId = 0;
+  /** Mueve los botones de deshacer cuando vence su plazo. */
+  now = signal(Date.now());
+  private timers: ReturnType<typeof setTimeout>[] = [];
 
   // ---- dictado: tocar para grabar, tocar para cortar (manos ocupadas: nada de mantener apretado)
   recording    = signal(false);
@@ -54,20 +89,21 @@ export class AiInputComponent implements OnDestroy {
   /** Cerrar el drawer descarta lo que se esté grabando o transcribiendo. */
   private voiceRun = 0;
 
-  readonly shortcuts = [
-    { icon: 'ti-shopping-cart',   label: 'Registrar compra de insumo', prompt: 'Compramos 5kg de pollo a $8000 al proveedor El Campo' },
-    { icon: 'ti-chart-bar',       label: 'Registrar ventas del día',    prompt: 'Vendimos 3 Caesar Tradicional y 2 American Burger' },
-    { icon: 'ti-trash',           label: 'Cargar merma o pérdida',      prompt: 'Se rompieron 2 botellas de aceite de oliva 500ml' },
-    { icon: 'ti-clipboard-check', label: 'Actualizar stock / conteo',   prompt: 'Hicimos conteo: tenemos 12kg de papa, 8kg de pollo' },
+  readonly examples = [
+    { icon: 'ti-shopping-cart',   key: 'purchase' },
+    { icon: 'ti-chart-bar',       key: 'sales' },
+    { icon: 'ti-trash',           key: 'waste' },
+    { icon: 'ti-clipboard-check', key: 'stockCount' },
   ] as const;
 
-  constructor(private api: Api, private aiRefresh: AiRefreshService, private auth: AuthService, private i18n: I18nService) {}
+  constructor(private api: Api, private aiRefresh: AiRefreshService, private auth: AuthService,
+              private i18n: I18nService, private injector: Injector) {}
 
   t(key: string, params?: Record<string, string | number>): string {
     return this.i18n.t(key, params);
   }
 
-  /** Plan sin la IA (plan gratis): en lugar del formulario, el aviso de plan, como /food-cost. */
+  /** Plan sin la IA (plan gratis): en lugar del chat, el aviso de plan, como /food-cost. */
   get planLocked(): boolean {
     return !this.auth.hasFeature('AI_INTERPRETER');
   }
@@ -85,7 +121,156 @@ export class AiInputComponent implements OnDestroy {
 
   ngOnDestroy(): void {
     this.stopRecording(true);
+    this.timers.forEach(clearTimeout);
   }
+
+  // ---------------------------------------------------------------- chat
+
+  /** Enter manda; Shift+Enter es una línea nueva. Con un IME a mitad de una palabra, Enter es del IME. */
+  onKeydown(e: KeyboardEvent): void {
+    if (e.key === 'Enter' && !e.shiftKey && !e.isComposing) { e.preventDefault(); void this.send(); }
+  }
+
+  canSend(): boolean {
+    return !!this.message.trim() && !this.sending() && !this.recording() && !this.transcribing();
+  }
+
+  async send(): Promise<void> {
+    if (!this.canSend()) return;
+    const turn: ChatTurn = { id: this.nextId++, text: this.message.trim(), status: 'pending' };
+    this.message = '';
+    this.voiceError.set(null);
+    this.turns.update(ts => [...ts, turn]);
+    await this.run(turn);
+  }
+
+  retry(turn: ChatTurn): void {
+    if (this.sending()) return;
+    this.patch(turn.id, { status: 'pending', error: undefined });
+    void this.run(turn);
+  }
+
+  /** Vuelve a poner el texto en la caja para corregirlo y mandarlo de nuevo, completo. */
+  edit(turn: ChatTurn): void {
+    this.message = turn.text;
+    this.box?.nativeElement.focus();
+  }
+
+  private async run(turn: ChatTurn): Promise<void> {
+    this.scrollToEnd();
+    try {
+      const res = await parseBlob<ChatResponse>(await this.api.invoke(sendChatMessage, { body: { message: turn.text } }) as unknown);
+      this.receive(turn.id, res);
+      this.patch(turn.id, { status: 'done' });
+    } catch (e: any) {
+      // El texto de AI_INTERPRETATION_FAILED es el del import (habla del archivo y la plantilla).
+      const error = e?.error?.errorCode === 'AI_INTERPRETATION_FAILED' ? this.t('ai.failed') : extractApiError(e, this.t('ai.error'));
+      this.patch(turn.id, { status: 'error', error });
+    }
+    this.scrollToEnd();
+  }
+
+  /** La propuesta va tal cual: el back la revalida entera. Para cambiarla, "Corregir" y mandar el mensaje de nuevo. */
+  async confirm(turn: ChatTurn): Promise<void> {
+    const operations = turn.response?.proposal;
+    if (!operations?.length || turn.confirming) return;
+    this.patch(turn.id, { confirming: true, confirmError: undefined });
+    try {
+      this.receive(turn.id, await parseBlob<ChatResponse>(await this.api.invoke(confirmChatOperations, { body: { operations } }) as unknown));
+    } catch (e) {
+      this.patch(turn.id, { confirmError: extractApiError(e, this.t('ai.confirmError')) });
+    } finally {
+      this.patch(turn.id, { confirming: false });
+    }
+    this.scrollToEnd();
+  }
+
+  cancel(turn: ChatTurn): void {
+    this.patch(turn.id, { cancelled: true });
+  }
+
+  private receive(turnId: number, res: ChatResponse): void {
+    this.patch(turnId, { response: res, actions: (res.actions ?? []).map(a => this.track(a)) });
+    if (res.actions?.length) this.aiRefresh.notify();
+  }
+
+  /**
+   * El plazo se cuenta desde que llegó la respuesta (15 min = undoableUntil − createdAt), no con la hora del server:
+   * con el reloj del celular corrido, comparar contra undoableUntil apagaría el botón antes o después de tiempo.
+   * Al vencer, un timer mueve `now` y el botón se apaga solo.
+   */
+  private track(action: ChatActionResponse): ChatAction {
+    const window = Date.parse(action.undoableUntil ?? '') - Date.parse(action.createdAt ?? '');
+    const deadline = Number.isFinite(window) ? Date.now() + window : 0;
+    if (deadline > Date.now()) this.timers.push(setTimeout(() => this.now.set(Date.now()), deadline - Date.now() + 100));
+    return { ...action, deadline };
+  }
+
+  canUndo(a: ChatAction): boolean {
+    return !a.undoneAt && !a.undoBlocked && (this.now() < a.deadline || this.auth.hasPermission(UNDO_PERMISSION[a.type ?? ''] ?? ''));
+  }
+
+  async undo(turn: ChatTurn, a: ChatAction): Promise<void> {
+    const id = a.actionId;
+    if (!id || a.undoing) return;
+    this.patchAction(turn.id, id, { undoing: true, undoError: undefined });
+    try {
+      const res = await parseBlob<ChatActionResponse>(await this.api.invoke(undoChatAction, { actionId: id }) as unknown);
+      this.patchAction(turn.id, id, { undoneAt: res?.undoneAt ?? new Date().toISOString() });
+      this.aiRefresh.notify();
+    } catch (e: any) {
+      const code = e?.error?.errorCode;
+      if (code === 'CHAT_ACTION_ALREADY_UNDONE') {
+        this.patchAction(turn.id, id, { undoneAt: new Date().toISOString() });
+      } else {
+        this.patchAction(turn.id, id, { undoError: extractApiError(e, this.t('ai.undoError')), undoBlocked: code === 'CHAT_UNDO_NOT_ALLOWED' });
+      }
+    } finally {
+      this.patchAction(turn.id, id, { undoing: false });
+    }
+  }
+
+  private patch(id: number, changes: Partial<ChatTurn>): void {
+    this.turns.update(ts => ts.map(t => t.id === id ? { ...t, ...changes } : t));
+  }
+
+  private patchAction(turnId: number, actionId: string, changes: Partial<ChatAction>): void {
+    this.turns.update(ts => ts.map(t => t.id !== turnId ? t
+      : { ...t, actions: t.actions?.map(a => a.actionId === actionId ? { ...a, ...changes } : a) }));
+  }
+
+  /** Después de dibujar: con eventCoalescing la vista nueva recién está en el frame siguiente. */
+  private scrollToEnd(): void {
+    afterNextRender(() => this.end?.nativeElement.scrollIntoView({ block: 'end' }), { injector: this.injector });
+  }
+
+  statusIcon(status?: string): string {
+    return STATUS_ICON[status ?? ''] ?? 'ti-info-circle';
+  }
+
+  itemLine(type: string | undefined, it: ChatOperationItem): string {
+    const item = [formatNum(it.quantity), it.unitName, it.name].filter(Boolean).join(' ');
+    return type === 'PURCHASE' && it.pricePerUnit != null
+      ? this.t('ai.itemPrice', { item, price: formatARS(it.pricePerUnit), unit: it.unitName ?? '' })
+      : item;
+  }
+
+  skipMessage(s: ChatSkip): string {
+    return getErrorMessage(s.errorCode) ?? s.message ?? '';
+  }
+
+  fillExample(key: string): void {
+    this.message = this.t(`ai.examples.${key}`);
+    this.box?.nativeElement.focus();
+  }
+
+  close(): void {
+    this.stopRecording(true);
+    this.transcribing.set(false);
+    this.closed.emit();
+  }
+
+  // ---------------------------------------------------------------- dictado
 
   async toggleRecording(): Promise<void> {
     if (this.recording()) { this.stopRecording(false); return; }
@@ -127,7 +312,7 @@ export class AiInputComponent implements OnDestroy {
     if (this.recorder?.state === 'recording') this.recorder.stop();
   }
 
-  /** El texto va al mensaje para revisarlo: no se interpreta solo. Si ya había algo escrito, se suma al final. */
+  /** El texto va a la caja para revisarlo: no se manda solo. Si ya había algo escrito, se suma al final. */
   private async transcribe(audio: Blob, run: number): Promise<void> {
     if (!audio.size) { this.voiceError.set(this.t('ai.voice.nothingRecorded')); return; }
     this.transcribing.set(true);
@@ -149,121 +334,5 @@ export class AiInputComponent implements OnDestroy {
 
   clock(seconds: number): string {
     return `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, '0')}`;
-  }
-
-  fillShortcut(text: string): void {
-    this.message = text;
-  }
-
-  onKeydown(e: KeyboardEvent): void {
-    if (e.ctrlKey && e.key === 'Enter') void this.interpret();
-  }
-
-  onClarificationKeydown(e: KeyboardEvent): void {
-    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); void this.interpretWithClarification(); }
-  }
-
-  canExecute(): boolean {
-    const r = this.result();
-    return !!r && EXECUTABLE_INTENTS.has(r.intent ?? '') && !this.executeResult();
-  }
-
-  async interpret(): Promise<void> {
-    const msg = this.message.trim();
-    if (!msg || this.loading()) return;
-    this.loading.set(true);
-    this.error.set(null);
-    this.result.set(null);
-    this.executeResult.set(null);
-    this.clarification = '';
-    try {
-      const raw = await this.api.invoke(interpretText, { body: { message: msg } }) as unknown;
-      this.result.set(await parseBlob<InterpretTextResponse>(raw));
-    } catch (e) {
-      this.error.set(extractApiError(e, 'No se pudo interpretar el mensaje'));
-    } finally {
-      this.loading.set(false);
-    }
-  }
-
-  async interpretWithClarification(): Promise<void> {
-    const clarif = this.clarification.trim();
-    if (!clarif || this.loading()) return;
-    const aiQuestion = this.result()?.responseToUser ?? '';
-    const combined = `${this.message.trim()}\n\n[La IA preguntó: ${aiQuestion}]\nRespuesta del usuario: ${clarif}`;
-    this.message = combined;
-    this.clarification = '';
-    await this.interpret();
-  }
-
-  async confirm(): Promise<void> {
-    const r = this.result();
-    if (!r?.intent || this.confirming()) return;
-    this.confirming.set(true);
-    this.error.set(null);
-    try {
-      const raw = await this.api.invoke(executeIntent, {
-        body: { intent: r.intent, data: r.data as Record<string, object> ?? {} }
-      }) as unknown;
-      this.executeResult.set(await parseBlob<ExecuteIntentResponse>(raw));
-      this.aiRefresh.notify();
-    } catch (e) {
-      this.error.set(extractApiError(e, 'No se pudo registrar la operación'));
-    } finally {
-      this.confirming.set(false);
-    }
-  }
-
-  retry(): void {
-    this.result.set(null);
-    this.executeResult.set(null);
-    this.error.set(null);
-    this.clarification = '';
-  }
-
-  resetForNew(): void {
-    this.message = '';
-    this.voiceError.set(null);
-    this.retry();
-  }
-
-  close(): void {
-    this.stopRecording(true);
-    this.transcribing.set(false);
-    this.closed.emit();
-    this.resetForNew();
-  }
-
-  intentLabel(intent?: string): string {
-    const map: Record<string, string> = {
-      purchase:         'Compra',
-      waste:            'Merma',
-      sale:             'Venta',
-      stock_adjustment: 'Ajuste de stock',
-      query:            'Consulta',
-      multi:            'Múltiple',
-      unknown:          'Desconocido',
-    };
-    return intent ? (map[intent] ?? intent) : '—';
-  }
-
-  intentBadgeClass(intent?: string): string {
-    const map: Record<string, string> = {
-      purchase:         'bg-brand-500/20 text-brand-300',
-      waste:            'bg-warning-500/20 text-warning-300',
-      sale:             'bg-success-500/20 text-success-300',
-      stock_adjustment: 'bg-purple-500/20 text-purple-300',
-      query:            'bg-surface-600 text-surface-300',
-      multi:            'bg-brand-500/20 text-brand-300',
-      unknown:          'bg-danger-500/20 text-danger-300',
-    };
-    return intent ? (map[intent] ?? 'bg-surface-600 text-surface-300') : '';
-  }
-
-  confidenceBarClass(confidence?: number): string {
-    if (!confidence) return 'bg-danger-500';
-    if (confidence >= 80) return 'bg-success-500';
-    if (confidence >= 60) return 'bg-warning-500';
-    return 'bg-danger-500';
   }
 }

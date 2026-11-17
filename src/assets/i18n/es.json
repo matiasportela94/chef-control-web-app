@@ -127,14 +127,20 @@
     "PRODUCT_NOT_A_PREPARATION": "Ese insumo no es una preparación: cargale una receta de preparación en Insumos",
     "PRODUCTION_NOT_FOUND": "La producción no existe o fue borrada",
     "PRODUCTION_ALREADY_REVERSED": "Esa producción ya estaba revertida",
-    "IMPORT_PREPARATION_CYCLE": "La preparación se lleva a sí misma, directo o a través de otra preparación"
+    "IMPORT_PREPARATION_CYCLE": "La preparación se lleva a sí misma, directo o a través de otra preparación",
+    "CHAT_ACTION_NOT_FOUND": "No encontramos esa operación: puede que ya no exista.",
+    "CHAT_ACTION_ALREADY_UNDONE": "Esa operación ya estaba deshecha.",
+    "CHAT_UNDO_NOT_ALLOWED": "Ya no podés deshacerla: pasaron los 15 minutos o la cargó otra persona, y hace falta el permiso de borrar.",
+    "CHAT_PERMISSION_MISSING": "No tenés permiso para registrar esta operación.",
+    "CHAT_PRODUCT_NOT_IN_CATALOG": "No está en el catálogo. Cargalo primero o escribilo como figura en Insumos.",
+    "CHAT_MISSING_PRICE": "Falta el precio por unidad.",
+    "CHAT_INVALID_QUANTITY": "La cantidad no es válida.",
+    "CHAT_OPERATION_NOT_SUPPORTED": "Esto todavía no se puede registrar desde la Entrada rápida. Usá el formulario."
   },
   "ai": {
     "title": "Entrada rápida",
     "subtitle": "Describí una operación en lenguaje natural",
     "placeholder": "Ej: compramos 10kg de tomate a $5000 / se rompieron 3 botellas de aceite / vendimos 8 milanesas...",
-    "interpret": "Interpretar",
-    "confirm": "Confirmar y registrar",
     "shortcuts": {
       "purchase": "Registrar compra de insumo",
       "sales": "Registrar ventas del día",
@@ -143,8 +149,6 @@
     },
     "subtitleVoice": "Dictá o escribí una operación, como se la contarías a alguien",
     "messageLabel": "Tu mensaje",
-    "ctrlEnterHint": "Ctrl+Enter para interpretar",
-    "reviewHint": "Revisá el texto antes de interpretar. Ctrl+Enter para interpretar",
     "voice": {
       "start": "Empezar a grabar",
       "stop": "Terminar de grabar",
@@ -157,7 +161,35 @@
       "nothingRecorded": "No se grabó nada. Tocá el micrófono y hablá antes de cortar.",
       "nothingHeard": "No se entendió nada en el audio. Probá de nuevo, más cerca del micrófono.",
       "error": "No se pudo pasar el audio a texto. Probá de nuevo o escribilo."
-    }
+    },
+    "emptyHint": "Contá qué pasó, como se lo dirías a alguien. Cada mensaje se entiende solo: escribí la operación completa.",
+    "examplesTitle": "Ejemplos",
+    "examples": {
+      "purchase": "Compramos 5 kg de pollo a $8000 el kilo al proveedor El Campo",
+      "sales": "Vendimos 3 Caesar Tradicional y 2 American Burger",
+      "waste": "Se rompieron 2 botellas de aceite de oliva de 500 ml",
+      "stockCount": "Hicimos conteo: tenemos 12 kg de papa y 8 kg de pollo"
+    },
+    "historyLabel": "Conversación de la Entrada rápida",
+    "thinking": "Interpretando…",
+    "error": "No se pudo interpretar el mensaje.",
+    "edit": "Corregir",
+    "cancelled": "No se registró.",
+    "send": "Enviar",
+    "types": {
+      "PURCHASE": "Compra",
+      "WASTE": "Merma",
+      "SALE": "Venta",
+      "STOCK_ADJUSTMENT": "Ajuste de stock",
+      "PRODUCTION": "Producción"
+    },
+    "itemPrice": "{item} a {price} por {unit}",
+    "undo": "Deshacer",
+    "undoUntil": "Podés deshacerlo hasta las {time}",
+    "undone": "Deshecho",
+    "undoError": "No se pudo deshacer.",
+    "confirmError": "No se pudo registrar.",
+    "failed": "La IA no pudo interpretar el mensaje en este momento. Probá de nuevo en un rato o usá el formulario."
   },
   "menu": {
     "carta": "Carta",

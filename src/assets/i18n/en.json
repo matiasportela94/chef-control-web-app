@@ -127,14 +127,20 @@
     "PRODUCT_NOT_A_PREPARATION": "That item isn't a prep: add a prep recipe to it in Items",
     "PRODUCTION_NOT_FOUND": "The production doesn't exist or was deleted",
     "PRODUCTION_ALREADY_REVERSED": "That production was already reversed",
-    "IMPORT_PREPARATION_CYCLE": "The prep contains itself, directly or through another prep"
+    "IMPORT_PREPARATION_CYCLE": "The prep contains itself, directly or through another prep",
+    "CHAT_ACTION_NOT_FOUND": "We could not find that operation: it may no longer exist.",
+    "CHAT_ACTION_ALREADY_UNDONE": "That operation was already undone.",
+    "CHAT_UNDO_NOT_ALLOWED": "You can no longer undo it: the 15 minutes are over or someone else recorded it, and it needs the delete permission.",
+    "CHAT_PERMISSION_MISSING": "You do not have permission to record this operation.",
+    "CHAT_PRODUCT_NOT_IN_CATALOG": "It is not in the catalog. Add it first or write it as it appears in Products.",
+    "CHAT_MISSING_PRICE": "The price per unit is missing.",
+    "CHAT_INVALID_QUANTITY": "The quantity is not valid.",
+    "CHAT_OPERATION_NOT_SUPPORTED": "This cannot be recorded from Quick entry yet. Use the form."
   },
   "ai": {
     "title": "Quick entry",
     "subtitle": "Describe an operation in natural language",
     "placeholder": "E.g.: we bought 10kg of tomatoes at $5000 / 3 bottles of oil broke / we sold 8 milanesas...",
-    "interpret": "Interpret",
-    "confirm": "Confirm and record",
     "shortcuts": {
       "purchase": "Record ingredient purchase",
       "sales": "Record daily sales",
@@ -143,8 +149,6 @@
     },
     "subtitleVoice": "Dictate or type an operation, the way you'd tell someone",
     "messageLabel": "Your message",
-    "ctrlEnterHint": "Ctrl+Enter to interpret",
-    "reviewHint": "Check the text before interpreting. Ctrl+Enter to interpret",
     "voice": {
       "start": "Start recording",
       "stop": "Stop recording",
@@ -157,7 +161,35 @@
       "nothingRecorded": "Nothing was recorded. Tap the microphone and speak before stopping.",
       "nothingHeard": "Nothing could be understood in the audio. Try again, closer to the microphone.",
       "error": "The audio couldn't be turned into text. Try again or type it."
-    }
+    },
+    "emptyHint": "Say what happened, the way you would tell someone. Each message stands on its own: write the whole operation.",
+    "examplesTitle": "Examples",
+    "examples": {
+      "purchase": "We bought 5 kg of chicken at $8000 per kilo from supplier El Campo",
+      "sales": "We sold 3 Caesar Tradicional and 2 American Burger",
+      "waste": "2 bottles of 500 ml olive oil broke",
+      "stockCount": "Stock count: we have 12 kg of potatoes and 8 kg of chicken"
+    },
+    "historyLabel": "Quick entry conversation",
+    "thinking": "Interpreting…",
+    "error": "The message could not be interpreted.",
+    "edit": "Edit",
+    "cancelled": "Not recorded.",
+    "send": "Send",
+    "types": {
+      "PURCHASE": "Purchase",
+      "WASTE": "Waste",
+      "SALE": "Sale",
+      "STOCK_ADJUSTMENT": "Stock adjustment",
+      "PRODUCTION": "Production"
+    },
+    "itemPrice": "{item} at {price} per {unit}",
+    "undo": "Undo",
+    "undoUntil": "You can undo it until {time}",
+    "undone": "Undone",
+    "undoError": "It could not be undone.",
+    "confirmError": "It could not be recorded.",
+    "failed": "The AI could not interpret the message right now. Try again later or use the form."
   },
   "menu": {
     "carta": "Menu",
