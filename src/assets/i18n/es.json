@@ -116,12 +116,16 @@
     "IMAGE_FORMAT_NOT_SUPPORTED": "Formato de imagen no soportado: usá JPG, PNG, WEBP o GIF",
     "IMAGE_TOO_LARGE": "La imagen pesa más de 2 MB",
     "MENU_SECTION_HAS_ITEMS": "Ese paso del menú todavía tiene platos: pasalos a otro antes de borrarlo",
-    "MENU_SECTION_NOT_FOUND": "El paso del menú no existe o fue borrado"
+    "MENU_SECTION_NOT_FOUND": "El paso del menú no existe o fue borrado",
+    "AI_AUDIO_TOO_LARGE": "El audio es demasiado largo: grabá hasta 2 minutos",
+    "AI_AUDIO_FORMAT_NOT_SUPPORTED": "No podemos leer el audio que grabó este navegador. Escribí el mensaje.",
+    "AI_TRANSCRIPTION_FAILED": "No se pudo pasar el audio a texto. Probá de nuevo o escribilo.",
+    "AI_TRANSCRIPTION_NOT_CONFIGURED": "El dictado por voz no está disponible por ahora. Escribí el mensaje."
   },
   "ai": {
     "title": "Entrada rápida",
     "subtitle": "Describí una operación en lenguaje natural",
-    "placeholder": "Ej: compramos 10kg de tomate a $5000 / se rompieron 3 botellas de aceite...",
+    "placeholder": "Ej: compramos 10kg de tomate a $5000 / se rompieron 3 botellas de aceite / vendimos 8 milanesas...",
     "interpret": "Interpretar",
     "confirm": "Confirmar y registrar",
     "shortcuts": {
@@ -129,6 +133,23 @@
       "sales": "Registrar ventas del día",
       "waste": "Cargar merma o pérdida",
       "stockCount": "Actualizar stock / conteo"
+    },
+    "subtitleVoice": "Dictá o escribí una operación, como se la contarías a alguien",
+    "messageLabel": "Tu mensaje",
+    "ctrlEnterHint": "Ctrl+Enter para interpretar",
+    "reviewHint": "Revisá el texto antes de interpretar. Ctrl+Enter para interpretar",
+    "voice": {
+      "start": "Empezar a grabar",
+      "stop": "Terminar de grabar",
+      "tapToSpeak": "Tocá el micrófono y contá qué pasó",
+      "tapToStop": "· tocá para terminar",
+      "transcribing": "Pasando el audio a texto…",
+      "permissionDenied": "El navegador no tiene permiso para usar el micrófono. Habilitalo en los permisos del sitio (el ícono al lado de la dirección; en el celular, en los ajustes del navegador → Configuración de sitios → Micrófono) y volvé a tocar el botón.",
+      "noMicrophone": "No encontramos un micrófono en este dispositivo.",
+      "micError": "No se pudo usar el micrófono. Probá de nuevo.",
+      "nothingRecorded": "No se grabó nada. Tocá el micrófono y hablá antes de cortar.",
+      "nothingHeard": "No se entendió nada en el audio. Probá de nuevo, más cerca del micrófono.",
+      "error": "No se pudo pasar el audio a texto. Probá de nuevo o escribilo."
     }
   },
   "menu": {
@@ -464,7 +485,8 @@
     "title": "No está incluido en tu plan",
     "foodCost": "Recetas y food cost están incluidos desde el plan Starter.",
     "cta": "Ver planes",
-    "toastTitle": "Función no incluida en tu plan"
+    "toastTitle": "Función no incluida en tu plan",
+    "ai": "La entrada rápida con IA está incluida desde el plan Starter."
   },
   "profile": {
     "title": "Mi perfil",

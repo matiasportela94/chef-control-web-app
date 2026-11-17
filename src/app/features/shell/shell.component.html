@@ -41,7 +41,8 @@
     }
 
     <div style="margin-left:auto;display:flex;align-items:center;flex-shrink:0;" class="gap-1.5 sm:gap-2.5">
-      <!-- Entrada rápida -->
+      <!-- Entrada rápida: sin AI_USE no aparece; sin la feature del plan, el drawer muestra el aviso de plan -->
+      @if (authService.hasPermission('AI_USE')) {
       <button (click)="aiInputOpen.set(true)" style="
         display:flex;align-items:center;gap:6px;
         font-family:'Poppins',sans-serif;font-size:12px;font-weight:500;
@@ -56,6 +57,7 @@
         <i class="ti ti-bolt" style="font-size:14px;"></i>
         <span class="hidden sm:inline">Entrada rápida</span>
       </button>
+      }
 
       <!-- Theme toggle -->
       <button (click)="theme.toggle()" style="

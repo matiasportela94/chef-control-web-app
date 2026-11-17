@@ -1,0 +1,23 @@
+// Dictado. El botón es grande a propósito: lo toca un cocinero con las manos ocupadas o sucias.
+.voice { display: flex; flex-direction: column; align-items: center; gap: 10px; padding: 6px 0 2px; }
+.voice-btn {
+  width: 76px; height: 76px; border-radius: 50%; border: none; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  background: var(--accent); color: #fff; font-size: 34px;
+  box-shadow: 0 6px 20px color-mix(in srgb, var(--accent) 35%, transparent);
+  transition: transform .15s, background .15s;
+  &:active { transform: scale(.96); }
+  &:disabled { opacity: .6; cursor: default; }
+  &.recording { background: var(--red); animation: voice-pulse 1.4s ease-out infinite; }
+}
+@keyframes voice-pulse {
+  0%   { box-shadow: 0 0 0 0 color-mix(in srgb, var(--red) 45%, transparent); }
+  100% { box-shadow: 0 0 0 18px transparent; }
+}
+@media (prefers-reduced-motion: reduce) { .voice-btn.recording { animation: none; } }
+.voice-label { font-size: 13px; color: var(--text-2); text-align: center; }
+.voice-time { font-weight: 700; color: var(--red); font-variant-numeric: tabular-nums; margin-right: 4px; }
+.voice-error {
+  display: flex; align-items: flex-start; gap: 6px; font-size: 12px; line-height: 1.45; color: var(--red);
+  i { flex-shrink: 0; margin-top: 2px; }
+}
