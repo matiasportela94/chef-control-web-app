@@ -199,6 +199,12 @@
           <i class="ti ti-trash"></i> Merma
         </a>
 
+        @if (authService.hasPermission('PRODUCTIONS_VIEW')) {
+          <a routerLink="/productions" routerLinkActive="side-link-active" class="side-link">
+            <i class="ti ti-chef-hat"></i> {{ t('nav.productions') }}
+          </a>
+        }
+
         <a routerLink="/stock-counts" routerLinkActive="side-link-active" class="side-link">
           <i class="ti ti-clipboard-check"></i> Conteos
         </a>

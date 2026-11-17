@@ -1,4 +1,4 @@
-import { Component, EventEmitter, Input, Output, computed, signal } from '@angular/core';
+import { Component, EventEmitter, Input, Output, WritableSignal, computed, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { Api } from '../../../api/api';
 import { listUnits } from '../../../api/fn/unit-controller/list-units';
@@ -7,6 +7,7 @@ import { interpretCatalogSpreadsheet } from '../../../api/fn/ai-controller/inter
 import { InterpretCatalogResult } from '../../../api/models/interpret-catalog-result';
 import { CatalogImportResult } from '../../../api/models/catalog-import-result';
 import { RecipeReplacement } from '../../../api/models/recipe-replacement';
+import { CatalogImportPreparationsResult, PreparationImportRow, PreparationReplacement } from '../../../core/api-pending/preparations';
 import { ImportRowError } from '../../../api/models/import-row-error';
 import { ProductImportRow } from '../../../api/models/product-import-row';
 import { RecipeImportRow } from '../../../api/models/recipe-import-row';
@@ -18,9 +19,13 @@ import { getErrorMessage } from '../../../core/utils/error-messages';
 import { parseBlob } from '../../../core/utils/parse-blob';
 import { DrawerComponent } from '../drawer/drawer.component';
 import {
-  ImportLabels, MAX_INTERPRET_ROWS, MAX_INTERPRET_SHEETS, PRODUCT_FIELDS, RECIPE_FIELDS, REQUIRED_FIELDS, RowRef, UNREADABLE_NUMBER,
+  ImportLabels, ImportSheet, MAX_INTERPRET_ROWS, MAX_INTERPRET_SHEETS, PREPARATION_FIELDS, PRODUCT_FIELDS, RECIPE_FIELDS, REQUIRED_FIELDS,
+  RowRef, UNREADABLE_NUMBER,
   buildInterpretSheets, parseCatalogWorkbook
 } from './catalog-import-parse';
+
+// ponytail: los campos de preparaciones (F17) a mano hasta que el back publique el spec.
+type ImportResult = CatalogImportResult & CatalogImportPreparationsResult;
 
 /** Más que esto no se dibuja: con 500 errores la lista no se lee igual, y el primero ya dice qué corregir. */
 const MAX_ERRORS_SHOWN = 50;
@@ -50,10 +55,11 @@ export class CatalogImportComponent {
   fileName = signal<string | null>(null);
   problems = signal<string[]>([]);
   requestError = signal<string | null>(null);
-  result = signal<CatalogImportResult | null>(null);
+  result = signal<ImportResult | null>(null);
   errors = signal<ImportRowError[]>([]);
   templateLoading = signal(false);
   hasRecipes = signal(false);
+  hasPreparations = signal(false);
   /** Ofrecer la IA: el archivo no es la plantilla, o el usuario dijo que su Excel tiene otro formato. */
   aiOffer = signal(false);
   warnings = signal<string[]>([]);
@@ -69,6 +75,8 @@ export class CatalogImportComponent {
    * cambia el food cost de lo que se venda, así que se tilda de a uno.
    */
   replaceIds = signal<ReadonlySet<string>>(new Set());
+  /** Lo mismo para las preparaciones que ya tienen otra receta: sin tildar por defecto. */
+  replacePrepIds = signal<ReadonlySet<string>>(new Set());
 
   readonly aiBlockedBy = computed<'plan' | 'permission' | null>(() => {
     if (!this.auth.hasFeature('AI_INTERPRETER')) return 'plan';
@@ -86,10 +94,17 @@ export class CatalogImportComponent {
     return null;
   });
   readonly recipesEnabled = computed(() => this.recipesBlockedBy() === null);
+  /** Las preparaciones piden el mismo plan que las recetas y editar insumos (pasan a tener receta). */
+  readonly preparationsBlockedBy = computed<'plan' | 'permission' | null>(() => {
+    if (!this.auth.hasFeature('RECIPES_AND_FOOD_COST')) return 'plan';
+    if (!this.auth.hasPermission('PRODUCTS_UPDATE')) return 'permission';
+    return null;
+  });
+  readonly preparationsEnabled = computed(() => this.preparationsBlockedBy() === null);
   readonly shownErrors = computed(() => this.errors().slice(0, MAX_ERRORS_SHOWN));
   readonly hiddenErrors = computed(() => Math.max(0, this.errors().length - MAX_ERRORS_SHOWN));
 
-  private payload: { products: ProductImportRow[]; recipes: RecipeImportRow[] } | null = null;
+  private payload: { products: ProductImportRow[]; preparations: PreparationImportRow[]; recipes: RecipeImportRow[] } | null = null;
   private sheetsRead: { sheet: string; data: any[][] }[] | null = null;
 
   constructor(private api: Api, private auth: AuthService, private i18n: I18nService) {}
@@ -100,8 +115,9 @@ export class CatalogImportComponent {
 
   private get labels(): ImportLabels {
     const columns: Record<string, string> = {};
-    for (const field of [...PRODUCT_FIELDS, ...RECIPE_FIELDS]) columns[field] = this.t(`import.columns.${field}`);
-    return { sheets: { PRODUCTS: this.t('import.sheets.PRODUCTS'), RECIPES: this.t('import.sheets.RECIPES') }, columns };
+    for (const field of [...PRODUCT_FIELDS, ...PREPARATION_FIELDS, ...RECIPE_FIELDS]) columns[field] = this.t(`import.columns.${field}`);
+    return { sheets: { PRODUCTS: this.t('import.sheets.PRODUCTS'), PREPARATIONS: this.t('import.sheets.PREPARATIONS'),
+                       RECIPES: this.t('import.sheets.RECIPES') }, columns };
   }
 
   close(): void {
@@ -122,6 +138,8 @@ export class CatalogImportComponent {
     this.aiOffer.set(false);
     this.aiRefs.set(null);
     this.replaceIds.set(new Set());
+    this.replacePrepIds.set(new Set());
+    this.hasPreparations.set(false);
     this.payload = null;
     this.sheetsRead = null;
   }
@@ -136,8 +154,11 @@ export class CatalogImportComponent {
       ]);
       const { sheets, columns } = this.labels;
       // El * marca lo obligatorio; al leer se ignora (igual que mayúsculas, acentos y paréntesis).
-      const header = (sheet: 'PRODUCTS' | 'RECIPES', fields: readonly string[]) => fields.map(f => ({
-        value: columns[f] + (REQUIRED_FIELDS[sheet].includes(f) ? '*' : ''), fontWeight: 'bold' as const,
+      // En Preparaciones la cantidad es de la tanda, no de un plato. El parser lee igual "Cantidad (…)": ignora los paréntesis.
+      const label = (sheet: ImportSheet, f: string) =>
+        sheet === 'PREPARATIONS' && f === 'quantity' ? this.t('import.columns.batchQuantity') : columns[f];
+      const header = (sheet: ImportSheet, fields: readonly string[]) => fields.map(f => ({
+        value: label(sheet, f) + (REQUIRED_FIELDS[sheet].includes(f) ? '*' : ''), fontWeight: 'bold' as const,
       }));
       const bold = (value: string) => ({ value, fontWeight: 'bold' as const });
       // Los ejemplos van en la hoja de instrucciones, nunca como filas de Insumos/Recetas: se importarían.
@@ -146,6 +167,8 @@ export class CatalogImportComponent {
       await writeXlsxFile([
         { sheet: sheets.PRODUCTS, data: [header('PRODUCTS', PRODUCT_FIELDS)], stickyRowsCount: 1,
           columns: [{ width: 30 }, { width: 14 }, { width: 20 }, { width: 14 }, { width: 16 }, { width: 10 }] },
+        { sheet: sheets.PREPARATIONS, data: [header('PREPARATIONS', PREPARATION_FIELDS)], stickyRowsCount: 1,
+          columns: [{ width: 30 }, { width: 10 }, { width: 16 }, { width: 30 }, { width: 24 }, { width: 14 }] },
         { sheet: sheets.RECIPES, data: [header('RECIPES', RECIPE_FIELDS)], stickyRowsCount: 1,
           columns: [{ width: 30 }, { width: 16 }, { width: 18 }, { width: 30 }, { width: 24 }, { width: 14 }] },
         { sheet: this.t('import.template.unitsSheet'), stickyRowsCount: 2, columns: [{ width: 24 }, { width: 14 }],
@@ -158,6 +181,10 @@ export class CatalogImportComponent {
             [''],
             [bold(this.t('import.template.exampleProducts'))],
             header('PRODUCTS', PRODUCT_FIELDS), example('import.template.exampleProduct1'), example('import.template.exampleProduct2'),
+            [''],
+            [bold(this.t('import.template.examplePreparations'))],
+            header('PREPARATIONS', PREPARATION_FIELDS),
+            example('import.template.examplePreparation1'), example('import.template.examplePreparation2'),
             [''],
             [bold(this.t('import.template.exampleRecipes'))],
             header('RECIPES', RECIPE_FIELDS), example('import.template.exampleRecipe1'), example('import.template.exampleRecipe2'),
@@ -183,7 +210,7 @@ export class CatalogImportComponent {
     try {
       const { default: readXlsxFile } = await import('read-excel-file/browser');
       this.sheetsRead = await readXlsxFile(file) as any;
-      parsed = parseCatalogWorkbook(this.sheetsRead!, this.labels, this.recipesEnabled());
+      parsed = parseCatalogWorkbook(this.sheetsRead!, this.labels, this.recipesEnabled(), this.preparationsEnabled());
     } catch {
       this.requestError.set(this.t('import.readError'));
       this.step.set('pick');
@@ -197,6 +224,7 @@ export class CatalogImportComponent {
       return;
     }
     this.hasRecipes.set(parsed.recipes.length > 0);
+    this.hasPreparations.set(parsed.preparations.length > 0);
     // Números ilegibles: se muestran sin consultar al back, que no los puede recibir.
     if (parsed.errors.length) {
       this.errors.set(parsed.errors);
@@ -204,7 +232,7 @@ export class CatalogImportComponent {
       return;
     }
 
-    this.payload = { products: parsed.products, recipes: parsed.recipes };
+    this.payload = { products: parsed.products, preparations: parsed.preparations, recipes: parsed.recipes };
     await this.check();
   }
 
@@ -242,12 +270,15 @@ export class CatalogImportComponent {
     this.aiOffer.set(false);
     this.warnings.set(interpretation.warnings ?? []);
     const recipes = this.recipesEnabled() ? interpretation.recipes ?? [] : [];
-    // Sin recetas no hay a quién le hagan falta: no se proponen.
-    const proposed = recipes.length ? interpretation.proposedProducts ?? [] : [];
+    const preparations = this.preparationsEnabled()
+      ? (interpretation as InterpretCatalogResult & { preparations?: PreparationImportRow[] }).preparations ?? [] : [];
+    // Sin recetas ni preparaciones no hay a quién le hagan falta: no se proponen.
+    const proposed = recipes.length || preparations.length ? interpretation.proposedProducts ?? [] : [];
     this.proposed.set(proposed);
-    this.payload = { products: [...(interpretation.products ?? []), ...proposed], recipes };
+    this.payload = { products: [...(interpretation.products ?? []), ...proposed], preparations, recipes };
     this.hasRecipes.set(recipes.length > 0);
-    if (!this.payload.products.length && !recipes.length) {
+    this.hasPreparations.set(preparations.length > 0);
+    if (!this.payload.products.length && !recipes.length && !preparations.length) {
       this.problems.set([this.t('import.ai.nothingFound')]);
       this.step.set('pick');
       return;
@@ -262,6 +293,7 @@ export class CatalogImportComponent {
       this.result.set(res);
       this.errors.set(res.errors ?? []);
       this.replaceIds.set(new Set());
+      this.replacePrepIds.set(new Set());
       this.step.set('preview');
     } catch (e) {
       this.requestError.set(extractApiError(e, this.t('import.checkError')));
@@ -290,22 +322,37 @@ export class CatalogImportComponent {
     }
   }
 
-  /** El dryRun pregunta qué platos ya tienen otra receta; al confirmar se mandan los tildados. Un id de más se ignora. */
-  private async send(dryRun: boolean): Promise<CatalogImportResult> {
-    const body = { ...this.payload!, replaceRecipeMenuItemIds: dryRun ? [] : [...this.replaceIds()] };
-    return parseBlob<CatalogImportResult>(await this.api.invoke(importCatalog, { dryRun, body }) as unknown);
+  /**
+   * El dryRun pregunta qué platos y qué preparaciones ya tienen otra receta; al confirmar se mandan los tildados. Un id
+   * de más se ignora.
+   */
+  private async send(dryRun: boolean): Promise<ImportResult> {
+    const body = { ...this.payload!,
+      replaceRecipeMenuItemIds: dryRun ? [] : [...this.replaceIds()],
+      replacePreparationProductIds: dryRun ? [] : [...this.replacePrepIds()] };
+    return parseBlob<ImportResult>(await this.api.invoke(importCatalog, { dryRun, body }) as unknown);
   }
 
-  toggleReplace(id: string | undefined, on: boolean): void {
+  toggleReplace(set: WritableSignal<ReadonlySet<string>>, id: string | undefined, on: boolean): void {
     if (!id) return;
-    const ids = new Set(this.replaceIds());
+    const ids = new Set(set());
     if (on) ids.add(id); else ids.delete(id);
-    this.replaceIds.set(ids);
+    set.set(ids);
   }
 
   /** En la vista previa, las que se van a pisar son las tildadas; al terminar, lo que dice el back. */
-  recipesReplacedCount(r: CatalogImportResult): number {
+  recipesReplacedCount(r: ImportResult): number {
     return this.step() === 'done' ? r.recipesReplaced ?? 0 : (r.recipesToReplace ?? []).filter(x => x.menuItemId && this.replaceIds().has(x.menuItemId)).length;
+  }
+
+  preparationsReplacedCount(r: ImportResult): number {
+    return this.step() === 'done' ? r.preparationsReplaced ?? 0
+      : (r.preparationsToReplace ?? []).filter(x => x.productId && this.replacePrepIds().has(x.productId)).length;
+  }
+
+  /** La primera fila de la preparación en su hoja (con IA, en la hoja del cliente). */
+  preparationPlace(r: PreparationReplacement): string {
+    return this.errorPlace({ sheet: 'PREPARATIONS', row: r.row });
   }
 
   /** La primera fila del plato en la hoja de recetas (con IA, en la hoja del cliente). */

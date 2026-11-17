@@ -17,6 +17,7 @@ import { listProducts }                from '../../api/fn/product-controller/lis
 import { listUnits }                   from '../../api/fn/unit-controller/list-units';
 import { MenuItemResponse }            from '../../api/models/menu-item-response';
 import { RecipeResponse }              from '../../api/models/recipe-response';
+import { ProductWithPreparation } from '../../core/api-pending/preparations';
 import { RecipeCostResponse }          from '../../api/models/recipe-cost-response';
 import { ProductResponse }             from '../../api/models/product-response';
 import { UnitResponse }                from '../../api/models/unit-response';
@@ -199,8 +200,9 @@ export class MenuComponent implements OnInit {
   products   = signal<ProductResponse[]>([]);
   units      = signal<UnitResponse[]>([]);
 
+  /** Las preparaciones (F17) se marcan: en una receta, "Mayonesa base" se costea con sus propios ingredientes. */
   productOptions = computed<SelectOption[]>(() =>
-    this.products().map(p => ({ value: p.id ?? '', label: p.name ?? '' }))
+    this.products().map(p => ({ value: p.id ?? '', label: this.isPreparation(p.id) ? `${p.name} · ${this.t('common.preparation')}` : (p.name ?? '') }))
   );
   unitOptions = computed<SelectOption[]>(() =>
     this.units().map(u => ({ value: u.id ?? '', label: u.abbreviation ?? '' }))
@@ -919,6 +921,10 @@ export class MenuComponent implements OnInit {
   }
 
   goToPage(p: number): void { this.page.set(p); }
+
+  isPreparation(id?: string): boolean {
+    return !!(this.products().find(p => p.id === id) as ProductWithPreparation | undefined)?.preparation;
+  }
 
   productName(id: string): string {
     return this.products().find(p => p.id === id)?.name ?? '—';

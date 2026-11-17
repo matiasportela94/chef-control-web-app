@@ -3,6 +3,10 @@
   @if (recipesBlockedBy(); as reason) {
     <div class="notice"><i class="ti ti-info-circle"></i><span>{{ t(reason === 'plan' ? 'import.productsOnlyPlan' : 'import.productsOnlyPermission') }}</span></div>
   }
+  <!-- Sin el plan ya lo dice el aviso de arriba; sin PRODUCTS_UPDATE, las preparaciones no se mandan -->
+  @if (preparationsBlockedBy() === 'permission') {
+    <div class="notice"><i class="ti ti-info-circle"></i><span>{{ t('import.preparationsOnlyPermission') }}</span></div>
+  }
 
   @if (step() === 'done') {
     <div class="notice notice-ok"><i class="ti ti-circle-check"></i><span>{{ t('import.done') }}</span></div>
@@ -86,6 +90,11 @@
       <div class="counter"><span>{{ r.productsCreated ?? 0 }}</span>{{ t('import.counters.productsCreated') }}</div>
       <div class="counter"><span>{{ r.productsExisting ?? 0 }}</span>{{ t('import.counters.productsExisting') }}</div>
       <div class="counter"><span>{{ r.categoriesCreated ?? 0 }}</span>{{ t('import.counters.categoriesCreated') }}</div>
+      @if (hasPreparations()) {
+        <div class="counter"><span>{{ r.preparationsCreated ?? 0 }}</span>{{ t('import.counters.preparationsCreated') }}</div>
+        <div class="counter"><span>{{ preparationsReplacedCount(r) }}</span>{{ t('import.counters.preparationsReplaced') }}</div>
+        <div class="counter"><span>{{ r.preparationsUnchanged ?? 0 }}</span>{{ t('import.counters.preparationsUnchanged') }}</div>
+      }
       @if (hasRecipes()) {
         <div class="counter"><span>{{ r.sectionsCreated ?? 0 }}</span>{{ t('import.counters.sectionsCreated') }}</div>
         <div class="counter"><span>{{ r.menuItemsCreated ?? 0 }}</span>{{ t('import.counters.menuItemsCreated') }}</div>
@@ -104,9 +113,26 @@
         @for (x of r.recipesToReplace; track x.menuItemId) {
           <label class="proposed-item replace-item">
             <input type="checkbox" [checked]="replaceIds().has(x.menuItemId!)" [disabled]="busy()"
-                   (change)="toggleReplace(x.menuItemId, $any($event.target).checked)">
+                   (change)="toggleReplace(replaceIds, x.menuItemId, $any($event.target).checked)">
             <span class="ellipsis replace-name">{{ x.menuItem }}</span>
             <span class="ellipsis replace-place">{{ recipePlace(x) }}</span>
+          </label>
+        }
+      </div>
+    }
+    <!-- Preparaciones que ya tienen otra receta: la misma pregunta que con los platos -->
+    @if (r.preparationsToReplace?.length && step() !== 'done') {
+      <p class="step-title" style="margin-top:14px;">
+        {{ r.preparationsToReplace!.length === 1 ? t('import.replacePrep.titleOne') : t('import.replacePrep.title', { count: r.preparationsToReplace!.length }) }}
+      </p>
+      <p class="hint">{{ t('import.replacePrep.hint') }}</p>
+      <div class="proposed-list">
+        @for (x of r.preparationsToReplace; track x.productId) {
+          <label class="proposed-item replace-item prep-replace-item">
+            <input type="checkbox" [checked]="replacePrepIds().has(x.productId!)" [disabled]="busy()"
+                   (change)="toggleReplace(replacePrepIds, x.productId, $any($event.target).checked)">
+            <span class="ellipsis replace-name">{{ x.preparation }}</span>
+            <span class="ellipsis replace-place">{{ preparationPlace(x) }}</span>
           </label>
         }
       </div>

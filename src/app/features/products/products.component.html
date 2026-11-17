@@ -82,7 +82,9 @@
             <div class="data-card" style="padding:12px 14px;">
               <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:8px;">
                 <div style="min-width:0;">
-                  <p style="color:var(--text-1);font-weight:600;font-size:13px;">{{ p.name }}</p>
+                  <p style="color:var(--text-1);font-weight:600;font-size:13px;">{{ p.name }}
+                    @if (isPreparation(p)) { <span class="badge badge-neutral prep-badge">{{ t('common.preparation') }}</span> }
+                  </p>
                   @if (p.sku) {
                     <p style="font-size:11px;color:var(--text-3);">{{ p.sku }}</p>
                   }
@@ -164,7 +166,9 @@
                 @for (p of pagedProducts(); track p.id) {
                   <tr>
                     <td>
-                      <p style="color:var(--text-1);font-weight:600;">{{ p.name }}</p>
+                      <p style="color:var(--text-1);font-weight:600;">{{ p.name }}
+                        @if (isPreparation(p)) { <span class="badge badge-neutral prep-badge">{{ t('common.preparation') }}</span> }
+                      </p>
                       @if (p.sku) {
                         <p style="font-size:11px;color:var(--text-3);">{{ p.sku }}</p>
                       }
@@ -412,6 +416,17 @@
     }
 
   </form>
+
+  <!-- Receta de preparación: fuera del <form> para que Enter en sus campos no guarde el insumo -->
+  @if (editingProduct(); as ep) {
+    <app-preparation-recipe [product]="ep" [products]="products()" [units]="units()" [startOpen]="prepStartOpen()" (changed)="loadProducts()" />
+  } @else if (canAddPreparation()) {
+    <div class="sec-div" style="margin-top:14px;">{{ t('products.prep.title') }}</div>
+    <p class="field-hint" style="margin-top:6px;">{{ t('products.prep.hint') }}</p>
+    <button type="button" class="btn-secondary btn-sm" (click)="saveProduct(true)" [disabled]="saving()">
+      <i class="ti ti-chef-hat"></i> {{ t('products.prep.createAndRecipe') }}
+    </button>
+  }
 
   <div drawer-footer class="panel-footer">
     <button type="button" (click)="closeDrawer()" class="btn-secondary">Cancelar</button>

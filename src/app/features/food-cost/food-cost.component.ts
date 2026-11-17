@@ -15,6 +15,7 @@ import { PagedResponseMenuItemResponse } from '../../api/models/paged-response-m
 import { RecipeCostResponse } from '../../api/models/recipe-cost-response';
 import { PriceEvolutionResponse } from '../../api/models/price-evolution-response';
 import { IngredientCost } from '../../api/models/ingredient-cost';
+import { IngredientCostWithPreparation } from '../../core/api-pending/preparations';
 import { parseBlob } from '../../core/utils/parse-blob';
 import { extractApiError } from '../../core/utils/api-error';
 import { formatARS, formatDate, formatNum, formatPct } from '../../core/utils/format';
@@ -56,6 +57,11 @@ export class FoodCostComponent implements OnInit {
   }
 
   /** Solo se muestran las dos cantidades cuando el rendimiento cambia algo. */
+  /** La línea de una preparación (F17): su costo sale de sus propios ingredientes. */
+  isPreparation(ing: IngredientCost): boolean {
+    return !!(ing as IngredientCostWithPreparation).preparation;
+  }
+
   hasYield(ing: IngredientCost): boolean {
     return ing.yieldPercentage != null && ing.yieldPercentage !== 100 && ing.grossQuantity != null;
   }
