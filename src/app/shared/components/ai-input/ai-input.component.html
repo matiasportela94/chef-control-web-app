@@ -1,8 +1,33 @@
 <app-drawer [isOpen]="isOpen" [accentHeader]="true" titleIcon="bolt"
-            title="Entrada rápida" subtitle="Describí una operación en lenguaje natural"
+            [title]="t('ai.title')" [subtitle]="t(canRecord ? 'ai.subtitleVoice' : 'ai.subtitle')"
             (closed)="close()">
 
   <div style="display:flex;flex-direction:column;gap:14px;">
+
+    <!-- Dictado: un botón grande, tocar para grabar y tocar para cortar -->
+    @if (canRecord && !result() && !executeResult()) {
+      <div class="voice">
+        <button type="button" class="voice-btn" [class.recording]="recording()" (click)="toggleRecording()"
+                [disabled]="transcribing() || loading() || voiceUnavailable()"
+                [attr.aria-label]="t(recording() ? 'ai.voice.stop' : 'ai.voice.start')" [title]="t(recording() ? 'ai.voice.stop' : 'ai.voice.start')">
+          @if (transcribing()) { <i class="ti ti-loader-2 animate-spin"></i> }
+          @else if (recording()) { <i class="ti ti-player-stop-filled"></i> }
+          @else { <i class="ti ti-microphone"></i> }
+        </button>
+        <p class="voice-label" aria-live="polite">
+          @if (recording()) {
+            <span class="voice-time">{{ clock(elapsed()) }} / {{ clock(maxSeconds) }}</span> {{ t('ai.voice.tapToStop') }}
+          } @else if (transcribing()) {
+            {{ t('ai.voice.transcribing') }}
+          } @else {
+            {{ t('ai.voice.tapToSpeak') }}
+          }
+        </p>
+        @if (voiceError()) {
+          <p class="voice-error"><i class="ti ti-alert-circle"></i><span>{{ voiceError() }}</span></p>
+        }
+      </div>
+    }
 
     <!-- Accesos directos (solo en estado inicial) -->
     @if (!result() && !loading() && !executeResult()) {
@@ -28,19 +53,19 @@
     @if (!executeResult()) {
       <div>
         <p style="font-size:10px;font-weight:600;color:var(--text-3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px;">
-          Tu mensaje
+          {{ t('ai.messageLabel') }}
         </p>
         <textarea
           [(ngModel)]="message"
           (keydown)="onKeydown($event)"
-          placeholder="Ej: compramos 10kg de tomate a $5000 / se rompieron 3 botellas de aceite / vendimos 8 milanesas..."
+          [placeholder]="t('ai.placeholder')"
           rows="3"
           [disabled]="loading() || confirming() || !!result()"
           class="field-textarea"
           style="min-height:80px;">
         </textarea>
         @if (!result()) {
-          <p style="font-size:10px;color:var(--text-3);margin-top:4px;">Ctrl+Enter para interpretar</p>
+          <p style="font-size:10px;color:var(--text-3);margin-top:4px;">{{ t(canRecord ? 'ai.reviewHint' : 'ai.ctrlEnterHint') }}</p>
         }
       </div>
     }
@@ -117,7 +142,7 @@
       }
     } @else {
       <button (click)="close()" class="btn-secondary" style="flex:1;">Cancelar</button>
-      <button (click)="interpret()" [disabled]="loading() || !message.trim()"
+      <button (click)="interpret()" [disabled]="loading() || recording() || transcribing() || !message.trim()"
               class="btn-primary" style="flex:1;justify-content:center;">
         @if (loading()) { <i class="ti ti-loader-2 animate-spin"></i>&nbsp;Interpretando... }
         @else { <i class="ti ti-bolt"></i>&nbsp;Interpretar }

@@ -116,12 +116,16 @@
     "IMAGE_FORMAT_NOT_SUPPORTED": "Image format not supported: use JPG, PNG, WEBP or GIF",
     "IMAGE_TOO_LARGE": "The image is larger than 2 MB",
     "MENU_SECTION_HAS_ITEMS": "That menu course still has dishes: move them to another one before deleting it",
-    "MENU_SECTION_NOT_FOUND": "The menu course doesn't exist or was deleted"
+    "MENU_SECTION_NOT_FOUND": "The menu course doesn't exist or was deleted",
+    "AI_AUDIO_TOO_LARGE": "The audio is too long: record up to 2 minutes",
+    "AI_AUDIO_FORMAT_NOT_SUPPORTED": "We can't read the audio this browser recorded. Type the message instead.",
+    "AI_TRANSCRIPTION_FAILED": "The audio couldn't be turned into text. Try again or type it.",
+    "AI_TRANSCRIPTION_NOT_CONFIGURED": "Voice dictation isn't available right now. Type the message instead."
   },
   "ai": {
     "title": "Quick entry",
     "subtitle": "Describe an operation in natural language",
-    "placeholder": "E.g.: bought 10kg of tomatoes at $5000 / broke 3 bottles of oil...",
+    "placeholder": "E.g.: we bought 10kg of tomatoes at $5000 / 3 bottles of oil broke / we sold 8 milanesas...",
     "interpret": "Interpret",
     "confirm": "Confirm and record",
     "shortcuts": {
@@ -129,6 +133,23 @@
       "sales": "Record daily sales",
       "waste": "Log waste or loss",
       "stockCount": "Update stock / count"
+    },
+    "subtitleVoice": "Dictate or type an operation, the way you'd tell someone",
+    "messageLabel": "Your message",
+    "ctrlEnterHint": "Ctrl+Enter to interpret",
+    "reviewHint": "Check the text before interpreting. Ctrl+Enter to interpret",
+    "voice": {
+      "start": "Start recording",
+      "stop": "Stop recording",
+      "tapToSpeak": "Tap the microphone and tell what happened",
+      "tapToStop": "· tap to finish",
+      "transcribing": "Turning the audio into text…",
+      "permissionDenied": "The browser isn't allowed to use the microphone. Enable it in the site permissions (the icon next to the address; on a phone, in the browser settings → Site settings → Microphone) and tap the button again.",
+      "noMicrophone": "We couldn't find a microphone on this device.",
+      "micError": "The microphone couldn't be used. Try again.",
+      "nothingRecorded": "Nothing was recorded. Tap the microphone and speak before stopping.",
+      "nothingHeard": "Nothing could be understood in the audio. Try again, closer to the microphone.",
+      "error": "The audio couldn't be turned into text. Try again or type it."
     }
   },
   "menu": {

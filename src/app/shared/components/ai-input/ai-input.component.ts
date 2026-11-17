@@ -1,6 +1,9 @@
-import { Component, EventEmitter, Input, Output, signal } from '@angular/core';
+import { Component, EventEmitter, Input, OnDestroy, Output, signal } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
 import { FormsModule } from '@angular/forms';
+import { firstValueFrom } from 'rxjs';
 import { Api } from '../../../api/api';
+import { ApiConfiguration } from '../../../api/api-configuration';
 import { interpret as interpretText } from '../../../api/fn/ai-controller/interpret';
 import { execute as executeIntent } from '../../../api/fn/ai-controller/execute';
 import { InterpretResponse as InterpretTextResponse } from '../../../api/models/interpret-response';
@@ -8,17 +11,25 @@ import { ExecuteResponse as ExecuteIntentResponse } from '../../../api/models/ex
 import { parseBlob } from '../../../core/utils/parse-blob';
 import { extractApiError } from '../../../core/utils/api-error';
 import { AiRefreshService } from '../../../core/services/ai-refresh.service';
+import { AuthService } from '../../../core/services/auth.service';
+import { I18nService } from '../../../core/services/i18n.service';
 import { DrawerComponent } from '../drawer/drawer.component';
 
 const EXECUTABLE_INTENTS = new Set(['purchase', 'waste', 'sale', 'stock_adjustment']);
+/** Se corta solo a los 2 min. A 64 kbps son ~1 MB, lejos del tope del back (4 MB, AI_AUDIO_TOO_LARGE). */
+const MAX_RECORDING_SECONDS = 120;
+const AUDIO_BITS_PER_SECOND = 64000;
+/** Chrome y Android graban webm; Safari de iOS, mp4. El primero que soporte el navegador. */
+const AUDIO_TYPES = ['audio/webm;codecs=opus', 'audio/webm', 'audio/mp4'];
 
 @Component({
   selector: 'app-ai-input',
   standalone: true,
   imports: [FormsModule, DrawerComponent],
   templateUrl: './ai-input.component.html',
+  styleUrl: './ai-input.component.scss',
 })
-export class AiInputComponent {
+export class AiInputComponent implements OnDestroy {
   @Input() isOpen = false;
   @Output() closed = new EventEmitter<void>();
 
@@ -30,6 +41,19 @@ export class AiInputComponent {
   result         = signal<InterpretTextResponse | null>(null);
   executeResult  = signal<ExecuteIntentResponse | null>(null);
 
+  // ---- dictado: tocar para grabar, tocar para cortar (manos ocupadas: nada de mantener apretado)
+  recording    = signal(false);
+  transcribing = signal(false);
+  elapsed      = signal(0);
+  voiceError   = signal<string | null>(null);
+  /** El back no tiene la transcripción configurada: el micrófono queda deshabilitado, reintentar no sirve. */
+  voiceUnavailable = signal(false);
+  readonly maxSeconds = MAX_RECORDING_SECONDS;
+  private recorder?: MediaRecorder;
+  private ticker?: ReturnType<typeof setInterval>;
+  /** Cerrar el drawer descarta lo que se esté grabando o transcribiendo. */
+  private voiceRun = 0;
+
   readonly shortcuts = [
     { icon: 'ti-shopping-cart',   label: 'Registrar compra de insumo', prompt: 'Compramos 5kg de pollo a $8000 al proveedor El Campo' },
     { icon: 'ti-chart-bar',       label: 'Registrar ventas del día',    prompt: 'Vendimos 3 Caesar Tradicional y 2 American Burger' },
@@ -37,7 +61,87 @@ export class AiInputComponent {
     { icon: 'ti-clipboard-check', label: 'Actualizar stock / conteo',   prompt: 'Hicimos conteo: tenemos 12kg de papa, 8kg de pollo' },
   ] as const;
 
-  constructor(private api: Api, private aiRefresh: AiRefreshService) {}
+  constructor(private api: Api, private aiRefresh: AiRefreshService, private auth: AuthService, private i18n: I18nService,
+              private http: HttpClient, private apiConfig: ApiConfiguration) {}
+
+  t(key: string, params?: Record<string, string | number>): string {
+    return this.i18n.t(key, params);
+  }
+
+  /** Sin MediaRecorder/getUserMedia (navegador viejo, o http fuera de localhost) o sin la IA, no se ofrece. */
+  get canRecord(): boolean {
+    return typeof MediaRecorder !== 'undefined' && !!navigator.mediaDevices?.getUserMedia
+      && this.auth.hasFeature('AI_INTERPRETER') && this.auth.hasPermission('AI_USE');
+  }
+
+  ngOnDestroy(): void {
+    this.stopRecording(true);
+  }
+
+  async toggleRecording(): Promise<void> {
+    if (this.recording()) { this.stopRecording(false); return; }
+    if (this.transcribing() || this.voiceUnavailable()) return;
+    this.voiceError.set(null);
+    let stream: MediaStream;
+    try {
+      stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    } catch (e: any) {
+      const key = e?.name === 'NotAllowedError' || e?.name === 'SecurityError' ? 'ai.voice.permissionDenied'
+        : e?.name === 'NotFoundError' ? 'ai.voice.noMicrophone' : 'ai.voice.micError';
+      this.voiceError.set(this.t(key));
+      return;
+    }
+    const run = this.voiceRun;
+    const mimeType = AUDIO_TYPES.find(type => MediaRecorder.isTypeSupported(type));
+    const recorder = new MediaRecorder(stream, { mimeType, audioBitsPerSecond: AUDIO_BITS_PER_SECOND });
+    const chunks: Blob[] = [];
+    recorder.ondataavailable = e => { if (e.data.size) chunks.push(e.data); };
+    recorder.onstop = () => {
+      stream.getTracks().forEach(track => track.stop());
+      clearInterval(this.ticker);
+      this.recording.set(false);
+      if (run === this.voiceRun) void this.transcribe(new Blob(chunks, { type: recorder.mimeType || mimeType || 'audio/webm' }), run);
+    };
+    const started = Date.now();
+    this.elapsed.set(0);
+    this.ticker = setInterval(() => {
+      this.elapsed.set(Math.min(MAX_RECORDING_SECONDS, Math.floor((Date.now() - started) / 1000)));
+      if (Date.now() - started >= MAX_RECORDING_SECONDS * 1000) this.stopRecording(false);
+    }, 250);
+    this.recorder = recorder;
+    recorder.start();
+    this.recording.set(true);
+  }
+
+  private stopRecording(discard: boolean): void {
+    if (discard) this.voiceRun++;
+    if (this.recorder?.state === 'recording') this.recorder.stop();
+  }
+
+  /** El texto va al mensaje para revisarlo: no se interpreta solo. Si ya había algo escrito, se suma al final. */
+  private async transcribe(audio: Blob, run: number): Promise<void> {
+    if (!audio.size) { this.voiceError.set(this.t('ai.voice.nothingRecorded')); return; }
+    this.transcribing.set(true);
+    try {
+      const form = new FormData();
+      form.append('audio', audio, audio.type.includes('mp4') ? 'dictado.mp4' : 'dictado.webm');
+      // ponytail: POST /ai/transcribe a mano hasta que el back publique el spec; después, la función generada.
+      const res = await firstValueFrom(this.http.post<{ text?: string }>(`${this.apiConfig.rootUrl}/ai/transcribe`, form));
+      if (run !== this.voiceRun) return;
+      const text = res?.text?.trim();
+      if (!text) { this.voiceError.set(this.t('ai.voice.nothingHeard')); return; }
+      this.message = this.message.trim() ? `${this.message.trim()} ${text}` : text;
+    } catch (e: any) {
+      if (e?.error?.errorCode === 'AI_TRANSCRIPTION_NOT_CONFIGURED') this.voiceUnavailable.set(true);
+      if (run === this.voiceRun) this.voiceError.set(extractApiError(e, this.t('ai.voice.error')));
+    } finally {
+      if (run === this.voiceRun) this.transcribing.set(false);
+    }
+  }
+
+  clock(seconds: number): string {
+    return `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, '0')}`;
+  }
 
   fillShortcut(text: string): void {
     this.message = text;
@@ -111,10 +215,13 @@ export class AiInputComponent {
 
   resetForNew(): void {
     this.message = '';
+    this.voiceError.set(null);
     this.retry();
   }
 
   close(): void {
+    this.stopRecording(true);
+    this.transcribing.set(false);
     this.closed.emit();
     this.resetForNew();
   }
