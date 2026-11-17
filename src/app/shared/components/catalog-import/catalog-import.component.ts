@@ -6,6 +6,7 @@ import { importCatalog } from '../../../api/fn/catalog-import-controller/import-
 import { interpretCatalogSpreadsheet } from '../../../api/fn/ai-controller/interpret-catalog-spreadsheet';
 import { InterpretCatalogResult } from '../../../api/models/interpret-catalog-result';
 import { CatalogImportResult } from '../../../api/models/catalog-import-result';
+import { RecipeReplacement } from '../../../api/models/recipe-replacement';
 import { ImportRowError } from '../../../api/models/import-row-error';
 import { ProductImportRow } from '../../../api/models/product-import-row';
 import { RecipeImportRow } from '../../../api/models/recipe-import-row';
@@ -63,6 +64,11 @@ export class CatalogImportComponent {
   proposed = signal<ProductImportRow[]>([]);
   /** Con IA, el `row` de cada fila es un ref nuestro: acá está a qué hoja y fila del cliente corresponde. */
   aiRefs = signal<Map<number, RowRef> | null>(null);
+  /**
+   * Platos que ya tienen otra receta y el usuario eligió pisar. Arranca vacío a propósito (Mati): reemplazar una receta
+   * cambia el food cost de lo que se venda, así que se tilda de a uno.
+   */
+  replaceIds = signal<ReadonlySet<string>>(new Set());
 
   readonly aiBlockedBy = computed<'plan' | 'permission' | null>(() => {
     if (!this.auth.hasFeature('AI_INTERPRETER')) return 'plan';
@@ -115,6 +121,7 @@ export class CatalogImportComponent {
     this.proposed.set([]);
     this.aiOffer.set(false);
     this.aiRefs.set(null);
+    this.replaceIds.set(new Set());
     this.payload = null;
     this.sheetsRead = null;
   }
@@ -254,6 +261,7 @@ export class CatalogImportComponent {
       const res = await this.send(true);
       this.result.set(res);
       this.errors.set(res.errors ?? []);
+      this.replaceIds.set(new Set());
       this.step.set('preview');
     } catch (e) {
       this.requestError.set(extractApiError(e, this.t('import.checkError')));
@@ -282,9 +290,27 @@ export class CatalogImportComponent {
     }
   }
 
+  /** El dryRun pregunta qué platos ya tienen otra receta; al confirmar se mandan los tildados. Un id de más se ignora. */
   private async send(dryRun: boolean): Promise<CatalogImportResult> {
-    return parseBlob<CatalogImportResult>(
-      await this.api.invoke(importCatalog, { dryRun, body: this.payload! }) as unknown);
+    const body = { ...this.payload!, replaceRecipeMenuItemIds: dryRun ? [] : [...this.replaceIds()] };
+    return parseBlob<CatalogImportResult>(await this.api.invoke(importCatalog, { dryRun, body }) as unknown);
+  }
+
+  toggleReplace(id: string | undefined, on: boolean): void {
+    if (!id) return;
+    const ids = new Set(this.replaceIds());
+    if (on) ids.add(id); else ids.delete(id);
+    this.replaceIds.set(ids);
+  }
+
+  /** En la vista previa, las que se van a pisar son las tildadas; al terminar, lo que dice el back. */
+  recipesReplacedCount(r: CatalogImportResult): number {
+    return this.step() === 'done' ? r.recipesReplaced ?? 0 : (r.recipesToReplace ?? []).filter(x => x.menuItemId && this.replaceIds().has(x.menuItemId)).length;
+  }
+
+  /** La primera fila del plato en la hoja de recetas (con IA, en la hoja del cliente). */
+  recipePlace(r: RecipeReplacement): string {
+    return this.errorPlace({ sheet: 'RECIPES', row: r.row });
   }
 
   errorMessage(error: ImportRowError): string {

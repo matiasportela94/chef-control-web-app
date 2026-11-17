@@ -59,3 +59,8 @@
   font-size: 12px; color: var(--text-1); border: 1px solid var(--border); border-radius: 10px; padding: 8px 12px;
 }
 .proposed-unit { flex-shrink: 0; font-size: 11px; color: var(--text-3); }
+
+// Platos con otra receta: el nombre se corta antes que la casilla; el lugar (hoja · fila) cede hasta la mitad.
+.replace-item { justify-content: flex-start; cursor: pointer; input { flex-shrink: 0; width: 16px; height: 16px; accent-color: var(--accent); } }
+.replace-name { flex: 1; }
+.replace-place { max-width: 50%; font-size: 11px; color: var(--text-3); }

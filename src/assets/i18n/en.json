@@ -518,9 +518,9 @@
       "sectionsCreated": "new menu sections",
       "menuItemsCreated": "new dishes",
       "recipesCreated": "new recipes",
-      "recipesReplaced": "replaced recipes"
+      "recipesReplaced": "replaced recipes",
+      "recipesUnchanged": "unchanged recipes"
     },
-    "replaceWarning": "For dishes that already exist, the whole recipe is replaced by the one in the file. Their price and menu section don't change.",
     "errorsTitle": "To fix ({count})",
     "errorsHint": "Nothing is saved while the file has errors. Fix it and choose it again.",
     "row": "row {row}",
@@ -586,6 +586,11 @@
       "tooManySheets": "Your Excel has more than {max} sheets with data. Keep only the products and recipes ones.",
       "proposedTitle": "Products proposed by the AI ({count})",
       "proposedHint": "Your recipes use them and they're not in your catalog or the Excel: they're created when you confirm. If one already exists under another name, fix the recipe in your Excel and choose it again."
+    },
+    "replace": {
+      "title": "These {count} dishes already have a different recipe",
+      "titleOne": "This dish already has a different recipe",
+      "hint": "Tick the ones you want to replace with the recipe in the file. The rest keep the one they have. Price and menu course don't change."
     }
   },
   "restaurants": {

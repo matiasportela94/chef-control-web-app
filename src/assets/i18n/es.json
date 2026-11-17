@@ -518,9 +518,9 @@
       "sectionsCreated": "pasos del menú nuevos",
       "menuItemsCreated": "platos nuevos",
       "recipesCreated": "recetas nuevas",
-      "recipesReplaced": "recetas reemplazadas"
+      "recipesReplaced": "recetas reemplazadas",
+      "recipesUnchanged": "recetas sin cambios"
     },
-    "replaceWarning": "En los platos que ya existen se reemplaza la receta entera por la del archivo. Su precio y su paso del menú no cambian.",
     "errorsTitle": "Para corregir ({count})",
     "errorsHint": "No se guarda nada mientras el archivo tenga errores. Corregilo y volvé a elegirlo.",
     "row": "fila {row}",
@@ -586,6 +586,11 @@
       "tooManySheets": "Tu Excel tiene más de {max} hojas con datos. Dejá solo las de insumos y recetas.",
       "proposedTitle": "Insumos propuestos por la IA ({count})",
       "proposedHint": "Tus recetas los usan y no están en tu catálogo ni en el Excel: se crean al confirmar. Si alguno ya existe con otro nombre, corregí la receta en tu Excel y volvé a elegirlo."
+    },
+    "replace": {
+      "title": "Estos {count} platos ya tienen otra receta",
+      "titleOne": "Este plato ya tiene otra receta",
+      "hint": "Tildá los que querés reemplazar por la receta del archivo. Los demás conservan la que tienen. El precio y el paso del menú no cambian."
     }
   },
   "restaurants": {
