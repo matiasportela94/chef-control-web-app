@@ -2,6 +2,14 @@
             [title]="t('ai.title')" [subtitle]="t(canRecord ? 'ai.subtitleVoice' : 'ai.subtitle')"
             (closed)="close()">
 
+  @if (planLocked) {
+    <div style="padding:28px 8px;text-align:center;">
+      <i class="ti ti-lock" style="font-size:28px;color:var(--accent);"></i>
+      <p style="font-size:15px;font-weight:600;color:var(--text-1);margin-top:8px;">{{ t('planGate.title') }}</p>
+      <p style="font-size:13px;color:var(--text-3);margin:6px auto 16px;max-width:420px;">{{ t('planGate.ai') }}</p>
+      @if (canSeePlans) { <a routerLink="/plan" (click)="close()" class="btn-primary btn-sm">{{ t('planGate.cta') }}</a> }
+    </div>
+  } @else {
   <div style="display:flex;flex-direction:column;gap:14px;">
 
     <!-- Dictado: un botón grande, tocar para grabar y tocar para cortar -->
@@ -119,10 +127,13 @@
     }
 
   </div>
+  }
 
   <!-- Footer -->
   <div drawer-footer style="padding:14px 20px;border-top:1px solid var(--border);background:var(--bg-card);display:flex;gap:8px;">
-    @if (executeResult()) {
+    @if (planLocked) {
+      <button (click)="close()" class="btn-secondary" style="flex:1;">{{ t('common.close') }}</button>
+    } @else if (executeResult()) {
       <button (click)="resetForNew()" class="btn-secondary" style="flex:1;">Nueva entrada</button>
       <button (click)="close()" class="btn-primary" style="flex:1;">Cerrar</button>
     } @else if (result()) {

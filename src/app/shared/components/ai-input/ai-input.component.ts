@@ -1,5 +1,6 @@
 import { Component, EventEmitter, Input, OnDestroy, Output, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { RouterLink } from '@angular/router';
 import { Api } from '../../../api/api';
 import { interpret as interpretText } from '../../../api/fn/ai-controller/interpret';
 import { execute as executeIntent } from '../../../api/fn/ai-controller/execute';
@@ -24,7 +25,7 @@ const AUDIO_TYPES = ['audio/webm;codecs=opus', 'audio/webm', 'audio/mp4'];
 @Component({
   selector: 'app-ai-input',
   standalone: true,
-  imports: [FormsModule, DrawerComponent],
+  imports: [FormsModule, DrawerComponent, RouterLink],
   templateUrl: './ai-input.component.html',
   styleUrl: './ai-input.component.scss',
 })
@@ -64,6 +65,16 @@ export class AiInputComponent implements OnDestroy {
 
   t(key: string, params?: Record<string, string | number>): string {
     return this.i18n.t(key, params);
+  }
+
+  /** Plan sin la IA (plan gratis): en lugar del formulario, el aviso de plan, como /food-cost. */
+  get planLocked(): boolean {
+    return !this.auth.hasFeature('AI_INTERPRETER');
+  }
+
+  /** `/plan` pide ACCOUNT_VIEW: sin eso el link rebotaría. */
+  get canSeePlans(): boolean {
+    return this.auth.hasPermission('ACCOUNT_VIEW');
   }
 
   /** Sin MediaRecorder/getUserMedia (navegador viejo, o http fuera de localhost) o sin la IA, no se ofrece. */

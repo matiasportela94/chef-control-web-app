@@ -485,7 +485,8 @@
     "title": "No está incluido en tu plan",
     "foodCost": "Recetas y food cost están incluidos desde el plan Starter.",
     "cta": "Ver planes",
-    "toastTitle": "Función no incluida en tu plan"
+    "toastTitle": "Función no incluida en tu plan",
+    "ai": "La entrada rápida con IA está incluida desde el plan Starter."
   },
   "profile": {
     "title": "Mi perfil",
