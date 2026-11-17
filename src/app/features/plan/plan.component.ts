@@ -263,6 +263,14 @@ export class PlanComponent implements OnInit, OnDestroy {
     return samePeriod ? 'upgrade' : 'upgradeAndPeriod';
   }
 
+  /**
+   * La card que se resalta. Sin suscripción vigente no hay período que comparar: es el plan efectivo de la cuenta en
+   * cualquier posición del selector (puesto a mano, o uno cancelado que sigue hasta `planExpiresAt`).
+   */
+  isCurrentCard(tier?: string): boolean {
+    return this.hasPlanToChange() ? this.cardAction(tier) === 'current' : this.account()?.plan === tier;
+  }
+
   isPendingChoice(tier?: string): boolean {
     const pc = this.pending();
     return pc?.planTier === tier && pc?.billingPeriod === this.period();

@@ -204,7 +204,7 @@
 
         <div class="plan-grid">
           @for (p of paidPlans(); track p.planTier) {
-            <div class="plan-card" [class.current]="hasPlanToChange() && cardAction(p.planTier) === 'current'">
+            <div class="plan-card" [class.current]="isCurrentCard(p.planTier)">
               <p style="font-size:14px;font-weight:700;color:var(--text-1);">{{ tierName(p.planTier) }}</p>
               @if (period() === 'MONTHLY') {
                 <p class="plan-price">{{ price(p.monthlyAmountArs) }}<span>{{ t('plan.perMonth') }}</span></p>
@@ -235,15 +235,25 @@
                       plan: tierName(p.planTier), current: periodName(subscription()?.billingPeriod), period: periodName(period()) }) }}</p>
                   }
                 }
-              } @else if (isOwner()) {
-                <button class="btn-primary btn-sm card-btn" [disabled]="subscribing() !== null" (click)="subscribe(p.planTier!)">
-                  @if (subscribing() === p.planTier) { <i class="ti ti-loader-2 spin"></i> } {{ t('plan.subscribe') }}
-                </button>
+              } @else if (isCurrentCard(p.planTier) && !account()?.planExpiresAt) {
+                <!-- Plan sin vencimiento (puesto a mano): no hay nada que contratar. -->
+                <button class="btn-secondary btn-sm card-btn" disabled>{{ t('plan.currentPlanButton') }}</button>
+              } @else {
+                @if (isOwner()) {
+                  <button class="btn-primary btn-sm card-btn" [disabled]="subscribing() !== null" (click)="subscribe(p.planTier!)">
+                    @if (subscribing() === p.planTier) { <i class="ti ti-loader-2 spin"></i> } {{ t('plan.subscribe') }}
+                  </button>
+                }
+                <!-- Cancelado que sigue hasta fin de período: "Suscribirme" lo reactiva. -->
+                @if (isCurrentCard(p.planTier)) {
+                  <p class="card-note">{{ t('plan.activeUntil', { date: formatDate(account()?.planExpiresAt) }) }}</p>
+                }
               }
             </div>
           }
         </div>
 
+        <p class="hint">{{ t('plan.pricesIncludeIva') }}</p>
         @if (!isOwner()) {
           <p class="hint">{{ t('plan.ownerOnly', { owner: account()?.ownerName ?? '' }) }}</p>
         } @else if (status() === 'ACTIVE') {

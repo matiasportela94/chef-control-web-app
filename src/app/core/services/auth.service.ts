@@ -102,12 +102,13 @@ export class AuthService {
     this.persistUser(response);
   }
 
+  /** El estado local se limpia antes del POST y pase lo que pase con él: la sesión del front termina igual. */
   async logout(): Promise<void> {
-    try {
-      await this.api.invoke(logoutFn);
-    } catch { /* ignorar errores de red al hacer logout */ }
     sessionStorage.removeItem(USER_KEY);
     this.currentUser.set(null);
+    try {
+      await this.api.invoke(logoutFn);
+    } catch { /* sin sesión o sin red: el back ya no la tiene o la cookie vence sola */ }
   }
 
   private persistUser(r: LoginResponse): void {

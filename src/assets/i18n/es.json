@@ -107,7 +107,16 @@
     "SUBSCRIPTION_NOT_ACTIVE": "No tenés una suscripción activa: para elegir un plan, suscribite.",
     "INVALID_IVA_PERCENTAGE": "La alícuota de IVA no es válida. Las posibles son 0; 2,5; 5; 10,5; 21 y 27 %.",
     "AI_SPREADSHEET_TOO_LARGE": "El Excel es demasiado grande para que la IA lo lea de una vez. Dividilo en varios archivos más chicos.",
-    "AI_INTERPRETATION_FAILED": "La IA no pudo interpretar el archivo en este momento. Probá de nuevo en un rato o usá la plantilla."
+    "AI_INTERPRETATION_FAILED": "La IA no pudo interpretar el archivo en este momento. Probá de nuevo en un rato o usá la plantilla.",
+    "AUTHENTICATION_REQUIRED": "Tu sesión terminó, volvé a entrar",
+    "CARTA_NOT_FOUND": "La carta no existe o fue borrada",
+    "DUPLICATE_CARTA_NAME": "Ya hay una carta con ese nombre",
+    "DUPLICATE_MENU_SECTION_NAME": "Ya hay un paso del menú con ese nombre",
+    "IMAGE_EMPTY": "La imagen está vacía",
+    "IMAGE_FORMAT_NOT_SUPPORTED": "Formato de imagen no soportado: usá JPG, PNG, WEBP o GIF",
+    "IMAGE_TOO_LARGE": "La imagen pesa más de 2 MB",
+    "MENU_SECTION_HAS_ITEMS": "Ese paso del menú todavía tiene platos: pasalos a otro antes de borrarlo",
+    "MENU_SECTION_NOT_FOUND": "El paso del menú no existe o fue borrado"
   },
   "ai": {
     "title": "Entrada rápida",
@@ -253,7 +262,7 @@
       "eyebrow": "Planes",
       "title": "Un precio claro.",
       "titleAccent": "Sin sorpresas.",
-      "subtitle": "Precios en pesos argentinos. Cancelás cuando quieras y seguís usando el plan hasta el final del período que pagaste.",
+      "subtitle": "Precios en pesos argentinos, con IVA incluido. Cancelás cuando quieras y seguís usando el plan hasta el final del período que pagaste.",
       "monthly": "Mensual",
       "annual": "Anual",
       "annualSaving": "−{pct}%",
@@ -400,7 +409,9 @@
       "upgradeConfirming": "Estamos confirmando tu pago con Mercado Pago…",
       "upgraded": "Listo: ya tenés el plan {plan}.",
       "upgradeTimeout": "Todavía no nos llegó la confirmación del pago. Si pagaste, en unos minutos vas a ver tu plan nuevo acá."
-    }
+    },
+    "pricesIncludeIva": "Precios en pesos argentinos, con IVA incluido.",
+    "activeUntil": "Hasta el {date}"
   },
   "auth": {
     "backHome": "← Volver al inicio",

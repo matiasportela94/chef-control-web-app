@@ -107,7 +107,16 @@
     "SUBSCRIPTION_NOT_ACTIVE": "You don't have an active subscription: subscribe to choose a plan.",
     "INVALID_IVA_PERCENTAGE": "Invalid VAT rate. Valid rates are 0, 2.5, 5, 10.5, 21 and 27%.",
     "AI_SPREADSHEET_TOO_LARGE": "The Excel is too large for the AI to read at once. Split it into smaller files.",
-    "AI_INTERPRETATION_FAILED": "The AI couldn't interpret the file right now. Try again later or use the template."
+    "AI_INTERPRETATION_FAILED": "The AI couldn't interpret the file right now. Try again later or use the template.",
+    "AUTHENTICATION_REQUIRED": "Your session ended, please sign in again",
+    "CARTA_NOT_FOUND": "The menu doesn't exist or was deleted",
+    "DUPLICATE_CARTA_NAME": "There's already a menu with that name",
+    "DUPLICATE_MENU_SECTION_NAME": "There's already a menu course with that name",
+    "IMAGE_EMPTY": "The image is empty",
+    "IMAGE_FORMAT_NOT_SUPPORTED": "Image format not supported: use JPG, PNG, WEBP or GIF",
+    "IMAGE_TOO_LARGE": "The image is larger than 2 MB",
+    "MENU_SECTION_HAS_ITEMS": "That menu course still has dishes: move them to another one before deleting it",
+    "MENU_SECTION_NOT_FOUND": "The menu course doesn't exist or was deleted"
   },
   "ai": {
     "title": "Quick entry",
@@ -253,7 +262,7 @@
       "eyebrow": "Pricing",
       "title": "Clear pricing.",
       "titleAccent": "No surprises.",
-      "subtitle": "Prices in Argentine pesos. Cancel anytime and keep your plan until the end of the period you paid for.",
+      "subtitle": "Prices in Argentine pesos, VAT included. Cancel anytime and keep your plan until the end of the period you paid for.",
       "monthly": "Monthly",
       "annual": "Yearly",
       "annualSaving": "−{pct}%",
@@ -400,7 +409,9 @@
       "upgradeConfirming": "We're confirming your payment with Mercado Pago…",
       "upgraded": "Done: you now have the {plan} plan.",
       "upgradeTimeout": "The payment confirmation hasn't arrived yet. If you paid, you'll see your new plan here in a few minutes."
-    }
+    },
+    "pricesIncludeIva": "Prices in Argentine pesos, VAT included.",
+    "activeUntil": "Until {date}"
   },
   "auth": {
     "backHome": "← Back to home",

@@ -224,9 +224,8 @@ export class CatalogImportComponent {
     this.step.set('interpreting');
     let interpretation: InterpretCatalogResult;
     try {
-      // El spec tipa las celdas como {} y no admite null; el back sí (una celda vacía en el medio de la fila).
       interpretation = await parseBlob<InterpretCatalogResult>(
-        await this.api.invoke(interpretCatalogSpreadsheet, { body: { sheets: request.sheets as any } }) as unknown);
+        await this.api.invoke(interpretCatalogSpreadsheet, { body: { sheets: request.sheets } }) as unknown);
     } catch (e) {
       this.requestError.set(extractApiError(e, this.t('import.ai.error')));
       this.step.set('pick');
