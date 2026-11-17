@@ -49,8 +49,8 @@
       <div class="prep-cost">
         <p class="field-label">{{ t('products.prep.costTitle') }}</p>
         @if (c.batchCost != null) {
-          <div class="prep-cost-row"><span>{{ t('products.prep.batchCost', { qty: formatNum(c.yieldQuantity), unit: c.unitName ?? yieldUnit }) }}</span><strong>{{ formatARS(c.batchCost) }}</strong></div>
-          <div class="prep-cost-row"><span>{{ t('products.prep.unitCost', { unit: c.unitName ?? yieldUnit }) }}</span><strong>{{ formatARS(c.unitCost) }}</strong></div>
+          <div class="prep-cost-row"><span>{{ t('products.prep.batchCost', { qty: formatNum(c.yieldQuantity), unit: yieldUnit || (c.unitName ?? '') }) }}</span><strong>{{ formatARS(c.batchCost) }}</strong></div>
+          <div class="prep-cost-row"><span>{{ t('products.prep.unitCost', { unit: yieldUnit || (c.unitName ?? '') }) }}</span><strong>{{ formatARS(c.unitCost) }}</strong></div>
           @for (ing of c.ingredients ?? []; track ing.productId) {
             <div class="prep-cost-line">
               <span class="ellipsis">{{ ing.productName }}@if (ing.preparation) { <span class="badge badge-neutral prep-badge">{{ t('common.preparation') }}</span> }</span>

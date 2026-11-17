@@ -7,7 +7,8 @@ import { interpretCatalogSpreadsheet } from '../../../api/fn/ai-controller/inter
 import { InterpretCatalogResult } from '../../../api/models/interpret-catalog-result';
 import { CatalogImportResult } from '../../../api/models/catalog-import-result';
 import { RecipeReplacement } from '../../../api/models/recipe-replacement';
-import { CatalogImportPreparationsResult, PreparationImportRow, PreparationReplacement } from '../../../core/api-pending/preparations';
+import { PreparationImportRow } from '../../../api/models/preparation-import-row';
+import { PreparationReplacement } from '../../../api/models/preparation-replacement';
 import { ImportRowError } from '../../../api/models/import-row-error';
 import { ProductImportRow } from '../../../api/models/product-import-row';
 import { RecipeImportRow } from '../../../api/models/recipe-import-row';
@@ -23,9 +24,6 @@ import {
   RowRef, UNREADABLE_NUMBER,
   buildInterpretSheets, parseCatalogWorkbook
 } from './catalog-import-parse';
-
-// ponytail: los campos de preparaciones (F17) a mano hasta que el back publique el spec.
-type ImportResult = CatalogImportResult & CatalogImportPreparationsResult;
 
 /** Más que esto no se dibuja: con 500 errores la lista no se lee igual, y el primero ya dice qué corregir. */
 const MAX_ERRORS_SHOWN = 50;
@@ -55,7 +53,7 @@ export class CatalogImportComponent {
   fileName = signal<string | null>(null);
   problems = signal<string[]>([]);
   requestError = signal<string | null>(null);
-  result = signal<ImportResult | null>(null);
+  result = signal<CatalogImportResult | null>(null);
   errors = signal<ImportRowError[]>([]);
   templateLoading = signal(false);
   hasRecipes = signal(false);
@@ -270,8 +268,7 @@ export class CatalogImportComponent {
     this.aiOffer.set(false);
     this.warnings.set(interpretation.warnings ?? []);
     const recipes = this.recipesEnabled() ? interpretation.recipes ?? [] : [];
-    const preparations = this.preparationsEnabled()
-      ? (interpretation as InterpretCatalogResult & { preparations?: PreparationImportRow[] }).preparations ?? [] : [];
+    const preparations = this.preparationsEnabled() ? interpretation.preparations ?? [] : [];
     // Sin recetas ni preparaciones no hay a quién le hagan falta: no se proponen.
     const proposed = recipes.length || preparations.length ? interpretation.proposedProducts ?? [] : [];
     this.proposed.set(proposed);
@@ -326,11 +323,11 @@ export class CatalogImportComponent {
    * El dryRun pregunta qué platos y qué preparaciones ya tienen otra receta; al confirmar se mandan los tildados. Un id
    * de más se ignora.
    */
-  private async send(dryRun: boolean): Promise<ImportResult> {
+  private async send(dryRun: boolean): Promise<CatalogImportResult> {
     const body = { ...this.payload!,
       replaceRecipeMenuItemIds: dryRun ? [] : [...this.replaceIds()],
       replacePreparationProductIds: dryRun ? [] : [...this.replacePrepIds()] };
-    return parseBlob<ImportResult>(await this.api.invoke(importCatalog, { dryRun, body }) as unknown);
+    return parseBlob<CatalogImportResult>(await this.api.invoke(importCatalog, { dryRun, body }) as unknown);
   }
 
   toggleReplace(set: WritableSignal<ReadonlySet<string>>, id: string | undefined, on: boolean): void {
@@ -341,11 +338,11 @@ export class CatalogImportComponent {
   }
 
   /** En la vista previa, las que se van a pisar son las tildadas; al terminar, lo que dice el back. */
-  recipesReplacedCount(r: ImportResult): number {
+  recipesReplacedCount(r: CatalogImportResult): number {
     return this.step() === 'done' ? r.recipesReplaced ?? 0 : (r.recipesToReplace ?? []).filter(x => x.menuItemId && this.replaceIds().has(x.menuItemId)).length;
   }
 
-  preparationsReplacedCount(r: ImportResult): number {
+  preparationsReplacedCount(r: CatalogImportResult): number {
     return this.step() === 'done' ? r.preparationsReplaced ?? 0
       : (r.preparationsToReplace ?? []).filter(x => x.productId && this.replacePrepIds().has(x.productId)).length;
   }

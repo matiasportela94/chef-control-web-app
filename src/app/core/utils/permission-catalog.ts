@@ -24,7 +24,7 @@ export const PERMISSION_MODULES: PermissionModule[] = [
   { label: 'Compras',     view: 'PURCHASES_VIEW',     create: 'PURCHASES_CREATE',     update: 'PURCHASES_UPDATE',     delete: 'PURCHASES_DELETE' },
   { label: 'Ventas',      view: 'SALES_VIEW',         create: 'SALES_CREATE',         delete: 'SALES_DELETE' },
   { label: 'Merma',       view: 'WASTE_VIEW',         create: 'WASTE_CREATE' },
-  { label: 'Producción',  view: 'PRODUCTIONS_VIEW' as PermissionKey, create: 'PRODUCTIONS_CREATE' as PermissionKey, delete: 'PRODUCTIONS_DELETE' as PermissionKey },  // ponytail: cast hasta regenerar con el spec de F17
+  { label: 'Producción',  view: 'PRODUCTIONS_VIEW',   create: 'PRODUCTIONS_CREATE',   delete: 'PRODUCTIONS_DELETE' },
   { label: 'Stock',       view: 'STOCK_VIEW',         delete: 'STOCK_DELETE' },
   { label: 'Conteos',     view: 'STOCK_COUNTS_VIEW',  create: 'STOCK_COUNTS_CREATE' },
   { label: 'Menú',        view: 'MENU_VIEW',          create: 'MENU_CREATE',          update: 'MENU_UPDATE',          delete: 'MENU_DELETE' },

@@ -9,7 +9,7 @@
 import { ImportRowError } from '../../../api/models/import-row-error';
 import { ProductImportRow } from '../../../api/models/product-import-row';
 import { RecipeImportRow } from '../../../api/models/recipe-import-row';
-import { PreparationImportRow } from '../../../core/api-pending/preparations';
+import { PreparationImportRow } from '../../../api/models/preparation-import-row';
 
 /** Los valores de `ImportRowError.sheet` del backend. */
 export type ImportSheet = 'PRODUCTS' | 'PREPARATIONS' | 'RECIPES';

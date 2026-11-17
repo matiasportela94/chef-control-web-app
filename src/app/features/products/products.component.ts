@@ -30,7 +30,6 @@ import { AuthService } from '../../core/services/auth.service';
 import { extractApiError } from '../../core/utils/api-error';
 import { isFormFieldInvalid } from '../../core/utils/form';
 import { IVA_RATES, formatIvaRate } from '../../core/utils/iva';
-import { ProductWithPreparation } from '../../core/api-pending/preparations';
 import { PreparationRecipeComponent } from './preparation-recipe/preparation-recipe.component';
 
 @Component({
@@ -171,7 +170,7 @@ export class ProductsComponent implements OnInit {
   }
 
   isPreparation(p: ProductResponse): boolean {
-    return !!(p as ProductWithPreparation).preparation;
+    return !!p.preparation;
   }
 
   openCreate(): void {

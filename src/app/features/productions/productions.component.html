@@ -58,7 +58,7 @@
                   @if (p.automatic) { <span class="badge badge-neutral">{{ t('productions.automatic') }}</span> }
                   @if (p.status === 'REVERSED') { <span class="badge badge-red">{{ t('productions.reversed') }}</span> }
                 </span>
-                <span class="prod-meta">{{ formatDatetime(p.producedAt) }} · {{ qty(p.quantity, p.unitName) }}</span>
+                <span class="prod-meta">{{ formatDatetime(p.producedAt) }} · {{ qty(p.quantity, p.unitId, p.unitName) }}</span>
               </div>
             </button>
           }
@@ -84,7 +84,7 @@
                     @if (p.automatic) { <span class="badge badge-neutral" style="margin-left:6px;">{{ t('productions.automatic') }}</span> }
                     @if (p.status === 'REVERSED') { <span class="badge badge-red" style="margin-left:6px;">{{ t('productions.reversed') }}</span> }
                   </td>
-                  <td style="text-align:right;color:var(--text-2);white-space:nowrap;">{{ qty(p.quantity, p.unitName) }}</td>
+                  <td style="text-align:right;color:var(--text-2);white-space:nowrap;">{{ qty(p.quantity, p.unitId, p.unitName) }}</td>
                   <td style="text-align:right;color:var(--text-2);white-space:nowrap;">{{ formatARS(p.totalCost) }}</td>
                 </tr>
               }
@@ -175,9 +175,9 @@
 
       <div class="kv">
         <span>{{ t('productions.colDate') }}</span><span>{{ formatDatetime(d.producedAt) }}</span>
-        <span>{{ t('productions.colQuantity') }}</span><span>{{ qty(d.quantity, d.unitName) }}</span>
+        <span>{{ t('productions.colQuantity') }}</span><span>{{ qty(d.quantity, d.unitId, d.unitName) }}</span>
         @if (d.expirationDate) { <span>{{ t('productions.formExpiration') }}</span><span>{{ formatDateOnly(d.expirationDate) }}</span> }
-        <span>{{ t('productions.costPerUnit', { unit: d.unitName ?? '' }) }}</span><span>{{ formatARS(d.costPerUnit) }}</span>
+        <span>{{ t('productions.costPerUnit', { unit: unitLabel(d.unitId, d.unitName) }) }}</span><span>{{ formatARS(d.costPerUnit) }}</span>
         <span>{{ t('productions.totalCost') }}</span><span class="strong">{{ formatARS(d.totalCost) }}</span>
       </div>
 
@@ -196,8 +196,8 @@
                 <div style="min-width:0;flex:1;">
                   <p class="ellipsis" style="color:var(--text-1);font-size:12px;">{{ i.productName }}</p>
                   <p style="font-size:11px;color:var(--text-3);">
-                    {{ qty(i.quantity, i.unitName) }}
-                    @if (i.standardWaste) { · {{ t('productions.standardWaste', { qty: qty(i.standardWaste, i.unitName) }) }} }
+                    {{ qty(i.quantity, i.unitId, i.unitName) }}
+                    @if (i.standardWaste) { · {{ t('productions.standardWaste', { qty: qty(i.standardWaste, i.unitId, i.unitName) }) }} }
                   </p>
                 </div>
                 <span style="font-size:12px;color:var(--text-1);font-weight:500;white-space:nowrap;">{{ formatARS(i.totalCost) }}</span>
@@ -224,7 +224,7 @@
   icon="⚠️"
   tone="danger"
   [message]="reverseError() ?? t('productions.reverseMessage')"
-  [itemTitle]="(detail()?.productName ?? '') + ' · ' + qty(detail()?.quantity, detail()?.unitName)"
+  [itemTitle]="(detail()?.productName ?? '') + ' · ' + qty(detail()?.quantity, detail()?.unitId, detail()?.unitName)"
   [confirmLabel]="t('productions.reverse')"
   [cancelLabel]="t('common.cancel')"
   [confirmDisabled]="reversing()"

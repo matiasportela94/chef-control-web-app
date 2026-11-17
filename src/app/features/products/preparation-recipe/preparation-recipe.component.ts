@@ -3,10 +3,13 @@ import { FormArray, FormBuilder, FormGroup, ReactiveFormsModule, Validators } fr
 import { RouterLink } from '@angular/router';
 import { Api } from '../../../api/api';
 import { UnitResponse } from '../../../api/models/unit-response';
-import {
-  PreparationCostResponse, PreparationRecipeResponse, ProductWithPreparation,
-  deletePreparationRecipe, getPreparationCost, getPreparationRecipe, setPreparationRecipe,
-} from '../../../core/api-pending/preparations';
+import { deletePreparationRecipe } from '../../../api/fn/product-controller/delete-preparation-recipe';
+import { getPreparationCost } from '../../../api/fn/product-controller/get-preparation-cost';
+import { getPreparationRecipe } from '../../../api/fn/product-controller/get-preparation-recipe';
+import { setPreparationRecipe } from '../../../api/fn/product-controller/set-preparation-recipe';
+import { PreparationCostResponse } from '../../../api/models/preparation-cost-response';
+import { PreparationRecipeResponse } from '../../../api/models/preparation-recipe-response';
+import { ProductResponse } from '../../../api/models/product-response';
 import { AuthService } from '../../../core/services/auth.service';
 import { I18nService } from '../../../core/services/i18n.service';
 import { extractApiError } from '../../../core/utils/api-error';
@@ -27,8 +30,8 @@ import { SelectComponent, SelectOption } from '../../../shared/components/select
   styleUrl: './preparation-recipe.component.scss'
 })
 export class PreparationRecipeComponent implements OnChanges {
-  @Input({ required: true }) product!: ProductWithPreparation;
-  @Input() products: ProductWithPreparation[] = [];
+  @Input({ required: true }) product!: ProductResponse;
+  @Input() products: ProductResponse[] = [];
   @Input() units: UnitResponse[] = [];
   /** Recién creado con "Crear y cargar receta": el editor arranca abierto. */
   @Input() startOpen = false;

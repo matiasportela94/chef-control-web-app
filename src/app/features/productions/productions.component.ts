@@ -6,10 +6,13 @@ import { listProducts } from '../../api/fn/product-controller/list-products';
 import { listUnits } from '../../api/fn/unit-controller/list-units';
 import { PagedResponseProductResponse } from '../../api/models/paged-response-product-response';
 import { UnitResponse } from '../../api/models/unit-response';
-import {
-  PagedResponseProductionResponse, ProductWithPreparation, ProductionResponse,
-  getProduction, listProductions, recordProduction, reverseProduction,
-} from '../../core/api-pending/preparations';
+import { getProduction } from '../../api/fn/production-controller/get-production';
+import { listProductions } from '../../api/fn/production-controller/list-productions';
+import { recordProduction } from '../../api/fn/production-controller/record-production';
+import { reverseProduction } from '../../api/fn/production-controller/reverse-production';
+import { PagedResponseProductionResponse } from '../../api/models/paged-response-production-response';
+import { ProductResponse } from '../../api/models/product-response';
+import { ProductionResponse } from '../../api/models/production-response';
 import { AlertNotificationService } from '../../core/services/alert-notification.service';
 import { AuthService } from '../../core/services/auth.service';
 import { I18nService } from '../../core/services/i18n.service';
@@ -47,7 +50,7 @@ export class ProductionsComponent implements OnInit {
   total   = signal(0);
   automaticFilter = signal<AutomaticFilter>('all');
 
-  preparations = signal<ProductWithPreparation[]>([]);
+  preparations = signal<ProductResponse[]>([]);
   units        = signal<UnitResponse[]>([]);
   preparationOptions = computed<SelectOption[]>(() => this.preparations().map(p => ({ value: p.id ?? '', label: p.name ?? '' })));
   /** Las unidades del mismo tipo que la de la preparación (kg → g, kg); el back convierte. */
@@ -117,7 +120,7 @@ export class ProductionsComponent implements OnInit {
         this.api.invoke(listUnits) as unknown,
       ]);
       const products = (await parseBlob<PagedResponseProductResponse>(prodsRaw)).content ?? [];
-      this.preparations.set((products as ProductWithPreparation[]).filter(p => p.preparation && p.isActive));
+      this.preparations.set(products.filter(p => p.preparation && p.isActive));
       this.units.set(await parseBlob<UnitResponse[]>(unitsRaw));
     } catch { /* el form queda sin opciones; el listado igual se ve */ }
   }
@@ -231,8 +234,13 @@ export class ProductionsComponent implements OnInit {
     return this.t('productions.automaticHint');
   }
 
-  qty(n?: number, unit?: string): string {
-    return `${formatNum(n)} ${unit ?? ''}`.trim();
+  /** El back manda el nombre largo de la unidad ("Kilogramo"): se muestra la abreviatura, como en el resto de la app. */
+  qty(n?: number, unitId?: string, unitName?: string): string {
+    return `${formatNum(n)} ${this.unitLabel(unitId, unitName)}`.trim();
+  }
+
+  unitLabel(unitId?: string, unitName?: string): string {
+    return this.units().find(u => u.id === unitId)?.abbreviation ?? unitName ?? '';
   }
 
   readonly formatARS = formatARS;

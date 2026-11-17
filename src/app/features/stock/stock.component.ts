@@ -17,7 +17,8 @@ import { listUnits } from '../../api/fn/unit-controller/list-units';
 import { UnitResponse } from '../../api/models/unit-response';
 import { parseBlob } from '../../core/utils/parse-blob';
 import { formatDatetime, formatNum } from '../../core/utils/format';
-import { ProductionResponse, getProduction } from '../../core/api-pending/preparations';
+import { getProduction } from '../../api/fn/production-controller/get-production';
+import { ProductionResponse } from '../../api/models/production-response';
 import { PaginatorComponent } from '../../shared/components/paginator/paginator.component';
 import { SpinnerComponent } from '../../shared/components/spinner/spinner.component';
 
