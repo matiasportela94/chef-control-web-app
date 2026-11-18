@@ -70,7 +70,7 @@
                     @for (op of r.proposal; track $index) {
                       <li class="proposal">
                         <span class="section-label">{{ t('ai.types.' + op.type) }}</span>
-                        @for (it of op.items ?? []; track $index) { <span class="proposal-item">{{ itemLine(op.type, it) }}</span> }
+                        @for (it of op.items; track $index) { <span class="proposal-item">{{ itemLine(op.type, it) }}</span> }
                       </li>
                     }
                   </ul>
