@@ -38,7 +38,7 @@
       <!-- Mobile: cards -->
       <div class="flex md:hidden" style="flex-direction:column;gap:8px;margin-bottom:16px;">
         @for (e of events(); track e.id) {
-          <div class="data-card" style="padding:12px 14px;">
+          <div class="data-card" [class.reversed]="e.reversed" style="padding:12px 14px;">
             <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:8px;">
               <div style="min-width:0;">
                 <p style="color:var(--text-1);font-weight:600;font-size:13px;">{{ e.productName ?? '—' }}</p>
@@ -46,10 +46,13 @@
                   <p style="font-size:11px;color:var(--text-3);">{{ e.productSku }}</p>
                 }
               </div>
-              <p style="color:var(--text-1);font-weight:700;font-size:13px;white-space:nowrap;">{{ formatARS(e.cost) }}</p>
+              <p class="waste-cost" style="color:var(--text-1);font-weight:700;font-size:13px;white-space:nowrap;">{{ formatARS(e.cost) }}</p>
             </div>
             <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;">
-              <span class="badge" [class]="reasonClass(e.reason)">{{ reasonLabel(e.reason) }}</span>
+              <span style="display:flex;flex-wrap:wrap;gap:6px;">
+                <span class="badge" [class]="reasonClass(e.reason)">{{ reasonLabel(e.reason) }}</span>
+                @if (e.reversed) { <span class="badge badge-reversed" [title]="t('waste.reversedHint')"><i class="ti ti-arrow-back-up"></i> {{ t('waste.reversed') }}</span> }
+              </span>
               <span style="font-size:11px;color:var(--text-3);white-space:nowrap;">
                 {{ formatDate(e.createdAt) }} · {{ e.quantity }} {{ e.unitAbbreviation ?? '' }}
               </span>
@@ -73,7 +76,7 @@
             </thead>
             <tbody>
               @for (e of events(); track e.id) {
-                <tr>
+                <tr [class.reversed]="e.reversed">
                   <td style="color:var(--text-2);white-space:nowrap;">
                     {{ formatDate(e.createdAt) }}
                   </td>
@@ -90,8 +93,9 @@
                     <span class="badge" [class]="reasonClass(e.reason)">
                       {{ reasonLabel(e.reason) }}
                     </span>
+                    @if (e.reversed) { <span class="badge badge-reversed" style="margin-left:6px;" [title]="t('waste.reversedHint')"><i class="ti ti-arrow-back-up"></i> {{ t('waste.reversed') }}</span> }
                   </td>
-                  <td style="text-align:right;color:var(--text-2);">
+                  <td class="waste-cost" style="text-align:right;color:var(--text-2);">
                     {{ formatARS(e.cost) }}
                   </td>
                 </tr>

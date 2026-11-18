@@ -938,5 +938,9 @@
     "reverseTitle": "Revertir la producción",
     "reverseMessage": "Los ingredientes vuelven al stock y se descuenta la preparación. No se puede deshacer.",
     "reverseError": "No se pudo revertir la producción."
+  },
+  "waste": {
+    "reversed": "Deshecha",
+    "reversedHint": "Se deshizo: el stock volvió y no cuenta en la merma del mes."
   }
 }

@@ -938,5 +938,9 @@
     "reverseTitle": "Reverse the production",
     "reverseMessage": "The ingredients go back to stock and the prep is deducted. This can't be undone.",
     "reverseError": "The production couldn't be reversed."
+  },
+  "waste": {
+    "reversed": "Undone",
+    "reversedHint": "It was undone: the stock came back and it does not count in the month's waste."
   }
 }

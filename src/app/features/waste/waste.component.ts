@@ -4,6 +4,7 @@ import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angula
 import { Api } from '../../api/api';
 import { AiRefreshService } from '../../core/services/ai-refresh.service';
 import { AlertNotificationService } from '../../core/services/alert-notification.service';
+import { I18nService } from '../../core/services/i18n.service';
 import { listWasteEvents } from '../../api/fn/waste-event-controller/list-waste-events';
 import { createWasteEvent } from '../../api/fn/waste-event-controller/create-waste-event';
 import { listProducts } from '../../api/fn/product-controller/list-products';
@@ -31,6 +32,8 @@ import { SelectComponent, SelectOption } from '../../shared/components/select/se
 })
 export class WasteComponent implements OnInit {
   private readonly destroyRef = inject(DestroyRef);
+  private readonly i18n = inject(I18nService);
+  t = (key: string) => this.i18n.t(key);
 
   events   = signal<WasteEventResponse[]>([]);
   loading  = signal(true);

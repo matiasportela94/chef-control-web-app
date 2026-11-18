@@ -20,3 +20,7 @@
 .badge-danger  { @apply bg-danger-500/10  text-danger-400  border border-danger-500/20;  }
 .badge-warning { @apply bg-warning-500/10 text-warning-400 border border-warning-500/20; }
 .badge-neutral { @apply bg-surface-700/50 text-surface-400 border border-white/10;       }
+
+// Una merma deshecha sigue en la lista (es historia), pero apagada y con el costo tachado: no cuenta en la merma del mes.
+.reversed { opacity: .6; .waste-cost { text-decoration: line-through; } }
+.badge-reversed { display: inline-flex; align-items: center; gap: 3px; background: var(--bg-input); color: var(--text-2); border: 1px solid var(--border-strong); }
