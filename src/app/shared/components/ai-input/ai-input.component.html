@@ -80,7 +80,7 @@
                   <ul class="reply-list">
                     @for (s of r.skipped; track $index) {
                       <li class="reply-line reply-skip"><i class="ti ti-alert-triangle"></i>
-                        <span>@if (s.name) { <strong>{{ s.name }}: </strong> }{{ skipMessage(s) }}</span>
+                        <span>@if (skipSubject(s); as subject) { <strong>{{ subject }}: </strong> }{{ skipMessage(s) }}</span>
                       </li>
                     }
                   </ul>

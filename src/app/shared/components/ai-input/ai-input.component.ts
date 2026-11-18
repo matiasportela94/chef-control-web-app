@@ -260,6 +260,11 @@ export class AiInputComponent implements OnDestroy {
       : item;
   }
 
+  /** Lo que se salteó: el nombre como lo escribió el usuario o, si no vino (un permiso), el tipo de operación. */
+  skipSubject(s: ChatSkip): string | null {
+    return s.name || (s.type ? this.t(`ai.types.${s.type}`) : null);
+  }
+
   skipMessage(s: ChatSkip): string {
     return getErrorMessage(s.errorCode) ?? s.message ?? '';
   }
