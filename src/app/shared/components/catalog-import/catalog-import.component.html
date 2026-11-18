@@ -1,4 +1,4 @@
-<app-drawer [isOpen]="isOpen" [title]="t('import.title')" titleIcon="file-spreadsheet" (closed)="close()">
+<app-drawer [isOpen]="isOpen" [title]="t(fromChat() ? 'import.chat.title' : 'import.title')" [titleIcon]="fromChat() ? 'chef-hat' : 'file-spreadsheet'" (closed)="close()">
 
   @if (recipesBlockedBy(); as reason) {
     <div class="notice"><i class="ti ti-info-circle"></i><span>{{ t(reason === 'plan' ? 'import.productsOnlyPlan' : 'import.productsOnlyPermission') }}</span></div>
@@ -9,8 +9,8 @@
   }
 
   @if (step() === 'done') {
-    <div class="notice notice-ok"><i class="ti ti-circle-check"></i><span>{{ t('import.done') }}</span></div>
-  } @else {
+    <div class="notice notice-ok"><i class="ti ti-circle-check"></i><span>{{ t(fromChat() ? 'import.chat.done' : 'import.done') }}</span></div>
+  } @else if (!fromChat()) {
     <!-- 1. Plantilla -->
     <div class="step">
       <p class="step-title">{{ t('import.step1') }}</p>
@@ -74,9 +74,9 @@
 
   <!-- 3. Vista previa / resultado -->
   @if ((step() === 'preview' || step() === 'saving' || step() === 'done') && result(); as r) {
-    <p class="step-title" style="margin-top:18px;">{{ step() === 'done' ? t('import.resultTitle') : t('import.previewTitle') }}</p>
-    @if (aiRefs() && step() !== 'done') {
-      <div class="notice"><i class="ti ti-sparkles"></i><span>{{ t('import.ai.review') }}</span></div>
+    <p class="step-title" style="margin-top:18px;">{{ step() === 'done' ? t('import.resultTitle') : t(fromChat() ? 'import.chat.previewTitle' : 'import.previewTitle') }}</p>
+    @if ((aiRefs() || fromChat()) && step() !== 'done') {
+      <div class="notice"><i class="ti ti-sparkles"></i><span>{{ t(fromChat() ? 'import.chat.review' : 'import.ai.review') }}</span></div>
     }
     @if (warnings().length && step() !== 'done') {
       <div class="notice notice-warn"><i class="ti ti-alert-circle"></i>
@@ -86,6 +86,22 @@
         </div>
       </div>
     }
+    <!-- Del chat, una sola receta: se muestra ella en vez de los contadores (casi todos en 0) -->
+    @if (fromChat()) {
+      @for (rec of chatRecipes(); track $index) {
+        <div class="chat-recipe">
+          <p class="chat-recipe-name">
+            <span class="ellipsis">{{ rec.name }}</span>
+            @if (step() !== 'done' && (r.menuItemsCreated || r.preparationsCreated)) { <span class="badge badge-neutral">{{ t('import.chat.new') }}</span> }
+          </p>
+          @if (rec.yield) { <p class="chat-recipe-yield">{{ rec.yield }}</p> }
+          <ul>@for (l of rec.lines; track $index) { <li>{{ l }}</li> }</ul>
+        </div>
+      }
+      @if (step() !== 'done' && (r.recipesUnchanged || r.preparationsUnchanged)) {
+        <div class="notice"><i class="ti ti-equal"></i><span>{{ t('import.chat.unchanged') }}</span></div>
+      }
+    } @else {
     <div class="counters">
       <div class="counter"><span>{{ r.productsCreated ?? 0 }}</span>{{ t('import.counters.productsCreated') }}</div>
       <div class="counter"><span>{{ r.productsExisting ?? 0 }}</span>{{ t('import.counters.productsExisting') }}</div>
@@ -103,12 +119,13 @@
         <div class="counter"><span>{{ r.recipesUnchanged ?? 0 }}</span>{{ t('import.counters.recipesUnchanged') }}</div>
       }
     </div>
+    }
     <!-- Platos que ya tienen otra receta: se pisa solo la que se tilde (sin tildar por defecto) -->
     @if (r.recipesToReplace?.length && step() !== 'done') {
       <p class="step-title" style="margin-top:14px;">
         {{ r.recipesToReplace!.length === 1 ? t('import.replace.titleOne') : t('import.replace.title', { count: r.recipesToReplace!.length }) }}
       </p>
-      <p class="hint">{{ t('import.replace.hint') }}</p>
+      <p class="hint">{{ t(fromChat() ? 'import.chat.replaceHint' : 'import.replace.hint') }}</p>
       <div class="proposed-list">
         @for (x of r.recipesToReplace; track x.menuItemId) {
           <label class="proposed-item replace-item">
@@ -125,7 +142,7 @@
       <p class="step-title" style="margin-top:14px;">
         {{ r.preparationsToReplace!.length === 1 ? t('import.replacePrep.titleOne') : t('import.replacePrep.title', { count: r.preparationsToReplace!.length }) }}
       </p>
-      <p class="hint">{{ t('import.replacePrep.hint') }}</p>
+      <p class="hint">{{ t(fromChat() ? 'import.chat.replaceHint' : 'import.replacePrep.hint') }}</p>
       <div class="proposed-list">
         @for (x of r.preparationsToReplace; track x.productId) {
           <label class="proposed-item replace-item prep-replace-item">
@@ -139,7 +156,7 @@
     }
     @if (proposed().length && step() !== 'done') {
       <p class="step-title" style="margin-top:14px;">{{ t('import.ai.proposedTitle', { count: proposed().length }) }}</p>
-      <p class="hint">{{ t('import.ai.proposedHint') }}</p>
+      <p class="hint">{{ t(fromChat() ? 'import.chat.proposedHint' : 'import.ai.proposedHint') }}</p>
       <div class="proposed-list">
         @for (p of proposed(); track $index) {
           <div class="proposed-item"><span class="ellipsis">{{ p.name }}</span><span class="proposed-unit">{{ p.unit }}</span></div>
@@ -174,7 +191,7 @@
       <button type="button" (click)="confirm()" class="btn-primary btn-sm"
               [disabled]="step() !== 'preview' || !result() || errors().length > 0">
         @if (step() === 'saving') { <i class="ti ti-loader-2 spin"></i> }
-        {{ t('import.confirm') }}
+        {{ t(fromChat() ? 'import.chat.confirm' : 'import.confirm') }}
       </button>
     }
   </div>

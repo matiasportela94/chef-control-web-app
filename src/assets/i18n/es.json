@@ -189,7 +189,9 @@
     "undoUntil": "Podés deshacerlo hasta las {time}",
     "undone": "Deshecho",
     "undoError": "No se pudo deshacer.",
-    "confirmError": "No se pudo registrar."
+    "confirmError": "No se pudo registrar.",
+    "reviewRecipe": "Revisar la receta",
+    "recipeSaved": "Receta guardada."
   },
   "menu": {
     "carta": "Carta",
@@ -589,6 +591,20 @@
     "live": "En vivo"
   },
   "import": {
+    "chat": {
+      "title": "Revisar receta",
+      "review": "La armó la IA a partir de tu mensaje. Revisala antes de confirmar.",
+      "ingredient": "Ingrediente {n}",
+      "previewTitle": "Esto es lo que se va a guardar",
+      "confirm": "Guardar receta",
+      "new": "Nueva",
+      "yield": "Rinde {qty} {unit}",
+      "unchanged": "Es igual a la receta que ya tiene: guardarla no cambia nada.",
+      "replaceHint": "Si la dejás tildada, se reemplaza por esta; si no, conserva la que tiene.",
+      "proposedHint": "La receta los usa y no están en tu catálogo: se crean al guardar. Si alguno ya existe con otro nombre, corregí el mensaje y mandalo de nuevo.",
+      "unknownIngredient": "No es un insumo del catálogo: cargalo en Insumos o escribilo como figura ahí.",
+      "done": "Listo: la receta quedó guardada."
+    },
     "title": "Importar desde Excel",
     "button": "Importar",
     "productsOnlyPlan": "Tu plan no incluye recetas ni preparaciones: se importa solo la hoja Insumos. Están desde el plan Starter.",

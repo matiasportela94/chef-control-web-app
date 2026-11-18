@@ -18,6 +18,7 @@ import { AiRefreshService } from '../../../core/services/ai-refresh.service';
 import { AuthService } from '../../../core/services/auth.service';
 import { I18nService } from '../../../core/services/i18n.service';
 import { DrawerComponent } from '../drawer/drawer.component';
+import { CatalogImportComponent } from '../catalog-import/catalog-import.component';
 
 /** Se corta solo a los 2 min. A 64 kbps son ~1 MB, lejos del tope del back (4 MB, AI_AUDIO_TOO_LARGE). */
 const MAX_RECORDING_SECONDS = 120;
@@ -33,7 +34,7 @@ const UNDO_PERMISSION: Record<string, string> = {
 
 const STATUS_ICON: Record<string, string> = {
   REGISTERED: 'ti-circle-check', NEEDS_CONFIRMATION: 'ti-help-circle', NOT_REGISTERED: 'ti-circle-x',
-  NOT_SUPPORTED: 'ti-info-circle', NOT_UNDERSTOOD: 'ti-question-mark',
+  NOT_SUPPORTED: 'ti-info-circle', NOT_UNDERSTOOD: 'ti-question-mark', RECIPE_PREVIEW: 'ti-chef-hat',
 };
 
 /** `deadline`: hasta cuándo se deshace sin permiso, en el reloj de este navegador (ver `track`). */
@@ -56,12 +57,13 @@ interface ChatTurn {
   confirming?: boolean;
   confirmError?: string;
   cancelled?: boolean;
+  recipeSaved?: boolean;
 }
 
 @Component({
   selector: 'app-ai-input',
   standalone: true,
-  imports: [FormsModule, DrawerComponent, RouterLink, DatePipe],
+  imports: [FormsModule, DrawerComponent, RouterLink, DatePipe, CatalogImportComponent],
   templateUrl: './ai-input.component.html',
   styleUrl: './ai-input.component.scss',
 })
@@ -70,6 +72,7 @@ export class AiInputComponent implements OnDestroy {
   @Output() closed = new EventEmitter<void>();
   @ViewChild('box') private box?: ElementRef<HTMLTextAreaElement>;
   @ViewChild('end') private end?: ElementRef<HTMLElement>;
+  @ViewChild(CatalogImportComponent) private importer?: CatalogImportComponent;
 
   message = '';
   /** El historial vive mientras viva el shell: salir a /login (logout o cambio de local) lo descarta. */
@@ -79,6 +82,8 @@ export class AiInputComponent implements OnDestroy {
   /** Mueve los botones de deshacer cuando vence su plazo. */
   now = signal(Date.now());
   private timers: ReturnType<typeof setTimeout>[] = [];
+  /** El mensaje cuya receta está abierta en la vista previa del import. */
+  recipeTurnId = signal<number | null>(null);
 
   // ---- dictado: tocar para grabar, tocar para cortar (manos ocupadas: nada de mantener apretado)
   recording    = signal(false);
@@ -195,6 +200,22 @@ export class AiInputComponent implements OnDestroy {
   private receive(turnId: number, res: ChatResponse): void {
     this.patch(turnId, { response: res, actions: (res.actions ?? []).map(a => this.track(a)) });
     if (res.actions?.length) this.aiRefresh.notify();
+    // Una receta, sea cual sea el status (puede venir junto con operaciones registradas): se abre su vista previa.
+    if (res.catalogImport) this.openRecipe(turnId);
+  }
+
+  /** La vista previa y la confirmación son las del import de Excel: el chat solo arma las filas. */
+  openRecipe(turnId: number): void {
+    const r = this.turns().find(t => t.id === turnId)?.response;
+    if (!r?.catalogImport || !this.importer) return;
+    this.recipeTurnId.set(turnId);
+    void this.importer.previewChatRecipe(r.catalogImport, r.replaceRecipeMenuItemIds ?? [], r.replacePreparationProductIds ?? []);
+  }
+
+  recipeImported(): void {
+    const id = this.recipeTurnId();
+    if (id !== null) this.patch(id, { recipeSaved: true });
+    this.aiRefresh.notify();
   }
 
   /**
@@ -264,6 +285,7 @@ export class AiInputComponent implements OnDestroy {
   }
 
   close(): void {
+    this.recipeTurnId.set(null);
     this.stopRecording(true);
     this.transcribing.set(false);
     this.closed.emit();

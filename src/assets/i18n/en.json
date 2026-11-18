@@ -189,7 +189,9 @@
     "undoUntil": "You can undo it until {time}",
     "undone": "Undone",
     "undoError": "It could not be undone.",
-    "confirmError": "It could not be recorded."
+    "confirmError": "It could not be recorded.",
+    "reviewRecipe": "Review the recipe",
+    "recipeSaved": "Recipe saved."
   },
   "menu": {
     "carta": "Menu",
@@ -589,6 +591,20 @@
     "live": "Live"
   },
   "import": {
+    "chat": {
+      "title": "Review recipe",
+      "review": "The AI built it from your message. Review it before confirming.",
+      "ingredient": "Ingredient {n}",
+      "previewTitle": "This is what will be saved",
+      "confirm": "Save recipe",
+      "new": "New",
+      "yield": "Yields {qty} {unit}",
+      "unchanged": "It is the same as its current recipe: saving it changes nothing.",
+      "replaceHint": "If you leave it ticked, this one replaces it; otherwise it keeps the one it has.",
+      "proposedHint": "The recipe uses them and they are not in your catalog: they are created when you save. If one already exists under another name, fix the message and send it again.",
+      "unknownIngredient": "It is not a product in the catalog: add it in Products or write it as it appears there.",
+      "done": "Done: the recipe was saved."
+    },
     "title": "Import from Excel",
     "button": "Import",
     "productsOnlyPlan": "Your plan doesn't include recipes or preps: only the Insumos sheet is imported. They're included from the Starter plan.",
