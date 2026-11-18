@@ -18,6 +18,7 @@ import { I18nService } from '../../../core/services/i18n.service';
 import { extractApiError } from '../../../core/utils/api-error';
 import { getErrorMessage } from '../../../core/utils/error-messages';
 import { parseBlob } from '../../../core/utils/parse-blob';
+import { formatNum } from '../../../core/utils/format';
 import { DrawerComponent } from '../drawer/drawer.component';
 import {
   ImportLabels, ImportSheet, MAX_INTERPRET_ROWS, MAX_INTERPRET_SHEETS, PREPARATION_FIELDS, PRODUCT_FIELDS, RECIPE_FIELDS, REQUIRED_FIELDS,
@@ -75,6 +76,10 @@ export class CatalogImportComponent {
   replaceIds = signal<ReadonlySet<string>>(new Set());
   /** Lo mismo para las preparaciones que ya tienen otra receta: sin tildar por defecto. */
   replacePrepIds = signal<ReadonlySet<string>>(new Set());
+  /** La receta la armó el chat a partir de un mensaje: sin Excel, y `row` es la posición del ingrediente. */
+  fromChat = signal(false);
+  /** Del chat no hay un Excel que mirar: la vista previa muestra la receta que armó la IA, ingrediente por ingrediente. */
+  chatRecipes = signal<{ name: string; yield: string | null; lines: string[] }[]>([]);
 
   readonly aiBlockedBy = computed<'plan' | 'permission' | null>(() => {
     if (!this.auth.hasFeature('AI_INTERPRETER')) return 'plan';
@@ -104,6 +109,8 @@ export class CatalogImportComponent {
 
   private payload: { products: ProductImportRow[]; preparations: PreparationImportRow[]; recipes: RecipeImportRow[] } | null = null;
   private sheetsRead: { sheet: string; data: any[][] }[] | null = null;
+  /** Lo que el chat ya sabe que hay que pisar (editar una receta que existe): llega tildado. */
+  private presetReplace = { recipes: [] as string[], preparations: [] as string[] };
 
   constructor(private api: Api, private auth: AuthService, private i18n: I18nService) {}
 
@@ -138,8 +145,11 @@ export class CatalogImportComponent {
     this.replaceIds.set(new Set());
     this.replacePrepIds.set(new Set());
     this.hasPreparations.set(false);
+    this.fromChat.set(false);
+    this.chatRecipes.set([]);
     this.payload = null;
     this.sheetsRead = null;
+    this.presetReplace = { recipes: [], preparations: [] };
   }
 
   async downloadTemplate(): Promise<void> {
@@ -266,6 +276,28 @@ export class CatalogImportComponent {
     }
     this.aiRefs.set(request.refs);
     this.aiOffer.set(false);
+    await this.applyInterpretation(interpretation);
+  }
+
+  /**
+   * Una receta que armó el chat: la misma vista previa y confirmación que con el Excel. Los ids de pisar vienen tildados
+   * porque el mensaje pidió editar esa receta; el usuario igual ve la vista previa y confirma.
+   */
+  async previewChatRecipe(interpretation: InterpretCatalogResult, replaceRecipeIds: string[], replacePreparationIds: string[]): Promise<void> {
+    this.reset();
+    this.fromChat.set(true);
+    this.presetReplace = { recipes: replaceRecipeIds, preparations: replacePreparationIds };
+    const line = (r: { quantity?: number; unit?: string; ingredient?: string }) => [formatNum(r.quantity), r.unit, r.ingredient].filter(Boolean).join(' ');
+    const group = <T>(rows: T[], name: (r: T) => string | undefined) => [...new Map(rows.map(r => [name(r) ?? '', rows.filter(x => name(x) === name(r))])).entries()];
+    this.chatRecipes.set([
+      ...group(interpretation.preparations ?? [], r => r.preparation).map(([name, rows]) => ({ name, lines: rows.map(line),
+        yield: rows[0].yieldQuantity != null ? this.t('import.chat.yield', { qty: formatNum(rows[0].yieldQuantity), unit: rows[0].yieldUnit ?? '' }) : null })),
+      ...group(interpretation.recipes ?? [], r => r.menuItem).map(([name, rows]) => ({ name, lines: rows.map(line), yield: null })),
+    ]);
+    await this.applyInterpretation(interpretation);
+  }
+
+  private async applyInterpretation(interpretation: InterpretCatalogResult): Promise<void> {
     this.warnings.set(interpretation.warnings ?? []);
     const recipes = this.recipesEnabled() ? interpretation.recipes ?? [] : [];
     const preparations = this.preparationsEnabled() ? interpretation.preparations ?? [] : [];
@@ -289,8 +321,8 @@ export class CatalogImportComponent {
       const res = await this.send(true);
       this.result.set(res);
       this.errors.set(res.errors ?? []);
-      this.replaceIds.set(new Set());
-      this.replacePrepIds.set(new Set());
+      this.replaceIds.set(new Set(this.presetReplace.recipes));
+      this.replacePrepIds.set(new Set(this.presetReplace.preparations));
       this.step.set('preview');
     } catch (e) {
       this.requestError.set(extractApiError(e, this.t('import.checkError')));
@@ -349,15 +381,18 @@ export class CatalogImportComponent {
 
   /** La primera fila de la preparación en su hoja (con IA, en la hoja del cliente). */
   preparationPlace(r: PreparationReplacement): string {
+    if (this.fromChat()) return '';  // una sola receta por mensaje: no hay dónde buscarla
     return this.errorPlace({ sheet: 'PREPARATIONS', row: r.row });
   }
 
   /** La primera fila del plato en la hoja de recetas (con IA, en la hoja del cliente). */
   recipePlace(r: RecipeReplacement): string {
+    if (this.fromChat()) return '';
     return this.errorPlace({ sheet: 'RECIPES', row: r.row });
   }
 
   errorMessage(error: ImportRowError): string {
+    if (this.fromChat() && error.errorCode === 'IMPORT_UNKNOWN_INGREDIENT') return this.t('import.chat.unknownIngredient');
     if (error.errorCode === UNREADABLE_NUMBER) return this.t('import.unreadableNumber');
     // El genérico ("negativo, cero o texto largo") no explica un 22: para el IVA se dice cuáles valen.
     if (error.errorCode === 'IMPORT_INVALID_VALUE' && error.field === 'ivaPercentage') {
@@ -370,8 +405,10 @@ export class CatalogImportComponent {
     return error.field ? this.t(`import.columns.${error.field}`) : null;
   }
 
-  /** "Insumos · fila 12", o con IA, la hoja y la fila del Excel del cliente. */
+  /** "Insumos · fila 12"; con IA, la hoja y la fila del Excel del cliente; del chat, el ingrediente. */
   errorPlace(error: ImportRowError): string {
+    // Del chat, `row` es la posición del ingrediente en la receta (en un insumo propuesto, la del primero que lo usa).
+    if (this.fromChat()) return this.t('import.chat.ingredient', { n: error.row ?? '' });
     const ref = error.row != null ? this.aiRefs()?.get(error.row) : undefined;
     if (ref) return `${ref.sheet} · ${this.t('import.row', { row: ref.row })}`;
     return `${this.t('import.sheets.' + error.sheet)} · ${this.t('import.row', { row: error.row ?? '' })}`;

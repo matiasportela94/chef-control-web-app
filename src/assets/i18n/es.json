@@ -127,14 +127,22 @@
     "PRODUCT_NOT_A_PREPARATION": "Ese insumo no es una preparación: cargale una receta de preparación en Insumos",
     "PRODUCTION_NOT_FOUND": "La producción no existe o fue borrada",
     "PRODUCTION_ALREADY_REVERSED": "Esa producción ya estaba revertida",
-    "IMPORT_PREPARATION_CYCLE": "La preparación se lleva a sí misma, directo o a través de otra preparación"
+    "IMPORT_PREPARATION_CYCLE": "La preparación se lleva a sí misma, directo o a través de otra preparación",
+    "CHAT_ACTION_NOT_FOUND": "No encontramos esa operación: puede que ya no exista.",
+    "CHAT_ACTION_ALREADY_UNDONE": "Esa operación ya estaba deshecha.",
+    "CHAT_UNDO_NOT_ALLOWED": "Ya no podés deshacerla: pasaron los 15 minutos o la cargó otra persona, y hace falta el permiso de borrar.",
+    "CHAT_PERMISSION_MISSING": "No tenés permiso para registrar esta operación.",
+    "CHAT_PRODUCT_NOT_IN_CATALOG": "No está en el catálogo. Cargalo primero o escribilo como figura en Insumos.",
+    "CHAT_MISSING_PRICE": "Falta el precio por unidad.",
+    "CHAT_INVALID_QUANTITY": "La cantidad no es válida.",
+    "CHAT_OPERATION_NOT_SUPPORTED": "Esto todavía no se puede registrar desde la Entrada rápida. Usá el formulario.",
+    "CHAT_MENU_ITEM_NOT_IN_CATALOG": "No es un plato del menú. Cargalo primero o escribilo como figura en el Menú.",
+    "CHAT_INVALID_PERIOD": "Ese período no se puede consultar: tiene que ser pasado, con el inicio antes del fin, y de hasta un año."
   },
   "ai": {
     "title": "Entrada rápida",
     "subtitle": "Describí una operación en lenguaje natural",
     "placeholder": "Ej: compramos 10kg de tomate a $5000 / se rompieron 3 botellas de aceite / vendimos 8 milanesas...",
-    "interpret": "Interpretar",
-    "confirm": "Confirmar y registrar",
     "shortcuts": {
       "purchase": "Registrar compra de insumo",
       "sales": "Registrar ventas del día",
@@ -143,8 +151,6 @@
     },
     "subtitleVoice": "Dictá o escribí una operación, como se la contarías a alguien",
     "messageLabel": "Tu mensaje",
-    "ctrlEnterHint": "Ctrl+Enter para interpretar",
-    "reviewHint": "Revisá el texto antes de interpretar. Ctrl+Enter para interpretar",
     "voice": {
       "start": "Empezar a grabar",
       "stop": "Terminar de grabar",
@@ -157,6 +163,49 @@
       "nothingRecorded": "No se grabó nada. Tocá el micrófono y hablá antes de cortar.",
       "nothingHeard": "No se entendió nada en el audio. Probá de nuevo, más cerca del micrófono.",
       "error": "No se pudo pasar el audio a texto. Probá de nuevo o escribilo."
+    },
+    "emptyHint": "Contá qué pasó, como se lo dirías a alguien. Si algo quedó mal, decilo («no, eran 5 kg») y lo corrijo.",
+    "examplesTitle": "Ejemplos",
+    "examples": {
+      "purchase": "Compramos 5 kg de pollo a $8000 el kilo al proveedor El Campo",
+      "sales": "Vendimos 3 Caesar Tradicional y 2 American Burger",
+      "waste": "Se rompieron 2 botellas de aceite de oliva de 500 ml",
+      "stockCount": "Hicimos conteo: tenemos 12 kg de papa y 8 kg de pollo"
+    },
+    "historyLabel": "Conversación de la Entrada rápida",
+    "thinking": "Interpretando…",
+    "error": "No se pudo interpretar el mensaje.",
+    "edit": "Corregir",
+    "send": "Enviar",
+    "types": {
+      "PURCHASE": "Compra",
+      "WASTE": "Merma",
+      "SALE": "Venta",
+      "STOCK_ADJUSTMENT": "Ajuste de stock",
+      "PRODUCTION": "Producción"
+    },
+    "itemPrice": "{item} a {price} por {unit}",
+    "undo": "Deshacer",
+    "undoUntil": "Podés deshacerlo hasta las {time}",
+    "undone": "Deshecho",
+    "undoError": "No se pudo deshacer.",
+    "confirmError": "No se pudo registrar.",
+    "reviewRecipe": "Revisar la receta",
+    "recipeSaved": "Receta guardada.",
+    "today": "Conversación de hoy",
+    "newConversation": "Nueva conversación",
+    "newConversationHint": "La IA deja de tener en cuenta lo anterior. Lo que registraste sigue registrado.",
+    "freshConversation": "Empezaste una conversación nueva: la IA ya no tiene en cuenta lo anterior. Lo que registraste sigue registrado.",
+    "newConversationError": "No se pudo empezar una conversación nueva.",
+    "loadingHistory": "Cargando la conversación…",
+    "historyError": "No se pudo cargar la conversación.",
+    "attach": {
+      "add": "Adjuntar foto o PDF",
+      "remove": "Quitar {name}",
+      "unsupported": "«{name}» no es una foto ni un PDF.",
+      "tooBig": "«{name}» pesa más de {mb} MB.",
+      "tooMany": "Hasta {max} archivos por mensaje.",
+      "totalTooBig": "Entre todos los archivos no pueden pasar de {mb} MB."
     }
   },
   "menu": {
@@ -557,6 +606,20 @@
     "live": "En vivo"
   },
   "import": {
+    "chat": {
+      "title": "Revisar receta",
+      "review": "La armó la IA a partir de tu mensaje. Revisala antes de confirmar.",
+      "ingredient": "Ingrediente {n}",
+      "previewTitle": "Esto es lo que se va a guardar",
+      "confirm": "Guardar receta",
+      "new": "Nueva",
+      "yield": "Rinde {qty} {unit}",
+      "unchanged": "Es igual a la receta que ya tiene: guardarla no cambia nada.",
+      "replaceHint": "Si la dejás tildada, se reemplaza por esta; si no, conserva la que tiene.",
+      "proposedHint": "La receta los usa y no están en tu catálogo: se crean al guardar. Si alguno ya existe con otro nombre, corregí el mensaje y mandalo de nuevo.",
+      "unknownIngredient": "No es un insumo del catálogo: cargalo en Insumos o escribilo como figura ahí.",
+      "done": "Listo: la receta quedó guardada."
+    },
     "title": "Importar desde Excel",
     "button": "Importar",
     "productsOnlyPlan": "Tu plan no incluye recetas ni preparaciones: se importa solo la hoja Insumos. Están desde el plan Starter.",
@@ -875,5 +938,9 @@
     "reverseTitle": "Revertir la producción",
     "reverseMessage": "Los ingredientes vuelven al stock y se descuenta la preparación. No se puede deshacer.",
     "reverseError": "No se pudo revertir la producción."
+  },
+  "waste": {
+    "reversed": "Deshecha",
+    "reversedHint": "Se deshizo: el stock volvió y no cuenta en la merma del mes."
   }
 }

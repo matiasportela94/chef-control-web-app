@@ -3,162 +3,218 @@
             (closed)="close()">
 
   @if (planLocked) {
-    <div style="padding:28px 8px;text-align:center;">
-      <i class="ti ti-lock" style="font-size:28px;color:var(--accent);"></i>
-      <p style="font-size:15px;font-weight:600;color:var(--text-1);margin-top:8px;">{{ t('planGate.title') }}</p>
-      <p style="font-size:13px;color:var(--text-3);margin:6px auto 16px;max-width:420px;">{{ t('planGate.ai') }}</p>
+    <div class="plan-gate">
+      <i class="ti ti-lock"></i>
+      <p class="plan-gate-title">{{ t('planGate.title') }}</p>
+      <p class="plan-gate-text">{{ t('planGate.ai') }}</p>
       @if (canSeePlans) { <a routerLink="/plan" (click)="close()" class="btn-primary btn-sm">{{ t('planGate.cta') }}</a> }
     </div>
-  } @else {
-  <div style="display:flex;flex-direction:column;gap:14px;">
-
-    <!-- Dictado: un botón grande, tocar para grabar y tocar para cortar -->
-    @if (canRecord && !result() && !executeResult()) {
-      <div class="voice">
-        <button type="button" class="voice-btn" [class.recording]="recording()" (click)="toggleRecording()"
-                [disabled]="transcribing() || loading() || voiceUnavailable()"
-                [attr.aria-label]="t(recording() ? 'ai.voice.stop' : 'ai.voice.start')" [title]="t(recording() ? 'ai.voice.stop' : 'ai.voice.start')">
-          @if (transcribing()) { <i class="ti ti-loader-2 animate-spin"></i> }
-          @else if (recording()) { <i class="ti ti-player-stop-filled"></i> }
-          @else { <i class="ti ti-microphone"></i> }
-        </button>
-        <p class="voice-label" aria-live="polite">
-          @if (recording()) {
-            <span class="voice-time">{{ clock(elapsed()) }} / {{ clock(maxSeconds) }}</span> {{ t('ai.voice.tapToStop') }}
-          } @else if (transcribing()) {
-            {{ t('ai.voice.transcribing') }}
-          } @else {
-            {{ t('ai.voice.tapToSpeak') }}
-          }
-        </p>
-        @if (voiceError()) {
-          <p class="voice-error"><i class="ti ti-alert-circle"></i><span>{{ voiceError() }}</span></p>
+  } @else if (!turns().length) {
+    @if (loadingHistory()) {
+      <p class="reply-muted"><i class="ti ti-loader-2 animate-spin"></i> {{ t('ai.loadingHistory') }}</p>
+    } @else {
+      <div class="empty">
+        @if (freshConversation()) {
+          <p class="reply-text status-REGISTERED fresh"><i class="ti ti-message-plus"></i><span>{{ t('ai.freshConversation') }}</span></p>
         }
-      </div>
-    }
-
-    <!-- Accesos directos (solo en estado inicial) -->
-    @if (!result() && !loading() && !executeResult()) {
-      <div>
-        <p style="font-size:10px;font-weight:600;color:var(--text-3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px;">
-          Accesos directos
-        </p>
-        @for (s of shortcuts; track s.label) {
-          <button type="button" (click)="fillShortcut(s.prompt)"
-                  style="width:100%;display:flex;align-items:center;gap:10px;padding:10px 12px;
-                         background:var(--bg-input);border:1.5px solid var(--border);border-radius:10px;
-                         cursor:pointer;text-align:left;color:inherit;margin-bottom:6px;
-                         transition:border-color .15s;">
-            <i [class]="'ti ' + s.icon" style="color:var(--accent);font-size:15px;flex-shrink:0;"></i>
-            <span style="font-size:12px;color:var(--text-2);">{{ s.label }}</span>
-            <i class="ti ti-chevron-right" style="margin-left:auto;font-size:12px;color:var(--text-3);"></i>
+        @if (historyError()) {
+          <p class="reply-line reply-error"><i class="ti ti-alert-circle"></i><span>{{ historyError() }}</span>
+            <button type="button" class="link-btn" (click)="loadHistory()">{{ t('common.retry') }}</button></p>
+        }
+        <p class="empty-hint">{{ t('ai.emptyHint') }}</p>
+        <p class="section-label">{{ t('ai.examplesTitle') }}</p>
+        @for (ex of examples; track ex.key) {
+          <button type="button" class="example" (click)="fillExample(ex.key)">
+            <i [class]="'ti ' + ex.icon"></i>
+            <span>{{ t('ai.shortcuts.' + ex.key) }}</span>
+            <i class="ti ti-chevron-right example-chevron"></i>
           </button>
         }
       </div>
     }
-
-    <!-- Textarea (oculto tras ejecución exitosa) -->
-    @if (!executeResult()) {
-      <div>
-        <p style="font-size:10px;font-weight:600;color:var(--text-3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px;">
-          {{ t('ai.messageLabel') }}
-        </p>
-        <textarea
-          [(ngModel)]="message"
-          (keydown)="onKeydown($event)"
-          [placeholder]="t('ai.placeholder')"
-          rows="3"
-          [disabled]="loading() || confirming() || !!result()"
-          class="field-textarea"
-          style="min-height:80px;">
-        </textarea>
-        @if (!result()) {
-          <p style="font-size:10px;color:var(--text-3);margin-top:4px;">{{ t(canRecord ? 'ai.reviewHint' : 'ai.ctrlEnterHint') }}</p>
-        }
-      </div>
+  } @else {
+    <!-- Empezar de cero corta la memoria de la IA: no deshace nada, por eso va chico y arriba, lejos de la caja -->
+    <div class="chat-head">
+      <span class="section-label">{{ t('ai.today') }}</span>
+      <button type="button" class="chat-new" (click)="newConversation()" [disabled]="sending() || startingConversation()" [title]="t('ai.newConversationHint')">
+        @if (startingConversation()) { <i class="ti ti-loader-2 animate-spin"></i> } @else { <i class="ti ti-message-plus"></i> }
+        {{ t('ai.newConversation') }}
+      </button>
+    </div>
+    @if (conversationError()) { <p class="reply-line reply-error"><i class="ti ti-alert-circle"></i><span>{{ conversationError() }}</span></p> }
+    @if (historyError()) {
+      <p class="reply-line reply-error"><i class="ti ti-alert-circle"></i><span>{{ historyError() }}</span>
+        <button type="button" class="link-btn" (click)="loadHistory()">{{ t('common.retry') }}</button></p>
     }
+    <div class="chat" role="log" aria-live="polite" [attr.aria-label]="t('ai.historyLabel')">
+      @for (turn of turns(); track turn.id) {
+        <!-- Sin texto: es el resultado de un "Confirmar" -->
+        @if (turn.text) { <p class="msg-user">{{ turn.text }}</p> }
+        <div class="msg-reply">
+          @switch (turn.status) {
+            @case ('pending') {
+              <p class="reply-muted"><i class="ti ti-loader-2 animate-spin"></i> {{ t('ai.thinking') }}</p>
+            }
+            @case ('error') {
+              <p class="reply-line reply-error"><i class="ti ti-alert-circle"></i><span>{{ turn.error }}</span></p>
+              <div class="reply-actions">
+                <button type="button" class="btn-secondary btn-sm" (click)="retry(turn)" [disabled]="sending()">
+                  <i class="ti ti-refresh"></i> {{ t('common.retry') }}
+                </button>
+                <button type="button" class="btn-secondary btn-sm" (click)="edit(turn)"><i class="ti ti-pencil"></i> {{ t('ai.edit') }}</button>
+              </div>
+            }
+            @default {
+              @if (turn.response; as r) {
+                <p class="reply-text" [class]="'status-' + r.status">
+                  <i [class]="'ti ' + statusIcon(r.status)"></i><span>{{ r.message }}</span>
+                </p>
 
-    <!-- Error -->
-    @if (error()) {
-      <p style="font-size:12px;color:var(--red);display:flex;align-items:center;gap:6px;">
-        <i class="ti ti-alert-circle"></i> {{ error() }}
-      </p>
-    }
+                @if (turn.actions?.length || turn.undone?.length) {
+                  <ul class="reply-list">
+                    <!-- Lo que deshizo una corrección ("no, eran 5 kg"), junto a lo nuevo -->
+                    @for (a of turn.undone; track a.actionId) {
+                      <li class="action undone">
+                        <span class="action-summary">{{ a.summary }}</span>
+                        <span class="badge badge-neutral">{{ t('ai.undone') }}</span>
+                      </li>
+                    }
+                    @for (a of turn.actions; track a.actionId) {
+                      <li class="action" [class.undone]="a.undoneAt">
+                        <span class="action-summary">{{ a.summary }}</span>
+                        @if (a.undoneAt) {
+                          <span class="badge badge-neutral">{{ t('ai.undone') }}</span>
+                        } @else if (canUndo(a)) {
+                          <button type="button" class="btn-secondary btn-sm action-undo" (click)="undo(turn, a)" [disabled]="a.undoing"
+                                  [title]="now() < a.deadline ? t('ai.undoUntil', { time: (a.deadline | date:'HH:mm') ?? '' }) : t('ai.undo')">
+                            @if (a.undoing) { <i class="ti ti-loader-2 animate-spin"></i> } @else { <i class="ti ti-arrow-back-up"></i> }
+                            {{ t('ai.undo') }}
+                          </button>
+                        }
+                        @if (a.undoError) { <span class="reply-line reply-error action-error"><i class="ti ti-alert-circle"></i><span>{{ a.undoError }}</span></span> }
+                      </li>
+                    }
+                  </ul>
+                }
 
-    <!-- Resultado de interpretación -->
-    @if (result(); as r) {
-      <div style="background:var(--bg-input);border:1.5px solid var(--border);border-radius:12px;padding:14px;">
-        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:8px;">
-          <span class="badge-accent badge" style="font-size:10px;">{{ intentLabel(r.intent) }}</span>
-          <div style="display:flex;align-items:center;gap:6px;">
-            <div style="background:var(--border);border-radius:4px;height:4px;width:60px;overflow:hidden;">
-              <div style="height:100%;background:var(--accent);border-radius:4px;" [style.width.%]="r.confidence ?? 0"></div>
-            </div>
-            <span style="font-size:10px;color:var(--text-3);">{{ r.confidence }}%</span>
-          </div>
-          @if (r.needsConfirmation) {
-            <span style="font-size:10px;color:#d97706;display:flex;align-items:center;gap:4px;">
-              <i class="ti ti-alert-triangle" style="font-size:11px;"></i> Verificar antes de registrar
-            </span>
+                <!-- Lo que se va a registrar. Con dos lecturas del precio, el precio lo dice cada botón -->
+                @if (r.status === 'NEEDS_CONFIRMATION' && r.proposals?.length) {
+                  <ul class="reply-list">
+                    @for (op of r.proposals![0].operations; track $index) {
+                      <li class="proposal">
+                        <span class="section-label">{{ t('ai.types.' + op.type) }}</span>
+                        @for (it of op.items; track $index) { <span class="proposal-item">{{ itemLine(op.type, it, r.proposals!.length === 1) }}</span> }
+                      </li>
+                    }
+                  </ul>
+                }
+
+                @if (turn.recipeSaved) {
+                  <p class="reply-text status-REGISTERED"><i class="ti ti-circle-check"></i><span>{{ t('ai.recipeSaved') }}</span></p>
+                }
+                @if (turn.confirmError) { <p class="reply-line reply-error"><i class="ti ti-alert-circle"></i><span>{{ turn.confirmError }}</span></p> }
+
+                <!-- Una receta puede venir con operaciones ya registradas: ahí no hay Corregir (mandaría todo de nuevo) -->
+                @if (isPending(turn) || canEdit(turn) || (r.catalogImport && !turn.recipeSaved)) {
+                  <div class="reply-actions">
+                    @if (r.catalogImport && !turn.recipeSaved) {
+                      <button type="button" [class]="isPending(turn) ? 'btn-secondary btn-sm' : 'btn-primary btn-sm'" (click)="openRecipe(turn.id)">
+                        <i class="ti ti-chef-hat"></i> {{ t('ai.reviewRecipe') }}
+                      </button>
+                    }
+                    @if (isPending(turn)) {
+                      <!-- Un botón por lectura (la primera es la del modelo); cada uno confirma la suya -->
+                      @for (alt of r.proposals; track $index; let i = $index) {
+                        <button type="button" [class]="i === 0 ? 'btn-primary btn-sm' : 'btn-secondary btn-sm'" (click)="confirm(turn, i)" [disabled]="sending()">
+                          @if (turn.confirming === i) { <i class="ti ti-loader-2 animate-spin"></i> } @else { <i class="ti ti-check"></i> }
+                          {{ alt.label || t('common.confirm') }}
+                        </button>
+                      }
+                      <button type="button" class="btn-secondary btn-sm" (click)="cancel(turn)" [disabled]="sending()">
+                        @if (turn.confirming === -1) { <i class="ti ti-loader-2 animate-spin"></i> }
+                        {{ t('common.cancel') }}
+                      </button>
+                    }
+                    @if (canEdit(turn)) {
+                      <button type="button" class="btn-secondary btn-sm" (click)="edit(turn)"><i class="ti ti-pencil"></i> {{ t('ai.edit') }}</button>
+                    }
+                  </div>
+                }
+              }
+            }
           }
         </div>
-        <p style="font-size:12px;color:var(--text-2);line-height:1.6;">{{ r.responseToUser }}</p>
-      </div>
-    }
-
-    <!-- Input de aclaración -->
-    @if (result()?.needsConfirmation && !executeResult()) {
-      <input type="text" [(ngModel)]="clarification" (keydown)="onClarificationKeydown($event)"
-             [disabled]="loading()" placeholder="Respondé la pregunta de la IA... (Enter para enviar)"
-             class="field-input" style="border-color:var(--accent);">
-    }
-
-    <!-- Resultado de ejecución -->
-    @if (executeResult(); as ex) {
-      <div style="border-radius:12px;padding:14px;display:flex;align-items:flex-start;gap:10px;"
-           [style.background]="ex.success ? '#f0fdf4' : 'var(--red-bg)'"
-           [style.border]="ex.success ? '1.5px solid #22c55e' : '1.5px solid var(--red)'">
-        <i style="font-size:16px;flex-shrink:0;margin-top:1px;"
-           [class]="ex.success ? 'ti ti-circle-check' : 'ti ti-circle-x'"
-           [style.color]="ex.success ? '#16a34a' : 'var(--red)'"></i>
-        <p style="font-size:12px;line-height:1.5;"
-           [style.color]="ex.success ? '#166534' : 'var(--red)'">{{ ex.message }}</p>
-      </div>
-    }
-
-  </div>
+      }
+      <div #end></div>
+    </div>
   }
 
-  <!-- Footer -->
-  <div drawer-footer style="padding:14px 20px;border-top:1px solid var(--border);background:var(--bg-card);display:flex;gap:8px;">
+  <!-- Caja para escribir: el dictado deja el texto acá para revisarlo, no se manda solo -->
+  <div drawer-footer class="composer">
     @if (planLocked) {
-      <button (click)="close()" class="btn-secondary" style="flex:1;">{{ t('common.close') }}</button>
-    } @else if (executeResult()) {
-      <button (click)="resetForNew()" class="btn-secondary" style="flex:1;">Nueva entrada</button>
-      <button (click)="close()" class="btn-primary" style="flex:1;">Cerrar</button>
-    } @else if (result()) {
-      <button (click)="retry()" [disabled]="confirming()" class="btn-secondary" style="flex:1;">Cambiar</button>
-      @if (result()?.needsConfirmation) {
-        <button (click)="interpretWithClarification()" [disabled]="loading() || !clarification.trim()"
-                class="btn-primary" style="flex:1;justify-content:center;">
-          @if (loading()) { <i class="ti ti-loader-2 animate-spin"></i>&nbsp;Interpretando... }
-          @else { Responder }
-        </button>
-      } @else if (canExecute()) {
-        <button (click)="confirm()" [disabled]="confirming()"
-                class="btn-primary" style="flex:1;justify-content:center;">
-          @if (confirming()) { <i class="ti ti-loader-2 animate-spin"></i>&nbsp;Registrando... }
-          @else { Confirmar y registrar }
-        </button>
-      }
+      <button type="button" (click)="close()" class="btn-secondary composer-close">{{ t('common.close') }}</button>
     } @else {
-      <button (click)="close()" class="btn-secondary" style="flex:1;">Cancelar</button>
-      <button (click)="interpret()" [disabled]="loading() || recording() || transcribing() || !message.trim()"
-              class="btn-primary" style="flex:1;justify-content:center;">
-        @if (loading()) { <i class="ti ti-loader-2 animate-spin"></i>&nbsp;Interpretando... }
-        @else { <i class="ti ti-bolt"></i>&nbsp;Interpretar }
-      </button>
+      @if (voiceError()) {
+        <p class="voice-error"><i class="ti ti-alert-circle"></i><span>{{ voiceError() }}</span></p>
+      }
+      <!-- Adjuntos que van con el próximo mensaje -->
+      @if (attachments().length || preparingAttachments()) {
+        <ul class="attach-list">
+          @for (a of attachments(); track a.id) {
+            <li class="attach-item" [class.attach-item-pdf]="a.kind === 'pdf'" [title]="a.file.name">
+              @if (a.preview) {
+                <img [src]="a.preview" [alt]="a.file.name">
+              } @else {
+                <i class="ti ti-file-type-pdf"></i><span class="attach-name">{{ a.file.name }}</span>
+              }
+              <button type="button" class="attach-remove" (click)="removeAttachment(a)" [attr.aria-label]="t('ai.attach.remove', { name: a.file.name })"
+                      [title]="t('ai.attach.remove', { name: a.file.name })"><i class="ti ti-x"></i></button>
+            </li>
+          }
+          @if (preparingAttachments()) { <li class="attach-item attach-loading"><i class="ti ti-loader-2 animate-spin"></i></li> }
+        </ul>
+      }
+      @if (attachError()) {
+        <p class="voice-error"><i class="ti ti-alert-circle"></i><span>{{ attachError() }}</span></p>
+      }
+      <textarea #box [(ngModel)]="message" (keydown)="onKeydown($event)" [placeholder]="t('ai.placeholder')"
+                [attr.aria-label]="t('ai.messageLabel')" rows="2" maxlength="2000" enterkeyhint="send"
+                [disabled]="recording() || transcribing()" class="field-textarea composer-box"></textarea>
+      <div class="composer-row">
+        @if (canRecord) {
+          <button type="button" class="voice-btn" [class.recording]="recording()" (click)="toggleRecording()"
+                  [disabled]="transcribing() || voiceUnavailable()"
+                  [attr.aria-label]="t(recording() ? 'ai.voice.stop' : 'ai.voice.start')" [title]="t(recording() ? 'ai.voice.stop' : 'ai.voice.start')">
+            @if (transcribing()) { <i class="ti ti-loader-2 animate-spin"></i> }
+            @else if (recording()) { <i class="ti ti-player-stop-filled"></i> }
+            @else { <i class="ti ti-microphone"></i> }
+          </button>
+          <p class="voice-label" [class.voice-label-idle]="canAttach && !recording() && !transcribing()" aria-live="polite">
+            @if (recording()) {
+              <span class="voice-time">{{ clock(elapsed()) }} / {{ clock(maxSeconds) }}</span> {{ t('ai.voice.tapToStop') }}
+            } @else if (transcribing()) {
+              {{ t('ai.voice.transcribing') }}
+            } @else {
+              {{ t('ai.voice.tapToSpeak') }}
+            }
+          </p>
+        }
+        @if (canAttach) {
+          <input #picker type="file" accept="image/*,application/pdf" multiple hidden (change)="addAttachments($event)">
+          <button type="button" class="attach-btn" (click)="picker.click()" [disabled]="preparingAttachments() || attachments().length >= maxAttachments"
+                  [attr.aria-label]="t('ai.attach.add')" [title]="t('ai.attach.add')">
+            <i class="ti ti-paperclip"></i>
+          </button>
+        }
+        <button type="button" class="btn-primary composer-send" (click)="send()" [disabled]="!canSend()">
+          @if (sending()) { <i class="ti ti-loader-2 animate-spin"></i> } @else { <i class="ti ti-send"></i> }
+          {{ t('ai.send') }}
+        </button>
+      </div>
     }
   </div>
 
 </app-drawer>
+
+<!-- Una receta del chat: la vista previa y la confirmación del import, encima del chat -->
+<app-catalog-import [isOpen]="isOpen && recipeTurnId() !== null" (closed)="recipeTurnId.set(null)" (imported)="recipeImported()" />
