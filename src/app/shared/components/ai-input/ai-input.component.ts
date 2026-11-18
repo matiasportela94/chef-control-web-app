@@ -52,7 +52,7 @@ const UNDO_PERMISSION: Record<string, string> = {
 
 const STATUS_ICON: Record<string, string> = {
   REGISTERED: 'ti-circle-check', NEEDS_CONFIRMATION: 'ti-help-circle', NOT_REGISTERED: 'ti-circle-x',
-  NOT_SUPPORTED: 'ti-info-circle', NOT_UNDERSTOOD: 'ti-question-mark', RECIPE_PREVIEW: 'ti-chef-hat',
+  NOT_SUPPORTED: 'ti-info-circle', NOT_UNDERSTOOD: 'ti-question-mark', RECIPE_PREVIEW: 'ti-chef-hat', ANSWERED: 'ti-message-circle',
 };
 
 /** `deadline`: hasta cuándo se deshace sin permiso, en el reloj de este navegador (ver `track`). */
@@ -441,6 +441,15 @@ export class AiInputComponent implements OnChanges, OnDestroy {
   /** Después de dibujar: con eventCoalescing la vista nueva recién está en el frame siguiente. */
   private scrollToEnd(): void {
     afterNextRender(() => this.end?.nativeElement.scrollIntoView({ block: 'end' }), { injector: this.injector });
+  }
+
+  /**
+   * Corregir manda el mensaje entero de nuevo: no se ofrece si algo ya quedó registrado (se registraría dos veces),
+   * ni en una consulta respondida (no hay nada que corregir), ni en el resultado de un Confirmar (no tiene texto).
+   */
+  canEdit(turn: ChatTurn): boolean {
+    const status = turn.response?.status;
+    return !!turn.text && status !== 'REGISTERED' && status !== 'ANSWERED' && turn.confirming == null;
   }
 
   statusIcon(status?: string): string {

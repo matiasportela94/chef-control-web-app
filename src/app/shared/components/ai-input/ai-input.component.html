@@ -115,7 +115,7 @@
                 @if (turn.confirmError) { <p class="reply-line reply-error"><i class="ti ti-alert-circle"></i><span>{{ turn.confirmError }}</span></p> }
 
                 <!-- Una receta puede venir con operaciones ya registradas: ahí no hay Corregir (mandaría todo de nuevo) -->
-                @if (r.status !== 'REGISTERED' || (r.catalogImport && !turn.recipeSaved)) {
+                @if (isPending(turn) || canEdit(turn) || (r.catalogImport && !turn.recipeSaved)) {
                   <div class="reply-actions">
                     @if (r.catalogImport && !turn.recipeSaved) {
                       <button type="button" [class]="isPending(turn) ? 'btn-secondary btn-sm' : 'btn-primary btn-sm'" (click)="openRecipe(turn.id)">
@@ -135,7 +135,7 @@
                         {{ t('common.cancel') }}
                       </button>
                     }
-                    @if (turn.text && r.status !== 'REGISTERED' && turn.confirming == null) {
+                    @if (canEdit(turn)) {
                       <button type="button" class="btn-secondary btn-sm" (click)="edit(turn)"><i class="ti ti-pencil"></i> {{ t('ai.edit') }}</button>
                     }
                   </div>
