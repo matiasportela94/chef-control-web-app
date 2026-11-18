@@ -136,7 +136,8 @@
     "CHAT_MISSING_PRICE": "The price per unit is missing.",
     "CHAT_INVALID_QUANTITY": "The quantity is not valid.",
     "CHAT_OPERATION_NOT_SUPPORTED": "This cannot be recorded from Quick entry yet. Use the form.",
-    "CHAT_MENU_ITEM_NOT_IN_CATALOG": "It is not a dish on the menu. Add it first or write it as it appears in Menu."
+    "CHAT_MENU_ITEM_NOT_IN_CATALOG": "It is not a dish on the menu. Add it first or write it as it appears in Menu.",
+    "CHAT_INVALID_PERIOD": "That period cannot be queried: it must be in the past, start before it ends, and be at most one year long."
   },
   "ai": {
     "title": "Quick entry",
@@ -197,7 +198,15 @@
     "freshConversation": "You started a new conversation: the AI no longer takes the earlier messages into account. What you recorded stays recorded.",
     "newConversationError": "A new conversation could not be started.",
     "loadingHistory": "Loading the conversation…",
-    "historyError": "The conversation could not be loaded."
+    "historyError": "The conversation could not be loaded.",
+    "attach": {
+      "add": "Attach a photo or PDF",
+      "remove": "Remove {name}",
+      "unsupported": "«{name}» is not a photo or a PDF.",
+      "tooBig": "«{name}» is larger than {mb} MB.",
+      "tooMany": "Up to {max} files per message.",
+      "totalTooBig": "All the files together cannot be larger than {mb} MB."
+    }
   },
   "menu": {
     "carta": "Menu",

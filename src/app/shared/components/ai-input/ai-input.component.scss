@@ -86,6 +86,33 @@
 .composer-send { margin-left: auto; flex-shrink: 0; padding: 12px 16px; }
 .composer-close { flex: 1; justify-content: center; }
 
+// Adjuntos: miniaturas con quitar. El botón de quitar va dentro de la miniatura pero con 28 px para el dedo.
+.attach-list { display: flex; flex-wrap: wrap; gap: 8px; list-style: none; margin: 0; padding: 0; }
+.attach-item {
+  position: relative; width: 64px; height: 64px; flex-shrink: 0; border-radius: 10px; overflow: hidden;
+  border: 1px solid var(--border); background: var(--bg-input);
+  display: flex; align-items: center; justify-content: center;
+  img { width: 100%; height: 100%; object-fit: cover; }
+  > i { font-size: 22px; color: var(--red); }
+}
+// El PDF del mismo tamaño que una foto: el nombre entero va en el title
+.attach-item-pdf { flex-direction: column; justify-content: flex-end; gap: 2px; padding: 0 4px 4px; }
+.attach-name { width: 100%; font-size: 10px; line-height: 1.2; color: var(--text-2); text-align: center;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.attach-loading > i { color: var(--text-3); font-size: 20px; }
+.attach-remove {
+  position: absolute; top: 2px; right: 2px; width: 28px; height: 28px; border-radius: 50%; border: none; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  background: rgba(0, 0, 0, .6); color: #fff; font-size: 14px;
+}
+.attach-btn {
+  width: 44px; height: 44px; flex-shrink: 0; border-radius: 50%; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  background: var(--bg-input); border: 1.5px solid var(--border); color: var(--text-2); font-size: 20px;
+  &:hover:not(:disabled) { border-color: var(--accent); color: var(--accent); }
+  &:disabled { opacity: .5; cursor: default; }
+}
+
 // Dictado. El botón es grande a propósito: lo toca un cocinero con las manos ocupadas o sucias.
 .voice-btn {
   width: 76px; height: 76px; flex-shrink: 0; border-radius: 50%; border: none; cursor: pointer;
@@ -103,6 +130,9 @@
 }
 @media (prefers-reduced-motion: reduce) { .voice-btn.recording { animation: none; } }
 .voice-label { flex: 1; min-width: 0; font-size: 12px; line-height: 1.4; color: var(--text-2); }
+// En el teléfono angosto, con el botón de adjuntar al lado, la pista quedaba en cuatro renglones: el micrófono
+// se explica solo (y tiene aria-label). Mientras graba o transcribe el texto sí se ve.
+@media (max-width: 379px) { .voice-label-idle { visibility: hidden; } }
 .voice-time { font-weight: 700; color: var(--red); font-variant-numeric: tabular-nums; margin-right: 4px; }
 .voice-error {
   display: flex; align-items: flex-start; gap: 6px; font-size: 12px; line-height: 1.45; color: var(--red);

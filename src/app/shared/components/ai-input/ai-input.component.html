@@ -157,6 +157,26 @@
       @if (voiceError()) {
         <p class="voice-error"><i class="ti ti-alert-circle"></i><span>{{ voiceError() }}</span></p>
       }
+      <!-- Adjuntos que van con el próximo mensaje -->
+      @if (attachments().length || preparingAttachments()) {
+        <ul class="attach-list">
+          @for (a of attachments(); track a.id) {
+            <li class="attach-item" [class.attach-item-pdf]="a.kind === 'pdf'" [title]="a.file.name">
+              @if (a.preview) {
+                <img [src]="a.preview" [alt]="a.file.name">
+              } @else {
+                <i class="ti ti-file-type-pdf"></i><span class="attach-name">{{ a.file.name }}</span>
+              }
+              <button type="button" class="attach-remove" (click)="removeAttachment(a)" [attr.aria-label]="t('ai.attach.remove', { name: a.file.name })"
+                      [title]="t('ai.attach.remove', { name: a.file.name })"><i class="ti ti-x"></i></button>
+            </li>
+          }
+          @if (preparingAttachments()) { <li class="attach-item attach-loading"><i class="ti ti-loader-2 animate-spin"></i></li> }
+        </ul>
+      }
+      @if (attachError()) {
+        <p class="voice-error"><i class="ti ti-alert-circle"></i><span>{{ attachError() }}</span></p>
+      }
       <textarea #box [(ngModel)]="message" (keydown)="onKeydown($event)" [placeholder]="t('ai.placeholder')"
                 [attr.aria-label]="t('ai.messageLabel')" rows="2" maxlength="2000" enterkeyhint="send"
                 [disabled]="recording() || transcribing()" class="field-textarea composer-box"></textarea>
@@ -169,7 +189,7 @@
             @else if (recording()) { <i class="ti ti-player-stop-filled"></i> }
             @else { <i class="ti ti-microphone"></i> }
           </button>
-          <p class="voice-label" aria-live="polite">
+          <p class="voice-label" [class.voice-label-idle]="!recording() && !transcribing()" aria-live="polite">
             @if (recording()) {
               <span class="voice-time">{{ clock(elapsed()) }} / {{ clock(maxSeconds) }}</span> {{ t('ai.voice.tapToStop') }}
             } @else if (transcribing()) {
@@ -179,6 +199,11 @@
             }
           </p>
         }
+        <input #picker type="file" accept="image/*,application/pdf" multiple hidden (change)="addAttachments($event)">
+        <button type="button" class="attach-btn" (click)="picker.click()" [disabled]="preparingAttachments() || attachments().length >= maxAttachments"
+                [attr.aria-label]="t('ai.attach.add')" [title]="t('ai.attach.add')">
+          <i class="ti ti-paperclip"></i>
+        </button>
         <button type="button" class="btn-primary composer-send" (click)="send()" [disabled]="!canSend()">
           @if (sending()) { <i class="ti ti-loader-2 animate-spin"></i> } @else { <i class="ti ti-send"></i> }
           {{ t('ai.send') }}

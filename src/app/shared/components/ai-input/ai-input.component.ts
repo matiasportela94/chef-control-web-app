@@ -18,6 +18,7 @@ import { ChatResponse } from '../../../api/models/chat-response';
 import { parseBlob } from '../../../core/utils/parse-blob';
 import { extractApiError } from '../../../core/utils/api-error';
 import { formatARS, formatNum } from '../../../core/utils/format';
+import { resizeImage } from '../../../core/utils/image';
 import { AiRefreshService } from '../../../core/services/ai-refresh.service';
 import { AuthService } from '../../../core/services/auth.service';
 import { I18nService } from '../../../core/services/i18n.service';
@@ -29,6 +30,19 @@ const MAX_RECORDING_SECONDS = 120;
 const AUDIO_BITS_PER_SECOND = 64000;
 /** Chrome y Android graban webm; Safari de iOS, mp4. El primero que soporte el navegador. */
 const AUDIO_TYPES = ['audio/webm;codecs=opus', 'audio/webm', 'audio/mp4'];
+
+/**
+ * Adjuntos (una factura en fotos o en PDF). El multipart del back corta en 4 MB por archivo y 5 MB por pedido: se
+ * valida antes de mandar, así el error dice qué archivo y por qué. Las fotos se achican, pero menos que las de los
+ * platos (1200 px): tiene que leerse la letra chica de una factura.
+ */
+const MAX_ATTACHMENTS = 5;
+const MAX_FILE_BYTES = 4 * 1024 * 1024;
+const MAX_TOTAL_BYTES = 5 * 1024 * 1024;
+const PHOTO_MAX_SIDE = 1800;
+const PHOTO_QUALITY = 0.85;
+
+interface ChatAttachment { id: number; file: File; kind: 'image' | 'pdf'; preview: string | null; }
 
 /** Pasado el plazo, o si la cargó otro, deshacer pide el permiso de borrar de su pantalla. */
 const UNDO_PERMISSION: Record<string, string> = {
@@ -108,6 +122,12 @@ export class AiInputComponent implements OnChanges, OnDestroy {
   /** El mensaje cuya receta está abierta en la vista previa del import. */
   recipeTurnId = signal<string | null>(null);
 
+  // ---- adjuntos: se eligen acá y van con el próximo mensaje
+  attachments = signal<ChatAttachment[]>([]);
+  attachError = signal<string | null>(null);
+  preparingAttachments = signal(false);
+  private nextAttachmentId = 0;
+
   // ---- dictado: tocar para grabar, tocar para cortar (manos ocupadas: nada de mantener apretado)
   recording    = signal(false);
   transcribing = signal(false);
@@ -116,6 +136,7 @@ export class AiInputComponent implements OnChanges, OnDestroy {
   /** El back no tiene la transcripción configurada: el micrófono queda deshabilitado, reintentar no sirve. */
   voiceUnavailable = signal(false);
   readonly maxSeconds = MAX_RECORDING_SECONDS;
+  readonly maxAttachments = MAX_ATTACHMENTS;
   private recorder?: MediaRecorder;
   private ticker?: ReturnType<typeof setInterval>;
   /** Cerrar el drawer descarta lo que se esté grabando o transcribiendo. */
@@ -156,6 +177,7 @@ export class AiInputComponent implements OnChanges, OnDestroy {
   }
 
   ngOnDestroy(): void {
+    this.attachments().forEach(a => a.preview && URL.revokeObjectURL(a.preview));
     this.stopRecording(true);
     this.timers.forEach(clearTimeout);
   }
@@ -168,7 +190,52 @@ export class AiInputComponent implements OnChanges, OnDestroy {
   }
 
   canSend(): boolean {
-    return !!this.message.trim() && !this.sending() && !this.recording() && !this.transcribing();
+    // ponytail: con adjuntos no se manda hasta que llegue el contrato de la tanda 7 (ahí se suman al pedido).
+    return !!this.message.trim() && !this.attachments().length && !this.sending() && !this.recording() && !this.transcribing()
+      && !this.preparingAttachments();
+  }
+
+  /**
+   * Sin `capture` a propósito: con él, el teléfono abre directo la cámara; sin él ofrece cámara, galería y archivos.
+   * Las fotos se achican acá; el PDF va tal cual. Lo que no entra se avisa y lo demás se agrega igual.
+   */
+  async addAttachments(event: Event): Promise<void> {
+    const input = event.target as HTMLInputElement;
+    const files = [...(input.files ?? [])];
+    input.value = '';  // para poder volver a elegir el mismo archivo
+    if (!files.length) return;
+    this.attachError.set(null);
+    this.preparingAttachments.set(true);
+    const list = [...this.attachments()];
+    let error: string | null = null;
+    for (const original of files) {
+      const name = original.name;
+      const isPdf = original.type === 'application/pdf' || /\.pdf$/i.test(name);
+      if (!isPdf && !original.type.startsWith('image/')) { error = this.t('ai.attach.unsupported', { name }); continue; }
+      if (list.length >= MAX_ATTACHMENTS) { error = this.t('ai.attach.tooMany', { max: MAX_ATTACHMENTS }); break; }
+      let file = original;
+      if (!isPdf) {
+        try {
+          const blob = await resizeImage(original, PHOTO_MAX_SIDE, PHOTO_QUALITY);
+          if (blob !== original) file = new File([blob], name.replace(/\.[^.]+$/, '') + '.jpg', { type: 'image/jpeg' });
+        } catch { /* el navegador no la puede abrir (un HEIC fuera de Safari): va la original y decide el back */ }
+      }
+      if (file.size > MAX_FILE_BYTES) { error = this.t('ai.attach.tooBig', { name, mb: MAX_FILE_BYTES / 1024 / 1024 }); continue; }
+      if (list.reduce((sum, a) => sum + a.file.size, 0) + file.size > MAX_TOTAL_BYTES) {
+        error = this.t('ai.attach.totalTooBig', { mb: MAX_TOTAL_BYTES / 1024 / 1024 });
+        continue;
+      }
+      list.push({ id: this.nextAttachmentId++, file, kind: isPdf ? 'pdf' : 'image', preview: isPdf ? null : URL.createObjectURL(file) });
+    }
+    this.attachments.set(list);
+    this.attachError.set(error);
+    this.preparingAttachments.set(false);
+  }
+
+  removeAttachment(a: ChatAttachment): void {
+    if (a.preview) URL.revokeObjectURL(a.preview);
+    this.attachments.update(list => list.filter(x => x.id !== a.id));
+    this.attachError.set(null);
   }
 
   async send(): Promise<void> {

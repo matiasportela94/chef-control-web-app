@@ -136,7 +136,8 @@
     "CHAT_MISSING_PRICE": "Falta el precio por unidad.",
     "CHAT_INVALID_QUANTITY": "La cantidad no es válida.",
     "CHAT_OPERATION_NOT_SUPPORTED": "Esto todavía no se puede registrar desde la Entrada rápida. Usá el formulario.",
-    "CHAT_MENU_ITEM_NOT_IN_CATALOG": "No es un plato del menú. Cargalo primero o escribilo como figura en el Menú."
+    "CHAT_MENU_ITEM_NOT_IN_CATALOG": "No es un plato del menú. Cargalo primero o escribilo como figura en el Menú.",
+    "CHAT_INVALID_PERIOD": "Ese período no se puede consultar: tiene que ser pasado, con el inicio antes del fin, y de hasta un año."
   },
   "ai": {
     "title": "Entrada rápida",
@@ -197,7 +198,15 @@
     "freshConversation": "Empezaste una conversación nueva: la IA ya no tiene en cuenta lo anterior. Lo que registraste sigue registrado.",
     "newConversationError": "No se pudo empezar una conversación nueva.",
     "loadingHistory": "Cargando la conversación…",
-    "historyError": "No se pudo cargar la conversación."
+    "historyError": "No se pudo cargar la conversación.",
+    "attach": {
+      "add": "Adjuntar foto o PDF",
+      "remove": "Quitar {name}",
+      "unsupported": "«{name}» no es una foto ni un PDF.",
+      "tooBig": "«{name}» pesa más de {mb} MB.",
+      "tooMany": "Hasta {max} archivos por mensaje.",
+      "totalTooBig": "Entre todos los archivos no pueden pasar de {mb} MB."
+    }
   },
   "menu": {
     "carta": "Carta",
