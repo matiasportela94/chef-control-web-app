@@ -137,6 +137,8 @@ export class AiInputComponent implements OnChanges, OnDestroy {
   voiceUnavailable = signal(false);
   readonly maxSeconds = MAX_RECORDING_SECONDS;
   readonly maxAttachments = MAX_ATTACHMENTS;
+  /** ponytail: oculto hasta conectar la tanda 7 (la rama tiene que poder subirse antes); al conectarla, true o se borra. */
+  readonly canAttach = false;
   private recorder?: MediaRecorder;
   private ticker?: ReturnType<typeof setInterval>;
   /** Cerrar el drawer descarta lo que se esté grabando o transcribiendo. */
