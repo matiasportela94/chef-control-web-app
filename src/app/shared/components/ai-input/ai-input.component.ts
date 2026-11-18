@@ -251,10 +251,16 @@ export class AiInputComponent implements OnChanges, OnDestroy {
     }
   }
 
-  /** Solo la última pregunta tiene botones: con memoria, una más vieja ya quedó atrás. */
+  /**
+   * Solo la última pregunta tiene botones: con memoria, una más vieja ya quedó atrás. Misma regla que el back: un
+   * NOT_UNDERSTOOD no la deja atrás (un fallo del modelo no contesta nada), y tampoco un pedido que no llegó (error
+   * de red: el back no lo guardó) ni uno que todavía está saliendo.
+   */
   isPending(turn: ChatTurn): boolean {
-    return turn.response?.status === 'NEEDS_CONFIRMATION' && !!turn.response.proposals?.length
-      && this.turns().at(-1)?.id === turn.id;
+    if (turn.response?.status !== 'NEEDS_CONFIRMATION' || !turn.response.proposals?.length) return false;
+    const ts = this.turns();
+    return ts.slice(ts.findIndex(t => t.id === turn.id) + 1)
+      .every(t => t.status !== 'done' || t.response?.status === 'NOT_UNDERSTOOD');
   }
 
   /**
