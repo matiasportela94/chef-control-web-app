@@ -163,7 +163,7 @@
       "nothingHeard": "No se entendió nada en el audio. Probá de nuevo, más cerca del micrófono.",
       "error": "No se pudo pasar el audio a texto. Probá de nuevo o escribilo."
     },
-    "emptyHint": "Contá qué pasó, como se lo dirías a alguien. Cada mensaje se entiende solo: escribí la operación completa.",
+    "emptyHint": "Contá qué pasó, como se lo dirías a alguien. Si algo quedó mal, decilo («no, eran 5 kg») y lo corrijo.",
     "examplesTitle": "Ejemplos",
     "examples": {
       "purchase": "Compramos 5 kg de pollo a $8000 el kilo al proveedor El Campo",
@@ -175,7 +175,6 @@
     "thinking": "Interpretando…",
     "error": "No se pudo interpretar el mensaje.",
     "edit": "Corregir",
-    "cancelled": "No se registró.",
     "send": "Enviar",
     "types": {
       "PURCHASE": "Compra",
@@ -191,7 +190,14 @@
     "undoError": "No se pudo deshacer.",
     "confirmError": "No se pudo registrar.",
     "reviewRecipe": "Revisar la receta",
-    "recipeSaved": "Receta guardada."
+    "recipeSaved": "Receta guardada.",
+    "today": "Conversación de hoy",
+    "newConversation": "Nueva conversación",
+    "newConversationHint": "La IA deja de tener en cuenta lo anterior. Lo que registraste sigue registrado.",
+    "freshConversation": "Empezaste una conversación nueva: la IA ya no tiene en cuenta lo anterior. Lo que registraste sigue registrado.",
+    "newConversationError": "No se pudo empezar una conversación nueva.",
+    "loadingHistory": "Cargando la conversación…",
+    "historyError": "No se pudo cargar la conversación."
   },
   "menu": {
     "carta": "Carta",

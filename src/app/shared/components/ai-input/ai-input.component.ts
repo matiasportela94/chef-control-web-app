@@ -1,4 +1,4 @@
-import { Component, ElementRef, EventEmitter, Injector, Input, OnDestroy, Output, ViewChild, afterNextRender, computed, signal } from '@angular/core';
+import { Component, ElementRef, EventEmitter, Injector, Input, OnChanges, OnDestroy, Output, SimpleChanges, ViewChild, afterNextRender, computed, signal } from '@angular/core';
 import { DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
@@ -10,6 +10,10 @@ import { confirmChatOperations } from '../../../api/fn/ai-chat-controller/confir
 import { undoChatAction } from '../../../api/fn/ai-chat-controller/undo-chat-action';
 import { ChatActionResponse } from '../../../api/models/chat-action-response';
 import { ChatOperationItem } from '../../../api/models/chat-operation-item';
+import { listChatMessages } from '../../../api/fn/ai-chat-controller/list-chat-messages';
+import { startChatConversation } from '../../../api/fn/ai-chat-controller/start-chat-conversation';
+import { cancelChatProposal } from '../../../api/fn/ai-chat-controller/cancel-chat-proposal';
+import { ChatExchangeResponse } from '../../../api/models/chat-exchange-response';
 import { ChatResponse } from '../../../api/models/chat-response';
 import { parseBlob } from '../../../core/utils/parse-blob';
 import { extractApiError } from '../../../core/utils/api-error';
@@ -46,17 +50,22 @@ interface ChatAction extends ChatActionResponse {
   undoBlocked?: boolean;
 }
 
-/** Un mensaje del usuario y cómo quedó. Cada uno se entiende solo: la IA no ve los anteriores. */
+/**
+ * Un intercambio: el mensaje del usuario y cómo quedó. `text` es null en el resultado de un "Confirmar" o un
+ * "Cancelar", que el back guarda como un intercambio aparte. `id` es el del back si vino del historial; uno local si se mandó en esta sesión.
+ */
 interface ChatTurn {
-  id: number;
-  text: string;
+  id: string;
+  text: string | null;
   status: 'pending' | 'done' | 'error';
   error?: string;
   response?: ChatResponse;
   actions?: ChatAction[];
-  confirming?: boolean;
+  /** Lo que deshizo una corrección ("no, eran 5 kg") en este mensaje. */
+  undone?: ChatAction[];
+  /** La alternativa que se está confirmando; -1 mientras se cancela. */
+  confirming?: number;
   confirmError?: string;
-  cancelled?: boolean;
   recipeSaved?: boolean;
 }
 
@@ -67,7 +76,7 @@ interface ChatTurn {
   templateUrl: './ai-input.component.html',
   styleUrl: './ai-input.component.scss',
 })
-export class AiInputComponent implements OnDestroy {
+export class AiInputComponent implements OnChanges, OnDestroy {
   @Input() isOpen = false;
   @Output() closed = new EventEmitter<void>();
   @ViewChild('box') private box?: ElementRef<HTMLTextAreaElement>;
@@ -75,15 +84,29 @@ export class AiInputComponent implements OnDestroy {
   @ViewChild(CatalogImportComponent) private importer?: CatalogImportComponent;
 
   message = '';
-  /** El historial vive mientras viva el shell: salir a /login (logout o cambio de local) lo descarta. */
+  /**
+   * La conversación la guarda el back (por usuario y local, desde la medianoche o el último "Nueva conversación"):
+   * se pide al abrir y esto es su caché. Lo que se ve tiene que ser lo que la IA recuerda.
+   */
   turns   = signal<ChatTurn[]>([]);
-  sending = computed(() => this.turns().some(t => t.status === 'pending'));
+  sending = computed(() => this.turns().some(t => t.status === 'pending' || t.confirming != null));
+  loadingHistory = signal(false);
+  historyError   = signal<string | null>(null);
+  startingConversation = signal(false);
+  conversationError    = signal<string | null>(null);
+  /** Se acaba de empezar una conversación nueva: el aviso de que lo registrado sigue registrado. */
+  freshConversation = signal(false);
   private nextId = 0;
+  /**
+   * Cuánto adelanta el reloj de este navegador respecto del back, medido con la última respuesta (createdAt ≈ ahora
+   * del back). Sin eso, un celular con la hora corrida apagaría el Deshacer antes o después de tiempo.
+   */
+  private skew = 0;
   /** Mueve los botones de deshacer cuando vence su plazo. */
   now = signal(Date.now());
   private timers: ReturnType<typeof setTimeout>[] = [];
   /** El mensaje cuya receta está abierta en la vista previa del import. */
-  recipeTurnId = signal<number | null>(null);
+  recipeTurnId = signal<string | null>(null);
 
   // ---- dictado: tocar para grabar, tocar para cortar (manos ocupadas: nada de mantener apretado)
   recording    = signal(false);
@@ -128,6 +151,10 @@ export class AiInputComponent implements OnDestroy {
       && this.auth.hasFeature('AI_INTERPRETER') && this.auth.hasPermission('AI_USE');
   }
 
+  ngOnChanges(changes: SimpleChanges): void {
+    if (changes['isOpen'] && this.isOpen) void this.loadHistory();
+  }
+
   ngOnDestroy(): void {
     this.stopRecording(true);
     this.timers.forEach(clearTimeout);
@@ -146,9 +173,10 @@ export class AiInputComponent implements OnDestroy {
 
   async send(): Promise<void> {
     if (!this.canSend()) return;
-    const turn: ChatTurn = { id: this.nextId++, text: this.message.trim(), status: 'pending' };
+    const turn: ChatTurn = { id: this.localId(), text: this.message.trim(), status: 'pending' };
     this.message = '';
     this.voiceError.set(null);
+    this.freshConversation.set(false);
     this.turns.update(ts => [...ts, turn]);
     await this.run(turn);
   }
@@ -161,14 +189,14 @@ export class AiInputComponent implements OnDestroy {
 
   /** Vuelve a poner el texto en la caja para corregirlo y mandarlo de nuevo, completo. */
   edit(turn: ChatTurn): void {
-    this.message = turn.text;
+    this.message = turn.text ?? '';
     this.box?.nativeElement.focus();
   }
 
   private async run(turn: ChatTurn): Promise<void> {
     this.scrollToEnd();
     try {
-      const res = await parseBlob<ChatResponse>(await this.api.invoke(sendChatMessage, { body: { message: turn.text } }) as unknown);
+      const res = await parseBlob<ChatResponse>(await this.api.invoke(sendChatMessage, { body: { message: turn.text ?? '' } }) as unknown);
       this.receive(turn.id, res);
       this.patch(turn.id, { status: 'done' });
     } catch (e) {
@@ -178,34 +206,101 @@ export class AiInputComponent implements OnDestroy {
     this.scrollToEnd();
   }
 
-  /** La propuesta va tal cual: el back la revalida entera. Para cambiarla, "Corregir" y mandar el mensaje de nuevo. */
-  async confirm(turn: ChatTurn): Promise<void> {
-    const operations = turn.response?.proposal;
-    if (!operations?.length || turn.confirming) return;
-    this.patch(turn.id, { confirming: true, confirmError: undefined });
+  /** La conversación guardada en el back. Un mensaje que está saliendo gana: se vuelve a pedir al próximo abrir. */
+  async loadHistory(): Promise<void> {
+    if (this.planLocked || this.loadingHistory()) return;
+    this.loadingHistory.set(true);
+    this.historyError.set(null);
     try {
-      this.receive(turn.id, await parseBlob<ChatResponse>(await this.api.invoke(confirmChatOperations, { body: { operations } }) as unknown));
+      const exchanges = await parseBlob<ChatExchangeResponse[]>(await this.api.invoke(listChatMessages) as unknown);
+      if (!this.sending()) {
+        this.timers.forEach(clearTimeout);
+        this.timers = [];
+        this.turns.set((exchanges ?? []).map(x => this.fromExchange(x)));
+      }
     } catch (e) {
-      this.patch(turn.id, { confirmError: extractApiError(e, this.t('ai.confirmError')) });
+      this.historyError.set(extractApiError(e, this.t('ai.historyError')));
     } finally {
-      this.patch(turn.id, { confirming: false });
+      this.loadingHistory.set(false);
     }
     this.scrollToEnd();
   }
 
-  cancel(turn: ChatTurn): void {
-    this.patch(turn.id, { cancelled: true });
+  private fromExchange(x: ChatExchangeResponse): ChatTurn {
+    const r = x.response;
+    return { id: x.id ?? this.localId(), text: x.userMessage ?? null, status: 'done', response: r,
+      actions: (r?.actions ?? []).map(a => this.track(a)), undone: (r?.undone ?? []).map(a => this.track(a)) };
   }
 
-  private receive(turnId: number, res: ChatResponse): void {
-    this.patch(turnId, { response: res, actions: (res.actions ?? []).map(a => this.track(a)) });
-    if (res.actions?.length) this.aiRefresh.notify();
+  /** Corta la memoria de la IA; no borra ni deshace nada (los mensajes quedan guardados en el back). */
+  async newConversation(): Promise<void> {
+    if (this.sending() || this.startingConversation()) return;
+    this.startingConversation.set(true);
+    this.conversationError.set(null);
+    try {
+      await this.api.invoke(startChatConversation);
+      this.timers.forEach(clearTimeout);
+      this.timers = [];
+      this.turns.set([]);
+      this.freshConversation.set(true);
+      this.box?.nativeElement.focus();
+    } catch (e) {
+      this.conversationError.set(extractApiError(e, this.t('ai.newConversationError')));
+    } finally {
+      this.startingConversation.set(false);
+    }
+  }
+
+  /** Solo la última pregunta tiene botones: con memoria, una más vieja ya quedó atrás. */
+  isPending(turn: ChatTurn): boolean {
+    return turn.response?.status === 'NEEDS_CONFIRMATION' && !!turn.response.proposals?.length
+      && this.turns().at(-1)?.id === turn.id;
+  }
+
+  /**
+   * Cada alternativa (por kg o el total, por ejemplo) se confirma tal cual: el back la revalida entera. El resultado
+   * entra como un intercambio nuevo, igual que lo guarda el back.
+   */
+  confirm(turn: ChatTurn, i: number): Promise<void> {
+    const operations = turn.response?.proposals?.[i]?.operations;
+    if (!operations?.length) return Promise.resolve();
+    return this.answer(turn, i, () => this.api.invoke(confirmChatOperations, { body: { operations } }));
+  }
+
+  /** Lo guarda el back como cancelada: un "sí" después ya no la registra. */
+  cancel(turn: ChatTurn): Promise<void> {
+    return this.answer(turn, -1, () => this.api.invoke(cancelChatProposal));
+  }
+
+  private async answer(turn: ChatTurn, i: number, call: () => Promise<unknown>): Promise<void> {
+    if (this.sending()) return;
+    this.patch(turn.id, { confirming: i, confirmError: undefined });
+    try {
+      const res = await parseBlob<ChatResponse>(await call());
+      const result: ChatTurn = { id: this.localId(), text: null, status: 'done' };
+      this.turns.update(ts => [...ts, result]);
+      this.receive(result.id, res);
+    } catch (e) {
+      this.patch(turn.id, { confirmError: extractApiError(e, this.t('ai.confirmError')) });
+    } finally {
+      this.patch(turn.id, { confirming: undefined });
+    }
+    this.scrollToEnd();
+  }
+
+  private receive(turnId: string, res: ChatResponse): void {
+    const created = Date.parse(res.actions?.[0]?.createdAt ?? '');
+    if (Number.isFinite(created)) this.skew = Date.now() - created;
+    this.patch(turnId, { response: res, actions: (res.actions ?? []).map(a => this.track(a)), undone: (res.undone ?? []).map(a => this.track(a)) });
+    // Una corrección deshizo algo de un mensaje anterior: ahí también se ve deshecho.
+    for (const u of res.undone ?? []) if (u.actionId) this.markUndone(u.actionId, u.undoneAt ?? new Date().toISOString(), turnId);
+    if (res.actions?.length || res.undone?.length) this.aiRefresh.notify();
     // Una receta, sea cual sea el status (puede venir junto con operaciones registradas): se abre su vista previa.
     if (res.catalogImport) this.openRecipe(turnId);
   }
 
   /** La vista previa y la confirmación son las del import de Excel: el chat solo arma las filas. */
-  openRecipe(turnId: number): void {
+  openRecipe(turnId: string): void {
     const r = this.turns().find(t => t.id === turnId)?.response;
     if (!r?.catalogImport || !this.importer) return;
     this.recipeTurnId.set(turnId);
@@ -218,14 +313,10 @@ export class AiInputComponent implements OnDestroy {
     this.aiRefresh.notify();
   }
 
-  /**
-   * El plazo se cuenta desde que llegó la respuesta (15 min = undoableUntil − createdAt), no con la hora del server:
-   * con el reloj del celular corrido, comparar contra undoableUntil apagaría el botón antes o después de tiempo.
-   * Al vencer, un timer mueve `now` y el botón se apaga solo.
-   */
+  /** Hasta undoableUntil en el reloj del back, corrido a este. Al vencer, un timer mueve `now` y el botón se apaga solo. */
   private track(action: ChatActionResponse): ChatAction {
-    const window = Date.parse(action.undoableUntil ?? '') - Date.parse(action.createdAt ?? '');
-    const deadline = Number.isFinite(window) ? Date.now() + window : 0;
+    const until = Date.parse(action.undoableUntil ?? '');
+    const deadline = Number.isFinite(until) ? until + this.skew : 0;
     if (deadline > Date.now()) this.timers.push(setTimeout(() => this.now.set(Date.now()), deadline - Date.now() + 100));
     return { ...action, deadline };
   }
@@ -254,13 +345,22 @@ export class AiInputComponent implements OnDestroy {
     }
   }
 
-  private patch(id: number, changes: Partial<ChatTurn>): void {
+  private localId(): string {
+    return `local-${this.nextId++}`;
+  }
+
+  private patch(id: string, changes: Partial<ChatTurn>): void {
     this.turns.update(ts => ts.map(t => t.id === id ? { ...t, ...changes } : t));
   }
 
-  private patchAction(turnId: number, actionId: string, changes: Partial<ChatAction>): void {
+  private patchAction(turnId: string, actionId: string, changes: Partial<ChatAction>): void {
     this.turns.update(ts => ts.map(t => t.id !== turnId ? t
       : { ...t, actions: t.actions?.map(a => a.actionId === actionId ? { ...a, ...changes } : a) }));
+  }
+
+  private markUndone(actionId: string, undoneAt: string, exceptTurnId: string): void {
+    this.turns.update(ts => ts.map(t => t.id === exceptTurnId || !t.actions?.some(a => a.actionId === actionId) ? t
+      : { ...t, actions: t.actions.map(a => a.actionId === actionId ? { ...a, undoneAt } : a) }));
   }
 
   /** Después de dibujar: con eventCoalescing la vista nueva recién está en el frame siguiente. */
@@ -272,9 +372,10 @@ export class AiInputComponent implements OnDestroy {
     return STATUS_ICON[status ?? ''] ?? 'ti-info-circle';
   }
 
-  itemLine(type: string | undefined, it: ChatOperationItem): string {
+  /** Con dos lecturas del precio, el precio lo dice cada botón: en la lista iría el de una sola. */
+  itemLine(type: string | undefined, it: ChatOperationItem, withPrice = true): string {
     const item = [formatNum(it.quantity), it.unitName, it.name].filter(Boolean).join(' ');
-    return type === 'PURCHASE' && it.pricePerUnit != null
+    return withPrice && type === 'PURCHASE' && it.pricePerUnit != null
       ? this.t('ai.itemPrice', { item, price: formatARS(it.pricePerUnit), unit: it.unitName ?? '' })
       : item;
   }
@@ -286,6 +387,7 @@ export class AiInputComponent implements OnDestroy {
 
   close(): void {
     this.recipeTurnId.set(null);
+    this.freshConversation.set(false);
     this.stopRecording(true);
     this.transcribing.set(false);
     this.closed.emit();

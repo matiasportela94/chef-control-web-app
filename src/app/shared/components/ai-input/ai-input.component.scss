@@ -21,6 +21,16 @@
 .example-chevron { margin-left: auto; font-size: 12px; color: var(--text-3); }
 
 // ---- historial: el mensaje a la derecha, cómo quedó debajo
+// "Nueva conversación": chico y arriba, para que no compita con la caja de escribir
+.chat-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 8px; }
+.chat-new {
+  display: inline-flex; align-items: center; gap: 5px; min-height: 32px; padding: 4px 8px; border-radius: 8px;
+  background: none; border: 1px solid var(--border); color: var(--text-2); font-size: 12px; cursor: pointer;
+  &:hover:not(:disabled) { border-color: var(--accent); color: var(--text-1); }
+  &:disabled { opacity: .5; cursor: default; }
+}
+.link-btn { background: none; border: none; padding: 0 0 0 4px; color: var(--accent); font-size: 12px; cursor: pointer; text-decoration: underline; }
+.fresh { margin-bottom: 8px; }
 .chat { display: flex; flex-direction: column; gap: 8px; }
 .msg-user {
   align-self: flex-end; max-width: 85%; margin-top: 6px;

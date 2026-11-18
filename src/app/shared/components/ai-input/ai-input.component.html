@@ -10,21 +10,46 @@
       @if (canSeePlans) { <a routerLink="/plan" (click)="close()" class="btn-primary btn-sm">{{ t('planGate.cta') }}</a> }
     </div>
   } @else if (!turns().length) {
-    <div class="empty">
-      <p class="empty-hint">{{ t('ai.emptyHint') }}</p>
-      <p class="section-label">{{ t('ai.examplesTitle') }}</p>
-      @for (ex of examples; track ex.key) {
-        <button type="button" class="example" (click)="fillExample(ex.key)">
-          <i [class]="'ti ' + ex.icon"></i>
-          <span>{{ t('ai.shortcuts.' + ex.key) }}</span>
-          <i class="ti ti-chevron-right example-chevron"></i>
-        </button>
-      }
-    </div>
+    @if (loadingHistory()) {
+      <p class="reply-muted"><i class="ti ti-loader-2 animate-spin"></i> {{ t('ai.loadingHistory') }}</p>
+    } @else {
+      <div class="empty">
+        @if (freshConversation()) {
+          <p class="reply-text status-REGISTERED fresh"><i class="ti ti-message-plus"></i><span>{{ t('ai.freshConversation') }}</span></p>
+        }
+        @if (historyError()) {
+          <p class="reply-line reply-error"><i class="ti ti-alert-circle"></i><span>{{ historyError() }}</span>
+            <button type="button" class="link-btn" (click)="loadHistory()">{{ t('common.retry') }}</button></p>
+        }
+        <p class="empty-hint">{{ t('ai.emptyHint') }}</p>
+        <p class="section-label">{{ t('ai.examplesTitle') }}</p>
+        @for (ex of examples; track ex.key) {
+          <button type="button" class="example" (click)="fillExample(ex.key)">
+            <i [class]="'ti ' + ex.icon"></i>
+            <span>{{ t('ai.shortcuts.' + ex.key) }}</span>
+            <i class="ti ti-chevron-right example-chevron"></i>
+          </button>
+        }
+      </div>
+    }
   } @else {
+    <!-- Empezar de cero corta la memoria de la IA: no deshace nada, por eso va chico y arriba, lejos de la caja -->
+    <div class="chat-head">
+      <span class="section-label">{{ t('ai.today') }}</span>
+      <button type="button" class="chat-new" (click)="newConversation()" [disabled]="sending() || startingConversation()" [title]="t('ai.newConversationHint')">
+        @if (startingConversation()) { <i class="ti ti-loader-2 animate-spin"></i> } @else { <i class="ti ti-message-plus"></i> }
+        {{ t('ai.newConversation') }}
+      </button>
+    </div>
+    @if (conversationError()) { <p class="reply-line reply-error"><i class="ti ti-alert-circle"></i><span>{{ conversationError() }}</span></p> }
+    @if (historyError()) {
+      <p class="reply-line reply-error"><i class="ti ti-alert-circle"></i><span>{{ historyError() }}</span>
+        <button type="button" class="link-btn" (click)="loadHistory()">{{ t('common.retry') }}</button></p>
+    }
     <div class="chat" role="log" aria-live="polite" [attr.aria-label]="t('ai.historyLabel')">
       @for (turn of turns(); track turn.id) {
-        <p class="msg-user">{{ turn.text }}</p>
+        <!-- Sin texto: es el resultado de un "Confirmar" -->
+        @if (turn.text) { <p class="msg-user">{{ turn.text }}</p> }
         <div class="msg-reply">
           @switch (turn.status) {
             @case ('pending') {
@@ -45,8 +70,15 @@
                   <i [class]="'ti ' + statusIcon(r.status)"></i><span>{{ r.message }}</span>
                 </p>
 
-                @if (turn.actions?.length) {
+                @if (turn.actions?.length || turn.undone?.length) {
                   <ul class="reply-list">
+                    <!-- Lo que deshizo una corrección ("no, eran 5 kg"), junto a lo nuevo -->
+                    @for (a of turn.undone; track a.actionId) {
+                      <li class="action undone">
+                        <span class="action-summary">{{ a.summary }}</span>
+                        <span class="badge badge-neutral">{{ t('ai.undone') }}</span>
+                      </li>
+                    }
                     @for (a of turn.actions; track a.actionId) {
                       <li class="action" [class.undone]="a.undoneAt">
                         <span class="action-summary">{{ a.summary }}</span>
@@ -65,12 +97,13 @@
                   </ul>
                 }
 
-                @if (r.status === 'NEEDS_CONFIRMATION' && r.proposal?.length) {
+                <!-- Lo que se va a registrar. Con dos lecturas del precio, el precio lo dice cada botón -->
+                @if (r.status === 'NEEDS_CONFIRMATION' && r.proposals?.length) {
                   <ul class="reply-list">
-                    @for (op of r.proposal; track $index) {
+                    @for (op of r.proposals![0].operations; track $index) {
                       <li class="proposal">
                         <span class="section-label">{{ t('ai.types.' + op.type) }}</span>
-                        @for (it of op.items; track $index) { <span class="proposal-item">{{ itemLine(op.type, it) }}</span> }
+                        @for (it of op.items; track $index) { <span class="proposal-item">{{ itemLine(op.type, it, r.proposals!.length === 1) }}</span> }
                       </li>
                     }
                   </ul>
@@ -80,24 +113,29 @@
                   <p class="reply-text status-REGISTERED"><i class="ti ti-circle-check"></i><span>{{ t('ai.recipeSaved') }}</span></p>
                 }
                 @if (turn.confirmError) { <p class="reply-line reply-error"><i class="ti ti-alert-circle"></i><span>{{ turn.confirmError }}</span></p> }
-                @if (turn.cancelled) { <p class="reply-muted">{{ t('ai.cancelled') }}</p> }
 
                 <!-- Una receta puede venir con operaciones ya registradas: ahí no hay Corregir (mandaría todo de nuevo) -->
-                @if (!turn.cancelled && (r.status !== 'REGISTERED' || (r.catalogImport && !turn.recipeSaved))) {
+                @if (r.status !== 'REGISTERED' || (r.catalogImport && !turn.recipeSaved)) {
                   <div class="reply-actions">
                     @if (r.catalogImport && !turn.recipeSaved) {
-                      <button type="button" [class]="r.status === 'NEEDS_CONFIRMATION' ? 'btn-secondary btn-sm' : 'btn-primary btn-sm'" (click)="openRecipe(turn.id)">
+                      <button type="button" [class]="isPending(turn) ? 'btn-secondary btn-sm' : 'btn-primary btn-sm'" (click)="openRecipe(turn.id)">
                         <i class="ti ti-chef-hat"></i> {{ t('ai.reviewRecipe') }}
                       </button>
                     }
-                    @if (r.status === 'NEEDS_CONFIRMATION' && r.proposal?.length) {
-                      <button type="button" class="btn-primary btn-sm" (click)="confirm(turn)" [disabled]="turn.confirming">
-                        @if (turn.confirming) { <i class="ti ti-loader-2 animate-spin"></i> } @else { <i class="ti ti-check"></i> }
-                        {{ t('common.confirm') }}
+                    @if (isPending(turn)) {
+                      <!-- Un botón por lectura (la primera es la del modelo); cada uno confirma la suya -->
+                      @for (alt of r.proposals; track $index; let i = $index) {
+                        <button type="button" [class]="i === 0 ? 'btn-primary btn-sm' : 'btn-secondary btn-sm'" (click)="confirm(turn, i)" [disabled]="sending()">
+                          @if (turn.confirming === i) { <i class="ti ti-loader-2 animate-spin"></i> } @else { <i class="ti ti-check"></i> }
+                          {{ alt.label || t('common.confirm') }}
+                        </button>
+                      }
+                      <button type="button" class="btn-secondary btn-sm" (click)="cancel(turn)" [disabled]="sending()">
+                        @if (turn.confirming === -1) { <i class="ti ti-loader-2 animate-spin"></i> }
+                        {{ t('common.cancel') }}
                       </button>
-                      <button type="button" class="btn-secondary btn-sm" (click)="cancel(turn)" [disabled]="turn.confirming">{{ t('common.cancel') }}</button>
                     }
-                    @if (r.status !== 'REGISTERED' && !turn.confirming) {
+                    @if (turn.text && r.status !== 'REGISTERED' && turn.confirming == null) {
                       <button type="button" class="btn-secondary btn-sm" (click)="edit(turn)"><i class="ti ti-pencil"></i> {{ t('ai.edit') }}</button>
                     }
                   </div>

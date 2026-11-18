@@ -163,7 +163,7 @@
       "nothingHeard": "Nothing could be understood in the audio. Try again, closer to the microphone.",
       "error": "The audio couldn't be turned into text. Try again or type it."
     },
-    "emptyHint": "Say what happened, the way you would tell someone. Each message stands on its own: write the whole operation.",
+    "emptyHint": "Say what happened, the way you would tell someone. If something came out wrong, say so («no, it was 5 kg») and I will fix it.",
     "examplesTitle": "Examples",
     "examples": {
       "purchase": "We bought 5 kg of chicken at $8000 per kilo from supplier El Campo",
@@ -175,7 +175,6 @@
     "thinking": "Interpreting…",
     "error": "The message could not be interpreted.",
     "edit": "Edit",
-    "cancelled": "Not recorded.",
     "send": "Send",
     "types": {
       "PURCHASE": "Purchase",
@@ -191,7 +190,14 @@
     "undoError": "It could not be undone.",
     "confirmError": "It could not be recorded.",
     "reviewRecipe": "Review the recipe",
-    "recipeSaved": "Recipe saved."
+    "recipeSaved": "Recipe saved.",
+    "today": "Today's conversation",
+    "newConversation": "New conversation",
+    "newConversationHint": "The AI stops taking the earlier messages into account. What you recorded stays recorded.",
+    "freshConversation": "You started a new conversation: the AI no longer takes the earlier messages into account. What you recorded stays recorded.",
+    "newConversationError": "A new conversation could not be started.",
+    "loadingHistory": "Loading the conversation…",
+    "historyError": "The conversation could not be loaded."
   },
   "menu": {
     "carta": "Menu",
