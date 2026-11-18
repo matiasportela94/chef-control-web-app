@@ -57,8 +57,6 @@
   padding: 8px 10px; border-radius: 10px; background: var(--bg-card); border: 1px dashed var(--border-strong);
 }
 .proposal-item { font-size: 12px; line-height: 1.45; color: var(--text-2); overflow-wrap: anywhere; }
-.reply-skip { color: #b45309; strong { font-weight: 600; } }
-:host-context([data-theme="dark"]) .reply-skip { color: #fbbf24; }
 .reply-line {
   display: flex; align-items: flex-start; gap: 6px; font-size: 12px; line-height: 1.45; overflow-wrap: anywhere;
   i { flex-shrink: 0; margin-top: 2px; font-size: 14px; }

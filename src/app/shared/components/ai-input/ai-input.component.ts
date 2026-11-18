@@ -11,10 +11,8 @@ import { undoChatAction } from '../../../api/fn/ai-chat-controller/undo-chat-act
 import { ChatActionResponse } from '../../../api/models/chat-action-response';
 import { ChatOperationItem } from '../../../api/models/chat-operation-item';
 import { ChatResponse } from '../../../api/models/chat-response';
-import { ChatSkip } from '../../../api/models/chat-skip';
 import { parseBlob } from '../../../core/utils/parse-blob';
 import { extractApiError } from '../../../core/utils/api-error';
-import { getErrorMessage } from '../../../core/utils/error-messages';
 import { formatARS, formatNum } from '../../../core/utils/format';
 import { AiRefreshService } from '../../../core/services/ai-refresh.service';
 import { AuthService } from '../../../core/services/auth.service';
@@ -258,15 +256,6 @@ export class AiInputComponent implements OnDestroy {
     return type === 'PURCHASE' && it.pricePerUnit != null
       ? this.t('ai.itemPrice', { item, price: formatARS(it.pricePerUnit), unit: it.unitName ?? '' })
       : item;
-  }
-
-  /** Lo que se salteó: el nombre como lo escribió el usuario o, si no vino (un permiso), el tipo de operación. */
-  skipSubject(s: ChatSkip): string | null {
-    return s.name || (s.type ? this.t(`ai.types.${s.type}`) : null);
-  }
-
-  skipMessage(s: ChatSkip): string {
-    return getErrorMessage(s.errorCode) ?? s.message ?? '';
   }
 
   fillExample(key: string): void {

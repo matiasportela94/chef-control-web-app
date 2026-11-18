@@ -135,7 +135,8 @@
     "CHAT_PRODUCT_NOT_IN_CATALOG": "No está en el catálogo. Cargalo primero o escribilo como figura en Insumos.",
     "CHAT_MISSING_PRICE": "Falta el precio por unidad.",
     "CHAT_INVALID_QUANTITY": "La cantidad no es válida.",
-    "CHAT_OPERATION_NOT_SUPPORTED": "Esto todavía no se puede registrar desde la Entrada rápida. Usá el formulario."
+    "CHAT_OPERATION_NOT_SUPPORTED": "Esto todavía no se puede registrar desde la Entrada rápida. Usá el formulario.",
+    "CHAT_MENU_ITEM_NOT_IN_CATALOG": "No es un plato del menú. Cargalo primero o escribilo como figura en el Menú."
   },
   "ai": {
     "title": "Entrada rápida",

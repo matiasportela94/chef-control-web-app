@@ -76,16 +76,6 @@
                   </ul>
                 }
 
-                @if (r.skipped?.length) {
-                  <ul class="reply-list">
-                    @for (s of r.skipped; track $index) {
-                      <li class="reply-line reply-skip"><i class="ti ti-alert-triangle"></i>
-                        <span>@if (skipSubject(s); as subject) { <strong>{{ subject }}: </strong> }{{ skipMessage(s) }}</span>
-                      </li>
-                    }
-                  </ul>
-                }
-
                 @if (turn.confirmError) { <p class="reply-line reply-error"><i class="ti ti-alert-circle"></i><span>{{ turn.confirmError }}</span></p> }
                 @if (turn.cancelled) { <p class="reply-muted">{{ t('ai.cancelled') }}</p> }
 

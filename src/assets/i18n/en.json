@@ -135,7 +135,8 @@
     "CHAT_PRODUCT_NOT_IN_CATALOG": "It is not in the catalog. Add it first or write it as it appears in Products.",
     "CHAT_MISSING_PRICE": "The price per unit is missing.",
     "CHAT_INVALID_QUANTITY": "The quantity is not valid.",
-    "CHAT_OPERATION_NOT_SUPPORTED": "This cannot be recorded from Quick entry yet. Use the form."
+    "CHAT_OPERATION_NOT_SUPPORTED": "This cannot be recorded from Quick entry yet. Use the form.",
+    "CHAT_MENU_ITEM_NOT_IN_CATALOG": "It is not a dish on the menu. Add it first or write it as it appears in Menu."
   },
   "ai": {
     "title": "Quick entry",
