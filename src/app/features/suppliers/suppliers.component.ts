@@ -11,6 +11,7 @@ import { extractApiError } from '../../core/utils/api-error';
 import { ActionDialogComponent } from '../../shared/components/action-dialog/action-dialog.component';
 import { DrawerComponent } from '../../shared/components/drawer/drawer.component';
 import { SpinnerComponent } from '../../shared/components/spinner/spinner.component';
+import { I18nService } from '../../core/services/i18n.service';
 import { isFormFieldInvalid } from '../../core/utils/form';
 
 @Component({
@@ -35,11 +36,12 @@ export class SuppliersComponent implements OnInit {
 
   form: FormGroup;
 
-  constructor(private api: Api, private fb: FormBuilder) {
+  constructor(private api: Api, private fb: FormBuilder, public i18n: I18nService) {
     this.form = this.fb.group({
       name:    ['', Validators.required],
       email:   [''],
       phone:   [''],
+      cuit:    [''],
       address: [''],
       notes:   [''],
     });
@@ -64,7 +66,7 @@ export class SuppliersComponent implements OnInit {
 
   openCreate(): void {
     this.editing.set(null);
-    this.form.reset({ name: '', email: '', phone: '', address: '', notes: '' });
+    this.form.reset({ name: '', email: '', phone: '', cuit: '', address: '', notes: '' });
     this.saveError.set(null);
     this.drawerOpen.set(true);
   }
@@ -75,6 +77,7 @@ export class SuppliersComponent implements OnInit {
       name:    s.name    ?? '',
       email:   s.email   ?? '',
       phone:   s.phone   ?? '',
+      cuit:    s.cuit    ?? '',
       address: s.address ?? '',
       notes:   s.notes   ?? '',
     });
@@ -101,6 +104,7 @@ export class SuppliersComponent implements OnInit {
       name:    v.name,
       ...(v.email?.trim()   ? { email:   v.email.trim()   } : {}),
       ...(v.phone?.trim()   ? { phone:   v.phone.trim()   } : {}),
+      ...(v.cuit?.trim()    ? { cuit:    v.cuit.trim()    } : {}),
       ...(v.address?.trim() ? { address: v.address.trim() } : {}),
       ...(v.notes?.trim()   ? { notes:   v.notes.trim()   } : {}),
     };

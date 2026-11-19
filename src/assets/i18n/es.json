@@ -137,7 +137,14 @@
     "CHAT_INVALID_QUANTITY": "La cantidad no es válida.",
     "CHAT_OPERATION_NOT_SUPPORTED": "Esto todavía no se puede registrar desde la Entrada rápida. Usá el formulario.",
     "CHAT_MENU_ITEM_NOT_IN_CATALOG": "No es un plato del menú. Cargalo primero o escribilo como figura en el Menú.",
-    "CHAT_INVALID_PERIOD": "Ese período no se puede consultar: tiene que ser pasado, con el inicio antes del fin, y de hasta un año."
+    "CHAT_INVALID_PERIOD": "Ese período no se puede consultar: tiene que ser pasado, con el inicio antes del fin, y de hasta un año.",
+    "CHAT_DOCUMENT_NOT_RECOGNIZED": "No reconozco ahí una factura, un remito ni un cierre de caja. Probá con una foto más nítida o el PDF.",
+    "ATTACHMENT_FORMAT_NOT_SUPPORTED": "Ese archivo no es una foto ni un PDF.",
+    "ATTACHMENT_TOO_LARGE": "El archivo pesa más de 4 MB.",
+    "ATTACHMENT_NOT_FOUND": "No encontramos ese adjunto: puede que ya lo hayan borrado.",
+    "ATTACHMENTS_NOT_MOVABLE": "No se pudieron pasar los adjuntos a la compra corregida.",
+    "INVALID_CUIT": "El CUIT no es válido: revisá los 11 dígitos.",
+    "SUPPLIER_CUIT_TAKEN": "Ya hay otro proveedor con ese CUIT."
   },
   "ai": {
     "title": "Entrada rápida",
@@ -205,8 +212,11 @@
       "unsupported": "«{name}» no es una foto ni un PDF.",
       "tooBig": "«{name}» pesa más de {mb} MB.",
       "tooMany": "Hasta {max} archivos por mensaje.",
-      "totalTooBig": "Entre todos los archivos no pueden pasar de {mb} MB."
-    }
+      "totalTooBig": "Entre todos los archivos no pueden pasar de {mb} MB.",
+      "pdfAlone": "Un PDF va solo: mandá el PDF o hasta 5 fotos, no las dos cosas."
+    },
+    "reviewInvoice": "Revisar la factura",
+    "invoiceSaved": "Compra registrada."
   },
   "menu": {
     "carta": "Carta",
@@ -833,7 +843,31 @@
     "colAvailable": "Disponible",
     "consumed": "{qty} {unit} ya consumidos en ventas o mermas.",
     "reverseNote": "Los movimientos de stock existentes no se modifican — se crearán nuevos movimientos de reversión en el ledger. Después se abrirá el formulario de carga pre-llenado para que puedas ingresar los datos correctos.",
-    "reverseConfirm": "Revertir y corregir"
+    "reverseConfirm": "Revertir y corregir",
+    "invoice": "Comprobante",
+    "invoiceType": "Tipo de comprobante",
+    "invoiceTypeNone": "Sin comprobante",
+    "invoiceTypeA": "Factura A",
+    "invoiceTypeB": "Factura B",
+    "invoiceTypeC": "Factura C",
+    "invoiceTypeRemito": "Remito",
+    "invoiceLabelA": "Factura A",
+    "invoiceLabelB": "Factura B",
+    "invoiceLabelC": "Factura C",
+    "invoiceLabelREMITO": "Remito",
+    "invoiceNumber": "Número",
+    "invoiceNumberPlaceholder": "0001-00001234",
+    "attachments": "Adjuntos",
+    "attachmentsLoading": "Cargando adjuntos…",
+    "attachmentsEmpty": "Sin adjuntos",
+    "attachmentAdd": "Adjuntar",
+    "attachmentDelete": "Eliminar",
+    "attachmentDeleteTitle": "Eliminar adjunto",
+    "attachmentDeleteBody": "Se va a eliminar este archivo de la compra.",
+    "attachmentTooLarge": "El archivo supera los 4 MB.",
+    "attachmentOpenError": "No se pudo abrir el adjunto",
+    "attachmentUploadError": "No se pudo subir el adjunto",
+    "attachmentDeleteError": "No se pudo eliminar el adjunto"
   },
   "iva": {
     "title": "IVA",
@@ -942,5 +976,61 @@
   "waste": {
     "reversed": "Deshecha",
     "reversedHint": "Se deshizo: el stock volvió y no cuenta en la merma del mes."
+  },
+  "suppliers": {
+    "cuit": "CUIT",
+    "optional": "opcional"
+  },
+  "invoice": {
+    "title": "Revisar factura",
+    "review": "La leyó la IA. Revisala y corregí lo que haga falta: nada se registra hasta que confirmes.",
+    "noFiles": "Los archivos no se van a adjuntar a la compra: se mandaron antes de recargar la página.",
+    "loadError": "No se pudieron cargar los insumos y proveedores.",
+    "supplier": "Proveedor",
+    "choose": "Elegí…",
+    "newOption": "Nuevo: {name}",
+    "newSupplierName": "Nombre del proveedor nuevo",
+    "type": "Tipo",
+    "types": {
+      "A": "Factura A",
+      "B": "Factura B",
+      "C": "Factura C",
+      "REMITO": "Remito"
+    },
+    "typeLetter": "Factura {type}",
+    "number": "Número",
+    "issuedOn": "Fecha",
+    "pricesIncludeIva": "Precios con IVA",
+    "lines": "Renglones ({count})",
+    "removeLine": "Quitar este renglón",
+    "product": "Insumo",
+    "newProductName": "Nombre del insumo nuevo",
+    "newProductUnit": "Su unidad",
+    "quantity": "Cantidad",
+    "unit": "Unidad",
+    "unitPrice": "Precio unitario",
+    "iva": "IVA",
+    "factorQuestion": "¿Cuántos {unit} trae 1 {printed}? Queda aprendido para las próximas facturas.",
+    "expiration": "Vencimiento (opcional)",
+    "printedTotal": "Total de la factura",
+    "total": "Total con lo corregido",
+    "totalDiffers": "No coincide con el total impreso: revisá cantidades y precios.",
+    "seePurchase": "Ver la compra",
+    "seePurchaseError": "No se pudo abrir la compra.",
+    "missing": {
+      "product": "Falta elegir el insumo.",
+      "newProduct": "Falta el nombre o la unidad del insumo nuevo.",
+      "quantity": "Falta la cantidad.",
+      "unit": "Falta la unidad.",
+      "price": "Falta el precio.",
+      "factor": "Falta cuántos trae cada unidad impresa."
+    },
+    "confirm": "Registrar compra",
+    "uploading": "Adjuntando…",
+    "saveError": "No se pudo registrar la compra.",
+    "uploadError": "no se pudo adjuntar",
+    "done": "Compra registrada. La podés deshacer desde el chat.",
+    "attached": "Adjuntos: {count} de {total}.",
+    "factorResult": "Se carga como {qty} {unit} a {price} por {unit}."
   }
 }

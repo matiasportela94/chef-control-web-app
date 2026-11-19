@@ -137,7 +137,14 @@
     "CHAT_INVALID_QUANTITY": "The quantity is not valid.",
     "CHAT_OPERATION_NOT_SUPPORTED": "This cannot be recorded from Quick entry yet. Use the form.",
     "CHAT_MENU_ITEM_NOT_IN_CATALOG": "It is not a dish on the menu. Add it first or write it as it appears in Menu.",
-    "CHAT_INVALID_PERIOD": "That period cannot be queried: it must be in the past, start before it ends, and be at most one year long."
+    "CHAT_INVALID_PERIOD": "That period cannot be queried: it must be in the past, start before it ends, and be at most one year long.",
+    "CHAT_DOCUMENT_NOT_RECOGNIZED": "I cannot recognize an invoice, a delivery note or a cash register report there. Try a sharper photo or the PDF.",
+    "ATTACHMENT_FORMAT_NOT_SUPPORTED": "That file is not a photo or a PDF.",
+    "ATTACHMENT_TOO_LARGE": "The file is larger than 4 MB.",
+    "ATTACHMENT_NOT_FOUND": "We could not find that attachment: it may have been deleted.",
+    "ATTACHMENTS_NOT_MOVABLE": "The attachments could not be moved to the corrected purchase.",
+    "INVALID_CUIT": "The CUIT is not valid: check the 11 digits.",
+    "SUPPLIER_CUIT_TAKEN": "Another supplier already has that CUIT."
   },
   "ai": {
     "title": "Quick entry",
@@ -205,8 +212,11 @@
       "unsupported": "«{name}» is not a photo or a PDF.",
       "tooBig": "«{name}» is larger than {mb} MB.",
       "tooMany": "Up to {max} files per message.",
-      "totalTooBig": "All the files together cannot be larger than {mb} MB."
-    }
+      "totalTooBig": "All the files together cannot be larger than {mb} MB.",
+      "pdfAlone": "A PDF goes alone: send the PDF or up to 5 photos, not both."
+    },
+    "reviewInvoice": "Review the invoice",
+    "invoiceSaved": "Purchase recorded."
   },
   "menu": {
     "carta": "Menu",
@@ -833,7 +843,31 @@
     "colAvailable": "Available",
     "consumed": "{qty} {unit} already used in sales or waste.",
     "reverseNote": "Existing stock movements are not modified — new reversal movements are added to the ledger. Then the purchase form opens prefilled so you can enter the correct data.",
-    "reverseConfirm": "Reverse and correct"
+    "reverseConfirm": "Reverse and correct",
+    "invoice": "Invoice",
+    "invoiceType": "Invoice type",
+    "invoiceTypeNone": "No invoice",
+    "invoiceTypeA": "Invoice A",
+    "invoiceTypeB": "Invoice B",
+    "invoiceTypeC": "Invoice C",
+    "invoiceTypeRemito": "Delivery note",
+    "invoiceLabelA": "Invoice A",
+    "invoiceLabelB": "Invoice B",
+    "invoiceLabelC": "Invoice C",
+    "invoiceLabelREMITO": "Delivery note",
+    "invoiceNumber": "Number",
+    "invoiceNumberPlaceholder": "0001-00001234",
+    "attachments": "Attachments",
+    "attachmentsLoading": "Loading attachments…",
+    "attachmentsEmpty": "No attachments",
+    "attachmentAdd": "Attach",
+    "attachmentDelete": "Delete",
+    "attachmentDeleteTitle": "Delete attachment",
+    "attachmentDeleteBody": "This file will be removed from the purchase.",
+    "attachmentTooLarge": "The file exceeds 4 MB.",
+    "attachmentOpenError": "Could not open the attachment",
+    "attachmentUploadError": "Could not upload the attachment",
+    "attachmentDeleteError": "Could not delete the attachment"
   },
   "iva": {
     "title": "VAT",
@@ -942,5 +976,61 @@
   "waste": {
     "reversed": "Undone",
     "reversedHint": "It was undone: the stock came back and it does not count in the month's waste."
+  },
+  "suppliers": {
+    "cuit": "Tax ID (CUIT)",
+    "optional": "optional"
+  },
+  "invoice": {
+    "title": "Review invoice",
+    "review": "The AI read it. Review it and fix what is needed: nothing is recorded until you confirm.",
+    "noFiles": "The files will not be attached to the purchase: they were sent before the page was reloaded.",
+    "loadError": "Products and suppliers could not be loaded.",
+    "supplier": "Supplier",
+    "choose": "Choose…",
+    "newOption": "New: {name}",
+    "newSupplierName": "New supplier name",
+    "type": "Type",
+    "types": {
+      "A": "Invoice A",
+      "B": "Invoice B",
+      "C": "Invoice C",
+      "REMITO": "Delivery note"
+    },
+    "typeLetter": "Invoice {type}",
+    "number": "Number",
+    "issuedOn": "Date",
+    "pricesIncludeIva": "Prices include VAT",
+    "lines": "Lines ({count})",
+    "removeLine": "Remove this line",
+    "product": "Product",
+    "newProductName": "New product name",
+    "newProductUnit": "Its unit",
+    "quantity": "Quantity",
+    "unit": "Unit",
+    "unitPrice": "Unit price",
+    "iva": "VAT",
+    "factorQuestion": "How many {unit} come in 1 {printed}? It is remembered for the next invoices.",
+    "expiration": "Expiration (optional)",
+    "printedTotal": "Invoice total",
+    "total": "Total with corrections",
+    "totalDiffers": "It does not match the printed total: check quantities and prices.",
+    "seePurchase": "See the purchase",
+    "seePurchaseError": "The purchase could not be opened.",
+    "missing": {
+      "product": "Choose the product.",
+      "newProduct": "The new product needs a name and a unit.",
+      "quantity": "The quantity is missing.",
+      "unit": "The unit is missing.",
+      "price": "The price is missing.",
+      "factor": "Say how many each printed unit brings."
+    },
+    "confirm": "Record purchase",
+    "uploading": "Attaching…",
+    "saveError": "The purchase could not be recorded.",
+    "uploadError": "could not be attached",
+    "done": "Purchase recorded. You can undo it from the chat.",
+    "attached": "Attachments: {count} of {total}.",
+    "factorResult": "It is recorded as {qty} {unit} at {price} per {unit}."
   }
 }

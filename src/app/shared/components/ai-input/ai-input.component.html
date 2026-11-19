@@ -49,7 +49,14 @@
     <div class="chat" role="log" aria-live="polite" [attr.aria-label]="t('ai.historyLabel')">
       @for (turn of turns(); track turn.id) {
         <!-- Sin texto: es el resultado de un "Confirmar" -->
-        @if (turn.text) { <p class="msg-user">{{ turn.text }}</p> }
+        @if (turn.text || turn.files?.length) {
+          <div class="msg-user">
+            @if (turn.text) { <span>{{ turn.text }}</span> }
+            @if (turn.files?.length) {
+              <span class="msg-files">@for (f of turn.files; track $index) { <span class="msg-file"><i class="ti ti-paperclip"></i>{{ f.name }}</span> }</span>
+            }
+          </div>
+        }
         <div class="msg-reply">
           @switch (turn.status) {
             @case ('pending') {
@@ -115,8 +122,16 @@
                 @if (turn.confirmError) { <p class="reply-line reply-error"><i class="ti ti-alert-circle"></i><span>{{ turn.confirmError }}</span></p> }
 
                 <!-- Una receta puede venir con operaciones ya registradas: ahí no hay Corregir (mandaría todo de nuevo) -->
-                @if (isPending(turn) || canEdit(turn) || (r.catalogImport && !turn.recipeSaved)) {
+                @if (turn.invoiceSaved) {
+                  <p class="reply-text status-REGISTERED"><i class="ti ti-circle-check"></i><span>{{ t('ai.invoiceSaved') }}</span></p>
+                }
+                @if (isPending(turn) || canEdit(turn) || (r.catalogImport && !turn.recipeSaved) || (r.invoice && !turn.invoiceSaved)) {
                   <div class="reply-actions">
+                    @if (r.invoice && !turn.invoiceSaved) {
+                      <button type="button" class="btn-primary btn-sm" (click)="openInvoice(turn.id)">
+                        <i class="ti ti-file-invoice"></i> {{ t('ai.reviewInvoice') }}
+                      </button>
+                    }
                     @if (r.catalogImport && !turn.recipeSaved) {
                       <button type="button" [class]="isPending(turn) ? 'btn-secondary btn-sm' : 'btn-primary btn-sm'" (click)="openRecipe(turn.id)">
                         <i class="ti ti-chef-hat"></i> {{ t('ai.reviewRecipe') }}
@@ -218,3 +233,6 @@
 
 <!-- Una receta del chat: la vista previa y la confirmación del import, encima del chat -->
 <app-catalog-import [isOpen]="isOpen && recipeTurnId() !== null" (closed)="recipeTurnId.set(null)" (imported)="recipeImported()" />
+
+<!-- Una factura o remito del chat: su vista previa, encima del chat -->
+<app-invoice-preview [isOpen]="isOpen && invoiceTurnId() !== null" (closed)="invoiceTurnId.set(null)" (saved)="invoiceSaved($event)" />

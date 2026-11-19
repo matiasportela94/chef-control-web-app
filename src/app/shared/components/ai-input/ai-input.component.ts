@@ -6,6 +6,7 @@ import { Api } from '../../../api/api';
 import { transcribeAudio } from '../../../api/fn/ai-controller/transcribe-audio';
 import { TranscriptionResponse } from '../../../api/models/transcription-response';
 import { sendChatMessage } from '../../../api/fn/ai-chat-controller/send-chat-message';
+import { sendChatDocument } from '../../../api/fn/ai-chat-controller/send-chat-document';
 import { confirmChatOperations } from '../../../api/fn/ai-chat-controller/confirm-chat-operations';
 import { undoChatAction } from '../../../api/fn/ai-chat-controller/undo-chat-action';
 import { ChatActionResponse } from '../../../api/models/chat-action-response';
@@ -24,6 +25,7 @@ import { AuthService } from '../../../core/services/auth.service';
 import { I18nService } from '../../../core/services/i18n.service';
 import { DrawerComponent } from '../drawer/drawer.component';
 import { CatalogImportComponent } from '../catalog-import/catalog-import.component';
+import { InvoicePreviewComponent } from '../invoice-preview/invoice-preview.component';
 
 /** Se corta solo a los 2 min. A 64 kbps son ~1 MB, lejos del tope del back (4 MB, AI_AUDIO_TOO_LARGE). */
 const MAX_RECORDING_SECONDS = 120;
@@ -32,13 +34,13 @@ const AUDIO_BITS_PER_SECOND = 64000;
 const AUDIO_TYPES = ['audio/webm;codecs=opus', 'audio/webm', 'audio/mp4'];
 
 /**
- * Adjuntos (una factura en fotos o en PDF). El multipart del back corta en 4 MB por archivo y 5 MB por pedido: se
- * valida antes de mandar, así el error dice qué archivo y por qué. Las fotos se achican, pero menos que las de los
+ * Adjuntos (una factura en fotos o en PDF): de 1 a 5 fotos o un PDF solo. El multipart del back corta en 4 MB por
+ * archivo y 12 MB por pedido: se valida antes de mandar, así el error dice qué archivo y por qué. Las fotos se achican, pero menos que las de los
  * platos (1200 px): tiene que leerse la letra chica de una factura.
  */
 const MAX_ATTACHMENTS = 5;
 const MAX_FILE_BYTES = 4 * 1024 * 1024;
-const MAX_TOTAL_BYTES = 5 * 1024 * 1024;
+const MAX_TOTAL_BYTES = 12 * 1024 * 1024;
 const PHOTO_MAX_SIDE = 1800;
 const PHOTO_QUALITY = 0.85;
 
@@ -81,12 +83,15 @@ interface ChatTurn {
   confirming?: number;
   confirmError?: string;
   recipeSaved?: boolean;
+  /** Lo que se adjuntó al mensaje: se sube a la compra al confirmar la factura. No sobrevive a recargar. */
+  files?: File[];
+  invoiceSaved?: boolean;
 }
 
 @Component({
   selector: 'app-ai-input',
   standalone: true,
-  imports: [FormsModule, DrawerComponent, RouterLink, DatePipe, CatalogImportComponent],
+  imports: [FormsModule, DrawerComponent, RouterLink, DatePipe, CatalogImportComponent, InvoicePreviewComponent],
   templateUrl: './ai-input.component.html',
   styleUrl: './ai-input.component.scss',
 })
@@ -96,6 +101,7 @@ export class AiInputComponent implements OnChanges, OnDestroy {
   @ViewChild('box') private box?: ElementRef<HTMLTextAreaElement>;
   @ViewChild('end') private end?: ElementRef<HTMLElement>;
   @ViewChild(CatalogImportComponent) private importer?: CatalogImportComponent;
+  @ViewChild(InvoicePreviewComponent) private invoicer?: InvoicePreviewComponent;
 
   message = '';
   /**
@@ -121,6 +127,8 @@ export class AiInputComponent implements OnChanges, OnDestroy {
   private timers: ReturnType<typeof setTimeout>[] = [];
   /** El mensaje cuya receta está abierta en la vista previa del import. */
   recipeTurnId = signal<string | null>(null);
+  /** El mensaje cuya factura está abierta en su vista previa. */
+  invoiceTurnId = signal<string | null>(null);
 
   // ---- adjuntos: se eligen acá y van con el próximo mensaje
   attachments = signal<ChatAttachment[]>([]);
@@ -137,8 +145,10 @@ export class AiInputComponent implements OnChanges, OnDestroy {
   voiceUnavailable = signal(false);
   readonly maxSeconds = MAX_RECORDING_SECONDS;
   readonly maxAttachments = MAX_ATTACHMENTS;
-  /** ponytail: oculto hasta conectar la tanda 7 (la rama tiene que poder subirse antes); al conectarla, true o se borra. */
-  readonly canAttach = false;
+  /** Una factura se carga con permiso de compras (tanda 7); un cierre de caja, con el de ventas (tanda 8). */
+  get canAttach(): boolean {
+    return this.auth.hasPermission('PURCHASES_CREATE') || this.auth.hasPermission('SALES_CREATE');
+  }
   private recorder?: MediaRecorder;
   private ticker?: ReturnType<typeof setInterval>;
   /** Cerrar el drawer descarta lo que se esté grabando o transcribiendo. */
@@ -192,8 +202,7 @@ export class AiInputComponent implements OnChanges, OnDestroy {
   }
 
   canSend(): boolean {
-    // ponytail: con adjuntos no se manda hasta que llegue el contrato de la tanda 7 (ahí se suman al pedido).
-    return !!this.message.trim() && !this.attachments().length && !this.sending() && !this.recording() && !this.transcribing()
+    return (!!this.message.trim() || this.attachments().length > 0) && !this.sending() && !this.recording() && !this.transcribing()
       && !this.preparingAttachments();
   }
 
@@ -215,6 +224,8 @@ export class AiInputComponent implements OnChanges, OnDestroy {
       const isPdf = original.type === 'application/pdf' || /\.pdf$/i.test(name);
       if (!isPdf && !original.type.startsWith('image/')) { error = this.t('ai.attach.unsupported', { name }); continue; }
       if (list.length >= MAX_ATTACHMENTS) { error = this.t('ai.attach.tooMany', { max: MAX_ATTACHMENTS }); break; }
+      // El back acepta de 1 a 5 fotos o un PDF solo (una factura en PDF ya trae todas sus páginas).
+      if (list.length && (isPdf || list.some(a => a.kind === 'pdf'))) { error = this.t('ai.attach.pdfAlone'); continue; }
       let file = original;
       if (!isPdf) {
         try {
@@ -242,8 +253,12 @@ export class AiInputComponent implements OnChanges, OnDestroy {
 
   async send(): Promise<void> {
     if (!this.canSend()) return;
-    const turn: ChatTurn = { id: this.localId(), text: this.message.trim(), status: 'pending' };
+    const files = this.attachments().map(a => a.file);
+    const turn: ChatTurn = { id: this.localId(), text: this.message.trim(), status: 'pending', files: files.length ? files : undefined };
     this.message = '';
+    this.attachments().forEach(a => a.preview && URL.revokeObjectURL(a.preview));
+    this.attachments.set([]);
+    this.attachError.set(null);
     this.voiceError.set(null);
     this.freshConversation.set(false);
     this.turns.update(ts => [...ts, turn]);
@@ -265,7 +280,11 @@ export class AiInputComponent implements OnChanges, OnDestroy {
   private async run(turn: ChatTurn): Promise<void> {
     this.scrollToEnd();
     try {
-      const res = await parseBlob<ChatResponse>(await this.api.invoke(sendChatMessage, { body: { message: turn.text ?? '' } }) as unknown);
+      // Con adjuntos va al endpoint de documentos (factura, remito o cierre de caja); el texto, si hay, lo acompaña.
+      const raw = turn.files?.length
+        ? await this.api.invoke(sendChatDocument, { message: turn.text || undefined, body: { files: turn.files } })
+        : await this.api.invoke(sendChatMessage, { body: { message: turn.text ?? '' } });
+      const res = await parseBlob<ChatResponse>(raw as unknown);
       this.receive(turn.id, res);
       this.patch(turn.id, { status: 'done' });
     } catch (e) {
@@ -372,6 +391,25 @@ export class AiInputComponent implements OnChanges, OnDestroy {
     if (res.actions?.length || res.undone?.length) this.aiRefresh.notify();
     // Una receta, sea cual sea el status (puede venir junto con operaciones registradas): se abre su vista previa.
     if (res.catalogImport) this.openRecipe(turnId);
+    if (res.invoice) this.openInvoice(turnId);
+  }
+
+  /** La factura no se registra en el acto: se revisa y se corrige en su vista previa, y recién ahí se confirma. */
+  openInvoice(turnId: string): void {
+    const turn = this.turns().find(t => t.id === turnId);
+    if (!turn?.response?.invoice || !this.invoicer) return;
+    this.invoiceTurnId.set(turnId);
+    void this.invoicer.open(turn.response.invoice, turn.files ?? []);
+  }
+
+  /** La compra quedó registrada: la respuesta entra como un intercambio nuevo, con su Deshacer. */
+  invoiceSaved(res: ChatResponse): void {
+    const id = this.invoiceTurnId();
+    if (id !== null) this.patch(id, { invoiceSaved: true });
+    const result: ChatTurn = { id: this.localId(), text: null, status: 'done' };
+    this.turns.update(ts => [...ts, result]);
+    this.receive(result.id, res);
+    this.scrollToEnd();
   }
 
   /** La vista previa y la confirmación son las del import de Excel: el chat solo arma las filas. */
@@ -449,7 +487,8 @@ export class AiInputComponent implements OnChanges, OnDestroy {
    */
   canEdit(turn: ChatTurn): boolean {
     const status = turn.response?.status;
-    return !!turn.text && status !== 'REGISTERED' && status !== 'ANSWERED' && turn.confirming == null;
+    // Con adjuntos tampoco: los archivos no vuelven a la caja; se adjuntan de nuevo.
+    return !!turn.text && !turn.files?.length && status !== 'REGISTERED' && status !== 'ANSWERED' && turn.confirming == null;
   }
 
   statusIcon(status?: string): string {
@@ -471,6 +510,7 @@ export class AiInputComponent implements OnChanges, OnDestroy {
 
   close(): void {
     this.recipeTurnId.set(null);
+    this.invoiceTurnId.set(null);
     this.freshConversation.set(false);
     this.stopRecording(true);
     this.transcribing.set(false);
