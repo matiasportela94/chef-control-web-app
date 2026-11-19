@@ -181,8 +181,9 @@ export class InvoicePreviewComponent {
   }
 
   /**
-   * Lo que se registra. Si la unidad impresa no convierte ("2 BOLSA HARINA X 25 KG"), el back guarda el renglón tal como
-   * llega y usa el factor solo para aprenderlo: la cuenta la hace el front. 2 bolsas de 25 kg a $ 20.000 → 50 kg a $ 800.
+   * Solo para mostrar ("Se carga como 50 kg a $ 800 por kg"): con una unidad impresa que no convierte ("2 BOLSA HARINA
+   * X 25 KG"), el renglón se manda tal cual y con unitsPerPrintedUnit, y la cuenta la hace el back (WhatsApp no tiene
+   * front). Mandarlo convertido lo convertiría dos veces.
    */
   converted(l: EditLine): { quantity: number; unitId: string; unitPrice: number } | null {
     if (!l.quantity || l.unitPrice == null) return null;
@@ -254,9 +255,12 @@ export class InvoicePreviewComponent {
         productId: l.productChoice === 'new' ? undefined : l.productChoice,
         newProductName: l.productChoice === 'new' ? l.newName.trim() : undefined,
         newProductUnitId: l.productChoice === 'new' ? l.newUnitId : undefined,
-        ...this.converted(l)!,
+        quantity: l.quantity!,
+        unitId: l.unitId,
+        unitPrice: l.unitPrice!,
         ivaPercentage: l.ivaPercentage,
         expirationDate: l.expirationDate || undefined,
+        // Solo en el renglón que preguntó: uno que vino del alias ya viene convertido (con factor, dos veces).
         unitsPerPrintedUnit: l.needsFactor ? l.factor ?? undefined : undefined,
       })),
     };
