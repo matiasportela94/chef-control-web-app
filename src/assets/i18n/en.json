@@ -216,7 +216,9 @@
       "pdfAlone": "A PDF goes alone: send the PDF or up to 5 photos, not both."
     },
     "reviewInvoice": "Review the invoice",
-    "invoiceSaved": "Purchase recorded."
+    "invoiceSaved": "Purchase recorded.",
+    "reviewSalesReport": "Review the report",
+    "salesReportSaved": "Sales from the report recorded."
   },
   "menu": {
     "carta": "Menu",
@@ -1032,5 +1034,51 @@
     "done": "Purchase recorded. You can undo it from the chat.",
     "attached": "Attachments: {count} of {total}.",
     "factorResult": "It is recorded as {qty} {unit} at {price} per {unit}."
+  },
+  "salesReport": {
+    "title": "Review cash register report",
+    "review": "The AI read it. Review it and fix what is needed: nothing is recorded until you confirm.",
+    "loadError": "The dishes could not be loaded.",
+    "soldOn": "Service day",
+    "reportNumber": "Z number",
+    "existingTitle": "That day already has {count} sales for {total}. What should I do with them?",
+    "reverse": "Reverse them and load the report",
+    "reverseHint": "If you later undo the report, the reversed sales do not come back.",
+    "add": "Add the report to the existing ones",
+    "lines": "Dishes ({count})",
+    "dish": "Dish",
+    "notADish": "Not a dish (it is remembered)",
+    "quantity": "Quantity",
+    "unitPrice": "Ticket price",
+    "priceDiffers": "The menu price is {price}.",
+    "ignored": "Ignored: not dishes ({count})",
+    "assign": "It is a dish",
+    "printedTotal": "Ticket total",
+    "total": "Total to record",
+    "totalDiffers": "It does not match the ticket total: check quantities, prices and what was ignored.",
+    "seeSale": "See the sale",
+    "seeSaleError": "The sale could not be opened.",
+    "items": "{count} dishes",
+    "missing": {
+      "dish": "Choose the dish or mark it as \"Not a dish\".",
+      "quantity": "The quantity must be a whole number.",
+      "price": "The price is missing."
+    },
+    "confirm": "Record sales",
+    "saveError": "The report could not be recorded.",
+    "done": "Sales recorded. You can undo them from the chat."
+  },
+  "sales": {
+    "attachments": "Attachments",
+    "attachmentsLoading": "Loading attachments…",
+    "attachmentsEmpty": "No attachments",
+    "attachmentAdd": "Attach",
+    "attachmentDelete": "Delete",
+    "attachmentDeleteTitle": "Delete attachment",
+    "attachmentDeleteBody": "This file will be removed from the sale.",
+    "attachmentTooLarge": "The file exceeds 4 MB.",
+    "attachmentOpenError": "Could not open the attachment",
+    "attachmentUploadError": "Could not upload the attachment",
+    "attachmentDeleteError": "Could not delete the attachment"
   }
 }

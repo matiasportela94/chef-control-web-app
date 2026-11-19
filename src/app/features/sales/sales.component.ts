@@ -8,6 +8,14 @@ import { listSales }               from '../../api/fn/sale-controller/list-sales
 import { createSale }              from '../../api/fn/sale-controller/create-sale';
 import { getSale }                 from '../../api/fn/sale-controller/get-sale';
 import { reverseSale }             from '../../api/fn/sale-controller/reverse-sale';
+import { listSaleAttachments }     from '../../api/fn/sale-attachment-controller/list-sale-attachments';
+import { getSaleAttachment }       from '../../api/fn/sale-attachment-controller/get-sale-attachment';
+import { uploadSaleAttachment }    from '../../api/fn/sale-attachment-controller/upload-sale-attachment';
+import { deleteSaleAttachment }    from '../../api/fn/sale-attachment-controller/delete-sale-attachment';
+import { SaleAttachmentResponse }  from '../../api/models/sale-attachment-response';
+import { AuthService }             from '../../core/services/auth.service';
+import { I18nService }             from '../../core/services/i18n.service';
+import { ActionDialogComponent }   from '../../shared/components/action-dialog/action-dialog.component';
 import { listMenuItems }           from '../../api/fn/menu-item-controller/list-menu-items';
 import { SaleResponse }            from '../../api/models/sale-response';
 import { MenuItemResponse }        from '../../api/models/menu-item-response';
@@ -25,7 +33,7 @@ import { SelectComponent, SelectOption } from '../../shared/components/select/se
 @Component({
   selector: 'app-sales',
   standalone: true,
-  imports: [ReactiveFormsModule, PaginatorComponent, DrawerComponent, SpinnerComponent, SelectComponent],
+  imports: [ReactiveFormsModule, PaginatorComponent, DrawerComponent, SpinnerComponent, SelectComponent, ActionDialogComponent],
   templateUrl: './sales.component.html',
   styleUrl: './sales.component.scss'
 })
@@ -53,6 +61,13 @@ export class SalesComponent implements OnInit {
   detail        = signal<SaleResponse | null>(null);
   detailLoading = signal(false);
 
+  readonly canManageAttachments = computed(() => this.auth.hasPermission('SALES_CREATE'));
+  attachments        = signal<SaleAttachmentResponse[]>([]);
+  attachmentsLoading = signal(false);
+  attachmentBusy     = signal(false);
+  attachmentError    = signal<string | null>(null);
+  deletingAttachment = signal<SaleAttachmentResponse | null>(null);
+
   reverseModalOpen = signal(false);
   reverseTarget    = signal<SaleResponse | null>(null);
   reverseTargetId  = signal<string | null>(null);
@@ -62,7 +77,7 @@ export class SalesComponent implements OnInit {
 
   form: FormGroup;
 
-  constructor(private api: Api, private fb: FormBuilder, private aiRefresh: AiRefreshService, private alertNotification: AlertNotificationService) {
+  constructor(private api: Api, private fb: FormBuilder, private aiRefresh: AiRefreshService, private alertNotification: AlertNotificationService, private auth: AuthService, private i18n: I18nService) {
     this.form = this.fb.group({
       soldAt: [arToday()],
       notes:  [''],
@@ -240,6 +255,9 @@ export class SalesComponent implements OnInit {
     this.detail.set(null);
     this.detailLoading.set(true);
     this.detailOpen.set(true);
+    this.attachments.set([]);
+    this.attachmentError.set(null);
+    void this.loadAttachments(sale.id!);
     try {
       const raw = await this.api.invoke(getSale, { id: sale.id! }) as unknown;
       this.detail.set(await parseBlob<SaleResponse>(raw));
@@ -249,13 +267,84 @@ export class SalesComponent implements OnInit {
     }
   }
 
+  t(key: string, params?: Record<string, string | number>): string {
+    return this.i18n.t(key, params);
+  }
+
+  async loadAttachments(saleId: string): Promise<void> {
+    this.attachmentsLoading.set(true);
+    try {
+      const raw = await this.api.invoke(listSaleAttachments, { saleId }) as unknown;
+      if (this.detailOpen()) this.attachments.set(await parseBlob<SaleAttachmentResponse[]>(raw));
+    } catch { this.attachments.set([]); }
+    finally { this.attachmentsLoading.set(false); }
+  }
+
+  /** Baja el archivo y lo abre en otra pestaña; la URL se libera pasado un rato. */
+  async openAttachment(a: SaleAttachmentResponse): Promise<void> {
+    const saleId = this.detail()?.id;
+    if (!saleId || !a.id) return;
+    this.attachmentError.set(null);
+    // Se abre antes del await: los navegadores bloquean un popup abierto fuera del gesto del usuario.
+    const win = window.open('', '_blank');
+    try {
+      const raw = await this.api.invoke(getSaleAttachment, { saleId, attachmentId: a.id }) as unknown;
+      const blob = raw instanceof Blob ? raw : new Blob([raw as BlobPart]);
+      const url = URL.createObjectURL(blob);
+      if (win) win.location.href = url; else window.open(url, '_blank');
+      setTimeout(() => URL.revokeObjectURL(url), 60_000);
+    } catch (e: any) {
+      win?.close();
+      this.attachmentError.set(extractApiError(e, this.t('sales.attachmentOpenError')));
+    }
+  }
+
+  async onAttachmentFile(ev: Event): Promise<void> {
+    const input = ev.target as HTMLInputElement;
+    const file = input.files?.[0];
+    input.value = '';
+    const saleId = this.detail()?.id;
+    if (!file || !saleId) return;
+    if (file.size > 4 * 1024 * 1024) { this.attachmentError.set(this.t('sales.attachmentTooLarge')); return; }
+    this.attachmentBusy.set(true);
+    this.attachmentError.set(null);
+    try {
+      await this.api.invoke(uploadSaleAttachment, { saleId, body: { file } });
+      await this.loadAttachments(saleId);
+    } catch (e: any) {
+      this.attachmentError.set(extractApiError(e, this.t('sales.attachmentUploadError')));
+    } finally { this.attachmentBusy.set(false); }
+  }
+
+  async confirmDeleteAttachment(): Promise<void> {
+    const a = this.deletingAttachment();
+    const saleId = this.detail()?.id;
+    if (!a?.id || !saleId) return;
+    this.attachmentBusy.set(true);
+    try {
+      await this.api.invoke(deleteSaleAttachment, { saleId, attachmentId: a.id });
+      this.deletingAttachment.set(null);
+      await this.loadAttachments(saleId);
+    } catch (e: any) {
+      this.deletingAttachment.set(null);
+      this.attachmentError.set(extractApiError(e, this.t('sales.attachmentDeleteError')));
+    } finally { this.attachmentBusy.set(false); }
+  }
+
+  formatSize(bytes?: number): string {
+    const b = bytes ?? 0;
+    return b >= 1024 * 1024 ? `${(b / 1024 / 1024).toLocaleString('es-AR', { maximumFractionDigits: 1 })} MB`
+                           : `${Math.max(1, Math.round(b / 1024)).toLocaleString('es-AR')} KB`;
+  }
+
   closeDetail(): void {
     this.detailOpen.set(false);
   }
 
   @HostListener('document:keydown.escape')
   onEscape(): void {
-    if (this.reverseModalOpen()) this.closeReverseModal();
+    if (this.deletingAttachment()) this.deletingAttachment.set(null);
+    else if (this.reverseModalOpen()) this.closeReverseModal();
     else if (this.createOpen()) this.closeCreate();
     else if (this.detailOpen()) this.closeDetail();
   }

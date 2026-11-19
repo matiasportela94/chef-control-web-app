@@ -56,3 +56,20 @@
 @keyframes spin { to { transform: rotate(360deg); } }
 @media (prefers-reduced-motion: reduce) { .spin { animation: none; } }
 .factor-result { margin: 6px 0 0; color: var(--text-2); }
+
+// Cierre de caja (comparte este archivo): la elección de qué hacer con ventas ya cargadas y los ignorados plegados.
+.choice { border: 1px solid var(--accent); border-radius: 12px; padding: 10px 12px; }
+.radio {
+  display: flex; align-items: flex-start; gap: 8px; margin-top: 8px; font-size: 12px; color: var(--text-1); cursor: pointer;
+  input { width: 18px; height: 18px; margin-top: 1px; accent-color: var(--accent); flex-shrink: 0; }
+  .hint { margin: 0; }
+}
+.price-differs { color: var(--text-1); }
+.ignored-toggle {
+  display: flex; align-items: center; gap: 6px; width: 100%; min-height: 40px; margin-bottom: 8px; padding: 0 4px;
+  background: none; border: none; color: var(--text-2); font-size: 12px; font-weight: 600; cursor: pointer; text-align: left;
+}
+.ignored-line {
+  display: flex; align-items: center; gap: 8px; padding: 6px 10px; margin-bottom: 6px; border-radius: 10px; background: var(--bg-input);
+  .line-printed { -webkit-line-clamp: 1; }
+}

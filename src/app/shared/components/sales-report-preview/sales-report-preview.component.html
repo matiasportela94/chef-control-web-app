@@ -1,0 +1,132 @@
+<app-drawer [isOpen]="isOpen" [title]="t('salesReport.title')" titleIcon="receipt" (closed)="close()">
+
+  @if (step() === 'done') {
+    <p class="notice notice-ok"><i class="ti ti-circle-check"></i><span>{{ t('salesReport.done') }}</span></p>
+    @if (files.length) { <p class="hint">{{ t('invoice.attached', { count: uploaded(), total: files.length }) }}</p> }
+    @for (e of uploadErrors(); track $index) {
+      <p class="notice notice-danger"><i class="ti ti-alert-triangle"></i><span>{{ e }}</span></p>
+    }
+  } @else {
+    <p class="notice"><i class="ti ti-sparkles"></i><span>{{ t('salesReport.review') }}</span></p>
+    @if (!files.length) { <p class="hint">{{ t('invoice.noFiles') }}</p> }
+
+    @for (w of warnings(); track $index) {
+      <div class="notice notice-warn">
+        <i class="ti ti-alert-circle"></i>
+        <div class="warn-body">
+          <span>{{ w.message }}</span>
+          @if (w.code === 'ALREADY_LOADED' && w.saleId) {
+            @switch (existingOf(w.saleId)) {
+              @case (undefined) { <button type="button" class="link-btn" (click)="showExisting(w.saleId)">{{ t('salesReport.seeSale') }}</button> }
+              @case ('loading') { <span class="hint"><i class="ti ti-loader-2 spin"></i></span> }
+              @case ('error') { <span class="hint">{{ t('salesReport.seeSaleError') }}</span> }
+              @default {
+                @if (existingOf(w.saleId); as s) {
+                  @if (s !== 'loading' && s !== 'error') {
+                    <span class="existing">{{ formatDate(s.soldAt) }} · {{ t('salesReport.items', { count: s.itemCount ?? 0 }) }} · {{ formatARS(s.totalAmount) }}</span>
+                  }
+                }
+              }
+            }
+          }
+        </div>
+      </div>
+    }
+
+    <div class="section">
+      <div class="grid2">
+        <div>
+          <label class="field-label" for="z-date">{{ t('salesReport.soldOn') }}</label>
+          <input id="z-date" type="date" class="field-input" [(ngModel)]="header.soldOn" [disabled]="busy">
+        </div>
+        <div>
+          <label class="field-label" for="z-number">{{ t('salesReport.reportNumber') }}</label>
+          <input id="z-number" class="field-input" [(ngModel)]="header.reportNumber" [disabled]="busy">
+        </div>
+      </div>
+    </div>
+
+    <!-- Ya hay ventas cargadas ese día: se elige qué hacer, sin opción por defecto -->
+    @if (existingSales(); as ex) {
+      <div class="section choice" role="radiogroup" [attr.aria-label]="t('salesReport.existingTitle')">
+        <p class="section-title">{{ t('salesReport.existingTitle', { count: ex.count ?? 0, total: formatARS(ex.total) }) }}</p>
+        <label class="radio">
+          <input type="radio" name="z-existing" value="REVERSE" [(ngModel)]="header.existingSales" [disabled]="busy">
+          <span><strong>{{ t('salesReport.reverse') }}</strong><br><span class="hint">{{ t('salesReport.reverseHint') }}</span></span>
+        </label>
+        <label class="radio">
+          <input type="radio" name="z-existing" value="ADD" [(ngModel)]="header.existingSales" [disabled]="busy">
+          <span><strong>{{ t('salesReport.add') }}</strong></span>
+        </label>
+      </div>
+    }
+
+    <p class="section-title">{{ t('salesReport.lines', { count: activeLines.length }) }}</p>
+    @for (l of activeLines; track l.key) {
+      <div class="line" [class.line-problem]="lineProblem(l)">
+        <div class="line-head"><span class="line-printed" [title]="l.printedText">{{ l.printedText }}</span></div>
+        <label class="field-label" [for]="'z-d-' + l.key">{{ t('salesReport.dish') }}</label>
+        <select [id]="'z-d-' + l.key" class="field-input" [(ngModel)]="l.dish" [disabled]="busy">
+          <option value="">{{ t('invoice.choose') }}</option>
+          <option value="ignore">{{ t('salesReport.notADish') }}</option>
+          @for (d of dishes(); track d.id) { <option [value]="d.id">{{ d.name }}</option> }
+        </select>
+        <div class="grid2 mt">
+          <div>
+            <label class="field-label" [for]="'z-q-' + l.key">{{ t('salesReport.quantity') }}</label>
+            <input [id]="'z-q-' + l.key" type="number" min="1" step="1" inputmode="numeric" class="field-input" [(ngModel)]="l.quantity" [disabled]="busy">
+          </div>
+          <div>
+            <label class="field-label" [for]="'z-p-' + l.key">{{ t('salesReport.unitPrice') }}</label>
+            <input [id]="'z-p-' + l.key" type="number" min="0" step="any" inputmode="decimal" class="field-input" [(ngModel)]="l.unitPrice" [disabled]="busy">
+          </div>
+        </div>
+        @if (l.menuPrice != null) {
+          <p class="line-warn price-differs"><i class="ti ti-alert-circle"></i><span>{{ t('salesReport.priceDiffers', { price: formatARS(l.menuPrice) }) }}</span></p>
+        }
+        @for (w of l.warnings; track $index) { <p class="line-warn"><i class="ti ti-alert-circle"></i><span>{{ w }}</span></p> }
+        @if (lineProblem(l); as problem) { <p class="line-missing">{{ problem }}</p> }
+      </div>
+    }
+
+    <!-- Lo que no es un plato (propinas, cubiertos, envases…): plegado, con la opción de asignarlo si fue un error -->
+    @if (ignoredLines.length) {
+      <button type="button" class="ignored-toggle" (click)="showIgnored.set(!showIgnored())" [attr.aria-expanded]="showIgnored()">
+        <i class="ti" [class.ti-chevron-right]="!showIgnored()" [class.ti-chevron-down]="showIgnored()"></i>
+        {{ t('salesReport.ignored', { count: ignoredLines.length }) }}
+      </button>
+      @if (showIgnored()) {
+        @for (l of ignoredLines; track l.key) {
+          <div class="ignored-line">
+            <span class="line-printed" [title]="l.printedText">{{ l.printedText }}</span>
+            <button type="button" class="link-btn" (click)="assign(l)" [disabled]="busy">{{ t('salesReport.assign') }}</button>
+          </div>
+        }
+      }
+    }
+
+    <div class="totals" [class.totals-differ]="totalDiffers()">
+      @if (printedTotal() != null) {
+        <div><span>{{ t('salesReport.printedTotal') }}</span><strong>{{ formatARS(printedTotal()) }}</strong></div>
+      }
+      <div><span>{{ t('salesReport.total') }}</span><strong>{{ formatARS(total()) }}</strong></div>
+      @if (totalDiffers()) { <p class="hint">{{ t('salesReport.totalDiffers') }}</p> }
+    </div>
+  }
+
+  @if (error()) {
+    <p class="notice notice-danger"><i class="ti ti-alert-triangle"></i><span>{{ error() }}</span></p>
+  }
+
+  <div drawer-footer class="panel-footer" style="justify-content:flex-end;">
+    @if (step() === 'done') {
+      <button type="button" (click)="close()" class="btn-primary btn-sm">{{ t('common.close') }}</button>
+    } @else {
+      <button type="button" (click)="close()" class="btn-secondary btn-sm" [disabled]="busy">{{ t('common.cancel') }}</button>
+      <button type="button" (click)="confirm()" class="btn-primary btn-sm" [disabled]="!canConfirm()">
+        @if (busy) { <i class="ti ti-loader-2 spin"></i> }
+        {{ step() === 'uploading' ? t('invoice.uploading') : t('salesReport.confirm') }}
+      </button>
+    }
+  </div>
+</app-drawer>

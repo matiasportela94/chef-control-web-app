@@ -26,6 +26,7 @@ import { I18nService } from '../../../core/services/i18n.service';
 import { DrawerComponent } from '../drawer/drawer.component';
 import { CatalogImportComponent } from '../catalog-import/catalog-import.component';
 import { InvoicePreviewComponent } from '../invoice-preview/invoice-preview.component';
+import { SalesReportPreviewComponent } from '../sales-report-preview/sales-report-preview.component';
 
 /** Se corta solo a los 2 min. A 64 kbps son ~1 MB, lejos del tope del back (4 MB, AI_AUDIO_TOO_LARGE). */
 const MAX_RECORDING_SECONDS = 120;
@@ -86,12 +87,13 @@ interface ChatTurn {
   /** Lo que se adjuntó al mensaje: se sube a la compra al confirmar la factura. No sobrevive a recargar. */
   files?: File[];
   invoiceSaved?: boolean;
+  salesReportSaved?: boolean;
 }
 
 @Component({
   selector: 'app-ai-input',
   standalone: true,
-  imports: [FormsModule, DrawerComponent, RouterLink, DatePipe, CatalogImportComponent, InvoicePreviewComponent],
+  imports: [FormsModule, DrawerComponent, RouterLink, DatePipe, CatalogImportComponent, InvoicePreviewComponent, SalesReportPreviewComponent],
   templateUrl: './ai-input.component.html',
   styleUrl: './ai-input.component.scss',
 })
@@ -102,6 +104,7 @@ export class AiInputComponent implements OnChanges, OnDestroy {
   @ViewChild('end') private end?: ElementRef<HTMLElement>;
   @ViewChild(CatalogImportComponent) private importer?: CatalogImportComponent;
   @ViewChild(InvoicePreviewComponent) private invoicer?: InvoicePreviewComponent;
+  @ViewChild(SalesReportPreviewComponent) private reporter?: SalesReportPreviewComponent;
 
   message = '';
   /**
@@ -129,6 +132,8 @@ export class AiInputComponent implements OnChanges, OnDestroy {
   recipeTurnId = signal<string | null>(null);
   /** El mensaje cuya factura está abierta en su vista previa. */
   invoiceTurnId = signal<string | null>(null);
+  /** El mensaje cuyo cierre de caja está abierto en su vista previa. */
+  salesReportTurnId = signal<string | null>(null);
 
   // ---- adjuntos: se eligen acá y van con el próximo mensaje
   attachments = signal<ChatAttachment[]>([]);
@@ -392,6 +397,7 @@ export class AiInputComponent implements OnChanges, OnDestroy {
     // Una receta, sea cual sea el status (puede venir junto con operaciones registradas): se abre su vista previa.
     if (res.catalogImport) this.openRecipe(turnId);
     if (res.invoice) this.openInvoice(turnId);
+    if (res.salesReport) this.openSalesReport(turnId);
   }
 
   /** La factura no se registra en el acto: se revisa y se corrige en su vista previa, y recién ahí se confirma. */
@@ -402,10 +408,18 @@ export class AiInputComponent implements OnChanges, OnDestroy {
     void this.invoicer.open(turn.response.invoice, turn.files ?? []);
   }
 
-  /** La compra quedó registrada: la respuesta entra como un intercambio nuevo, con su Deshacer. */
-  invoiceSaved(res: ChatResponse): void {
-    const id = this.invoiceTurnId();
-    if (id !== null) this.patch(id, { invoiceSaved: true });
+  /** Un cierre de caja (Z): igual que la factura, se revisa y se confirma en su vista previa. */
+  openSalesReport(turnId: string): void {
+    const turn = this.turns().find(t => t.id === turnId);
+    if (!turn?.response?.salesReport || !this.reporter) return;
+    this.salesReportTurnId.set(turnId);
+    void this.reporter.open(turn.response.salesReport, turn.files ?? []);
+  }
+
+  /** La compra o la venta quedó registrada: la respuesta entra como un intercambio nuevo, con su Deshacer. */
+  documentSaved(kind: 'invoice' | 'salesReport', res: ChatResponse): void {
+    const id = kind === 'invoice' ? this.invoiceTurnId() : this.salesReportTurnId();
+    if (id !== null) this.patch(id, kind === 'invoice' ? { invoiceSaved: true } : { salesReportSaved: true });
     const result: ChatTurn = { id: this.localId(), text: null, status: 'done' };
     this.turns.update(ts => [...ts, result]);
     this.receive(result.id, res);
@@ -511,6 +525,7 @@ export class AiInputComponent implements OnChanges, OnDestroy {
   close(): void {
     this.recipeTurnId.set(null);
     this.invoiceTurnId.set(null);
+    this.salesReportTurnId.set(null);
     this.freshConversation.set(false);
     this.stopRecording(true);
     this.transcribing.set(false);

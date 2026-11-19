@@ -125,8 +125,17 @@
                 @if (turn.invoiceSaved) {
                   <p class="reply-text status-REGISTERED"><i class="ti ti-circle-check"></i><span>{{ t('ai.invoiceSaved') }}</span></p>
                 }
-                @if (isPending(turn) || canEdit(turn) || (r.catalogImport && !turn.recipeSaved) || (r.invoice && !turn.invoiceSaved)) {
+                @if (turn.salesReportSaved) {
+                  <p class="reply-text status-REGISTERED"><i class="ti ti-circle-check"></i><span>{{ t('ai.salesReportSaved') }}</span></p>
+                }
+                @if (isPending(turn) || canEdit(turn) || (r.catalogImport && !turn.recipeSaved) || (r.invoice && !turn.invoiceSaved)
+                     || (r.salesReport && !turn.salesReportSaved)) {
                   <div class="reply-actions">
+                    @if (r.salesReport && !turn.salesReportSaved) {
+                      <button type="button" class="btn-primary btn-sm" (click)="openSalesReport(turn.id)">
+                        <i class="ti ti-receipt"></i> {{ t('ai.reviewSalesReport') }}
+                      </button>
+                    }
                     @if (r.invoice && !turn.invoiceSaved) {
                       <button type="button" class="btn-primary btn-sm" (click)="openInvoice(turn.id)">
                         <i class="ti ti-file-invoice"></i> {{ t('ai.reviewInvoice') }}
@@ -235,4 +244,7 @@
 <app-catalog-import [isOpen]="isOpen && recipeTurnId() !== null" (closed)="recipeTurnId.set(null)" (imported)="recipeImported()" />
 
 <!-- Una factura o remito del chat: su vista previa, encima del chat -->
-<app-invoice-preview [isOpen]="isOpen && invoiceTurnId() !== null" (closed)="invoiceTurnId.set(null)" (saved)="invoiceSaved($event)" />
+<app-invoice-preview [isOpen]="isOpen && invoiceTurnId() !== null" (closed)="invoiceTurnId.set(null)" (saved)="documentSaved('invoice', $event)" />
+
+<!-- Un cierre de caja (Z) del chat: su vista previa, encima del chat -->
+<app-sales-report-preview [isOpen]="isOpen && salesReportTurnId() !== null" (closed)="salesReportTurnId.set(null)" (saved)="documentSaved('salesReport', $event)" />

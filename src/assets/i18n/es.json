@@ -216,7 +216,9 @@
       "pdfAlone": "Un PDF va solo: mandá el PDF o hasta 5 fotos, no las dos cosas."
     },
     "reviewInvoice": "Revisar la factura",
-    "invoiceSaved": "Compra registrada."
+    "invoiceSaved": "Compra registrada.",
+    "reviewSalesReport": "Revisar el cierre",
+    "salesReportSaved": "Ventas del cierre registradas."
   },
   "menu": {
     "carta": "Carta",
@@ -1032,5 +1034,51 @@
     "done": "Compra registrada. La podés deshacer desde el chat.",
     "attached": "Adjuntos: {count} de {total}.",
     "factorResult": "Se carga como {qty} {unit} a {price} por {unit}."
+  },
+  "salesReport": {
+    "title": "Revisar cierre de caja",
+    "review": "Lo leyó la IA. Revisalo y corregí lo que haga falta: nada se registra hasta que confirmes.",
+    "loadError": "No se pudieron cargar los platos.",
+    "soldOn": "Día del servicio",
+    "reportNumber": "Número de Z",
+    "existingTitle": "Ese día ya tiene {count} ventas cargadas por {total}. ¿Qué hago con ellas?",
+    "reverse": "Revertirlas y cargar el cierre",
+    "reverseHint": "Si después deshacés el cierre, las ventas revertidas no vuelven.",
+    "add": "Sumar el cierre a las que ya están",
+    "lines": "Platos ({count})",
+    "dish": "Plato",
+    "notADish": "No es un plato (queda aprendido)",
+    "quantity": "Cantidad",
+    "unitPrice": "Precio del ticket",
+    "priceDiffers": "En la carta está a {price}.",
+    "ignored": "Ignorados: no son platos ({count})",
+    "assign": "Es un plato",
+    "printedTotal": "Total del ticket",
+    "total": "Total que se registra",
+    "totalDiffers": "No coincide con el total del ticket: revisá cantidades, precios y lo ignorado.",
+    "seeSale": "Ver la venta",
+    "seeSaleError": "No se pudo abrir la venta.",
+    "items": "{count} platos",
+    "missing": {
+      "dish": "Elegí el plato o marcalo como \"No es un plato\".",
+      "quantity": "La cantidad tiene que ser un número entero.",
+      "price": "Falta el precio."
+    },
+    "confirm": "Registrar ventas",
+    "saveError": "No se pudo registrar el cierre.",
+    "done": "Ventas registradas. Las podés deshacer desde el chat."
+  },
+  "sales": {
+    "attachments": "Adjuntos",
+    "attachmentsLoading": "Cargando adjuntos…",
+    "attachmentsEmpty": "Sin adjuntos",
+    "attachmentAdd": "Adjuntar",
+    "attachmentDelete": "Eliminar",
+    "attachmentDeleteTitle": "Eliminar adjunto",
+    "attachmentDeleteBody": "Se va a eliminar este archivo de la venta.",
+    "attachmentTooLarge": "El archivo supera los 4 MB.",
+    "attachmentOpenError": "No se pudo abrir el adjunto",
+    "attachmentUploadError": "No se pudo subir el adjunto",
+    "attachmentDeleteError": "No se pudo eliminar el adjunto"
   }
 }
