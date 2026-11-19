@@ -80,6 +80,10 @@ export class CatalogImportComponent {
   fromChat = signal(false);
   /** Del chat no hay un Excel que mirar: la vista previa muestra la receta que armó la IA, ingrediente por ingrediente. */
   chatRecipes = signal<{ name: string; yield: string | null; lines: string[] }[]>([]);
+  /** Varias recetas del chat (una foto o un PDF de recetas): título en plural y los contadores, como el import normal. */
+  readonly chatMany = computed(() => this.fromChat() && this.chatRecipes().length > 1);
+  /** Para corregir la unidad de un insumo propuesto ("1 cebolla" no es kg). Se cargan a pedido. */
+  units = signal<UnitResponse[]>([]);
 
   readonly aiBlockedBy = computed<'plan' | 'permission' | null>(() => {
     if (!this.auth.hasFeature('AI_INTERPRETER')) return 'plan';
@@ -297,6 +301,23 @@ export class CatalogImportComponent {
     await this.applyInterpretation(interpretation);
   }
 
+  /** La IA propuso un insumo con una unidad que no cierra con la receta: se corrige y se vuelve a probar el import. */
+  hasUnit(unit: string | undefined): boolean {
+    return this.units().some(u => u.abbreviation === unit);
+  }
+
+  async setProposedUnit(p: ProductImportRow, unit: string): Promise<void> {
+    if (this.busy() || p.unit === unit) return;
+    p.unit = unit;  // el mismo objeto está en payload.products
+    this.proposed.update(list => [...list]);
+    await this.check();
+  }
+
+  private async loadUnits(): Promise<void> {
+    if (this.units().length) return;
+    try { this.units.set(await parseBlob<UnitResponse[]>(await this.api.invoke(listUnits) as unknown)); } catch { /* sin unidades no se edita: queda la propuesta */ }
+  }
+
   private async applyInterpretation(interpretation: InterpretCatalogResult): Promise<void> {
     this.warnings.set(interpretation.warnings ?? []);
     const recipes = this.recipesEnabled() ? interpretation.recipes ?? [] : [];
@@ -305,6 +326,7 @@ export class CatalogImportComponent {
     const proposed = recipes.length || preparations.length ? interpretation.proposedProducts ?? [] : [];
     this.proposed.set(proposed);
     this.payload = { products: [...(interpretation.products ?? []), ...proposed], preparations, recipes };
+    if (proposed.length) void this.loadUnits();
     this.hasRecipes.set(recipes.length > 0);
     this.hasPreparations.set(preparations.length > 0);
     if (!this.payload.products.length && !recipes.length && !preparations.length) {
@@ -408,7 +430,14 @@ export class CatalogImportComponent {
   /** "Insumos · fila 12"; con IA, la hoja y la fila del Excel del cliente; del chat, el ingrediente. */
   errorPlace(error: ImportRowError): string {
     // Del chat, `row` es la posición del ingrediente en la receta (en un insumo propuesto, la del primero que lo usa).
-    if (this.fromChat()) return this.t('import.chat.ingredient', { n: error.row ?? '' });
+    if (this.fromChat()) {
+      // Con varias recetas, "ingrediente 2" no alcanza: se dice de cuál (las filas de una hoja son de una sola receta).
+      const owners = new Set(error.sheet === 'PREPARATIONS'
+        ? (this.payload?.preparations ?? []).filter(r => r.row === error.row).map(r => r.preparation)
+        : error.sheet === 'RECIPES' ? (this.payload?.recipes ?? []).filter(r => r.row === error.row).map(r => r.menuItem) : []);
+      const ingredient = this.t('import.chat.ingredient', { n: error.row ?? '' });
+      return this.chatMany() && owners.size === 1 ? `${[...owners][0]} · ${ingredient}` : ingredient;
+    }
     const ref = error.row != null ? this.aiRefs()?.get(error.row) : undefined;
     if (ref) return `${ref.sheet} · ${this.t('import.row', { row: ref.row })}`;
     return `${this.t('import.sheets.' + error.sheet)} · ${this.t('import.row', { row: error.row ?? '' })}`;

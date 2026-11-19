@@ -630,7 +630,8 @@
       "replaceHint": "If you leave it ticked, this one replaces it; otherwise it keeps the one it has.",
       "proposedHint": "The recipe uses them and they are not in your catalog: they are created when you save. If one already exists under another name, fix the message and send it again.",
       "unknownIngredient": "It is not a product in the catalog: add it in Products or write it as it appears there.",
-      "done": "Done: the recipe was saved."
+      "done": "Done: the recipe was saved.",
+      "titleMany": "Review recipes"
     },
     "title": "Import from Excel",
     "button": "Import",
@@ -729,7 +730,8 @@
       "error": "We couldn't interpret the file. Please try again.",
       "tooManySheets": "Your Excel has more than {max} sheets with data. Keep only the products and recipes ones.",
       "proposedTitle": "Products proposed by the AI ({count})",
-      "proposedHint": "Your recipes use them and they're not in your catalog or the Excel: they're created when you confirm. If one already exists under another name, fix the recipe in your Excel and choose it again."
+      "proposedHint": "Your recipes use them and they're not in your catalog or the Excel: they're created when you confirm. If one already exists under another name, fix the recipe in your Excel and choose it again.",
+      "proposedUnit": "Unit of {name}"
     },
     "replace": {
       "title": "These {count} dishes already have a different recipe",

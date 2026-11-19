@@ -630,7 +630,8 @@
       "replaceHint": "Si la dejás tildada, se reemplaza por esta; si no, conserva la que tiene.",
       "proposedHint": "La receta los usa y no están en tu catálogo: se crean al guardar. Si alguno ya existe con otro nombre, corregí el mensaje y mandalo de nuevo.",
       "unknownIngredient": "No es un insumo del catálogo: cargalo en Insumos o escribilo como figura ahí.",
-      "done": "Listo: la receta quedó guardada."
+      "done": "Listo: la receta quedó guardada.",
+      "titleMany": "Revisar recetas"
     },
     "title": "Importar desde Excel",
     "button": "Importar",
@@ -729,7 +730,8 @@
       "error": "No pudimos interpretar el archivo. Probá de nuevo.",
       "tooManySheets": "Tu Excel tiene más de {max} hojas con datos. Dejá solo las de insumos y recetas.",
       "proposedTitle": "Insumos propuestos por la IA ({count})",
-      "proposedHint": "Tus recetas los usan y no están en tu catálogo ni en el Excel: se crean al confirmar. Si alguno ya existe con otro nombre, corregí la receta en tu Excel y volvé a elegirlo."
+      "proposedHint": "Tus recetas los usan y no están en tu catálogo ni en el Excel: se crean al confirmar. Si alguno ya existe con otro nombre, corregí la receta en tu Excel y volvé a elegirlo.",
+      "proposedUnit": "Unidad de {name}"
     },
     "replace": {
       "title": "Estos {count} platos ya tienen otra receta",
