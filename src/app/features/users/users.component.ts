@@ -3,6 +3,7 @@ import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angula
 import { RouterLink } from '@angular/router';
 import { Api } from '../../api/api';
 import { AuthService } from '../../core/services/auth.service';
+import { I18nService } from '../../core/services/i18n.service';
 import { listUsers } from '../../api/fn/user-controller/list-users';
 import { createUser } from '../../api/fn/user-controller/create-user';
 import { updateUser } from '../../api/fn/user-controller/update-user';
@@ -74,7 +75,7 @@ export class UsersComponent implements OnInit {
 
   form: FormGroup;
 
-  constructor(private api: Api, private fb: FormBuilder, public authService: AuthService) {
+  constructor(private api: Api, private fb: FormBuilder, public authService: AuthService, private i18n: I18nService) {
     this.form = this.fb.group({
       name:   ['', Validators.required],
       email:  ['', [Validators.required, Validators.email]],
@@ -111,6 +112,8 @@ export class UsersComponent implements OnInit {
     this.editing.set(null);
     this.form.reset({ name: '', email: '', roleId: '', phone: '' });
     this.form.get('email')?.enable();
+    this.form.get('name')?.enable();
+    this.form.get('phone')?.enable();
     this.saveError.set(null);
     this.drawerOpen.set(true);
   }
@@ -119,6 +122,9 @@ export class UsersComponent implements OnInit {
     this.editing.set(u);
     this.form.reset({ name: u.name ?? '', email: u.email ?? '', roleId: u.roleId ?? '', phone: u.phone ?? '' });
     this.form.get('email')?.disable();
+    // Si también trabaja en otra cuenta, su nombre y su teléfono los maneja esa persona: acá solo se cambia el rol.
+    // Deshabilitados no salen en form.value: save() usa getRawValue() y manda los actuales (si no, el back rechaza).
+    for (const field of ['name', 'phone']) this.profileLocked(u) ? this.form.get(field)?.disable() : this.form.get(field)?.enable();
     this.saveError.set(null);
     this.drawerOpen.set(true);
     this.permissionsError.set(null);
@@ -192,6 +198,15 @@ export class UsersComponent implements OnInit {
   onEscape(): void {
     if (this.drawerOpen()) this.closeDrawer();
     if (this.deactivating()) this.deactivating.set(null);
+  }
+
+  t(key: string): string {
+    return this.i18n.t(key);
+  }
+
+  profileLocked(u: UserResponse | null): boolean {
+    // ponytail: cast hasta regenerar contra la rama del back (UserResponse.profileEditable); después se borra.
+    return (u as (UserResponse & { profileEditable?: boolean }) | null)?.profileEditable === false;
   }
 
   async save(): Promise<void> {

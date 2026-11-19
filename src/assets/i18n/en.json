@@ -144,7 +144,9 @@
     "ATTACHMENT_NOT_FOUND": "We could not find that attachment: it may have been deleted.",
     "ATTACHMENTS_NOT_MOVABLE": "The attachments could not be moved to the corrected purchase.",
     "INVALID_CUIT": "The CUIT is not valid: check the 11 digits.",
-    "SUPPLIER_CUIT_TAKEN": "Another supplier already has that CUIT."
+    "SUPPLIER_CUIT_TAKEN": "Another supplier already has that CUIT.",
+    "USER_ALREADY_IN_RESTAURANT": "That person already works at this restaurant.",
+    "USER_PROFILE_NOT_EDITABLE": "This person also works in another account: their name and phone cannot be changed here."
   },
   "ai": {
     "title": "Quick entry",
@@ -1082,5 +1084,9 @@
     "attachmentOpenError": "Could not open the attachment",
     "attachmentUploadError": "Could not upload the attachment",
     "attachmentDeleteError": "Could not delete the attachment"
+  },
+  "users": {
+    "inviteExistingHint": "If they already use Chef Control, they join with their own name and phone.",
+    "profileShared": "This person also works in another account: they manage their own name and phone. You can change their role here."
   }
 }

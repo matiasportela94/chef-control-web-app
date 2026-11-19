@@ -154,6 +154,7 @@
                class="field-input" [class.input-error]="isInvalid('email')"
                [class.opacity-50]="!!editing()">
         @if (isInvalid('email')) { <p style="font-size:11px;color:var(--red);margin-top:4px;">Email inválido</p> }
+        @if (!editing()) { <p class="field-hint">{{ t('users.inviteExistingHint') }}</p> }
       </div>
 
       <div style="margin-bottom:0;">
@@ -167,6 +168,7 @@
         <input formControlName="phone" type="tel" placeholder="+54 11 1234-5678"
                class="field-input" [class.input-error]="isInvalid('phone')">
         @if (isInvalid('phone')) { <p style="font-size:11px;color:var(--red);margin-top:4px;">Requerido para acceso vía Telegram</p> }
+        @if (profileLocked(editing())) { <p class="field-hint"><i class="ti ti-lock"></i> {{ t('users.profileShared') }}</p> }
         @else { <p style="font-size:11px;color:var(--text-3);margin-top:4px;">Se usa como whitelist para el bot de Telegram</p> }
       </div>
 

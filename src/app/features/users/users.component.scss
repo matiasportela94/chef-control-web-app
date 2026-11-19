@@ -22,3 +22,5 @@
 .badge-kitchen { @apply bg-success-500/10  text-success-400 border border-success-500/20; }
 .badge-neutral { @apply bg-surface-700/50  text-surface-400 border border-white/10;       }
 .badge-active  { @apply bg-success-500/10  text-success-400 border border-success-500/20; }
+
+.field-hint { font-size: 11px; line-height: 1.45; color: var(--text-3); margin-top: 6px; }
