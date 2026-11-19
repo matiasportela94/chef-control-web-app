@@ -31,7 +31,9 @@
     "users": "Users",
     "logout": "Log out",
     "iva": "VAT",
-    "productions": "Production"
+    "productions": "Production",
+    "switchRestaurant": "Switch restaurant",
+    "switchError": "The restaurant could not be switched."
   },
   "errors": {
     "INVALID_CREDENTIALS": "Invalid email or password",

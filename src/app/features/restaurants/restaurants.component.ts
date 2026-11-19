@@ -155,9 +155,9 @@ export class RestaurantsComponent implements OnInit {
         await this.api.invoke(createRestaurant, { body });
       }
       this.drawerOpen.set(false);
-      // La sesión guarda la condición fiscal del local activo (el default de "precios con IVA" en compras):
-      // sin esto quedaría la vieja hasta el próximo login. De paso trae el nombre nuevo.
-      if (r && this.isCurrent(r)) await this.auth.refreshSession().catch(() => undefined);
+      // La sesión guarda los locales (el selector de la barra) y la condición fiscal del activo (el default de
+      // "precios con IVA" en compras): sin esto quedarían viejos hasta el próximo login.
+      await this.auth.refreshSession().catch(() => undefined);
       await this.load();
     } catch (e: any) {
       this.saveError.set(extractApiError(e, this.t('restaurants.saveError')));
@@ -172,6 +172,7 @@ export class RestaurantsComponent implements OnInit {
     this.error.set(null);
     try {
       await this.api.invoke(setRestaurantActive, { id: r.id, body: { active: !r.isActive } });
+      await this.auth.refreshSession().catch(() => undefined);  // el selector de la barra
       await this.load();
     } catch (e: any) {
       this.error.set(extractApiError(e, this.t('restaurants.toggleError')));
@@ -198,6 +199,7 @@ export class RestaurantsComponent implements OnInit {
     this.deleteError.set(null);
     try {
       await this.api.invoke(deleteRestaurant, { id: r.id });
+      await this.auth.refreshSession().catch(() => undefined);  // el selector de la barra
       this.closeDelete();
       await this.load();
     } catch (e: any) {

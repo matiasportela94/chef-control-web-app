@@ -31,7 +31,9 @@
     "users": "Usuarios",
     "logout": "Salir",
     "iva": "IVA",
-    "productions": "Producción"
+    "productions": "Producción",
+    "switchRestaurant": "Cambiar de local",
+    "switchError": "No se pudo cambiar de local."
   },
   "errors": {
     "INVALID_CREDENTIALS": "Email o contraseña incorrectos",
