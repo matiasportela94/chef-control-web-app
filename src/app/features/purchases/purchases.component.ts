@@ -9,6 +9,11 @@ import { createPurchase } from '../../api/fn/purchase-controller/create-purchase
 import { updatePurchase }  from '../../api/fn/purchase-controller/update-purchase';
 import { reversePurchase } from '../../api/fn/purchase-controller/reverse-purchase';
 import { getPurchase }     from '../../api/fn/purchase-controller/get-purchase';
+import { listPurchaseAttachments } from '../../api/fn/purchase-attachment-controller/list-purchase-attachments';
+import { getPurchaseAttachment }   from '../../api/fn/purchase-attachment-controller/get-purchase-attachment';
+import { uploadPurchaseAttachment } from '../../api/fn/purchase-attachment-controller/upload-purchase-attachment';
+import { deletePurchaseAttachment } from '../../api/fn/purchase-attachment-controller/delete-purchase-attachment';
+import { PurchaseAttachmentResponse } from '../../api/models/purchase-attachment-response';
 import { listProducts }   from '../../api/fn/product-controller/list-products';
 import { listSuppliers }  from '../../api/fn/supplier-controller/list-suppliers';
 import { listUnits }      from '../../api/fn/unit-controller/list-units';
@@ -31,12 +36,13 @@ import { RouterLink } from '@angular/router';
 import { PaginatorComponent } from '../../shared/components/paginator/paginator.component';
 import { DrawerComponent } from '../../shared/components/drawer/drawer.component';
 import { SpinnerComponent } from '../../shared/components/spinner/spinner.component';
+import { ActionDialogComponent } from '../../shared/components/action-dialog/action-dialog.component';
 import { SelectComponent, SelectOption } from '../../shared/components/select/select.component';
 
 @Component({
   selector: 'app-purchases',
   standalone: true,
-  imports: [ReactiveFormsModule, DecimalPipe, NgClass, RouterLink, PaginatorComponent, DrawerComponent, SpinnerComponent, SelectComponent],
+  imports: [ReactiveFormsModule, DecimalPipe, NgClass, RouterLink, PaginatorComponent, DrawerComponent, SpinnerComponent, SelectComponent, ActionDialogComponent],
   templateUrl: './purchases.component.html',
   styleUrl: './purchases.component.scss'
 })
@@ -67,6 +73,24 @@ export class PurchasesComponent implements OnInit {
   readonly ivaOptions = computed<SelectOption[]>(() => IVA_RATES.map(r => ({
     value: String(r), label: r === 0 ? this.t('purchases.ivaNone') : this.t('purchases.ivaOption', { rate: formatIvaRate(r) }),
   })));
+
+  /** Tipo de comprobante (opcional); '' = ninguno. */
+  readonly invoiceTypeOptions = computed<SelectOption[]>(() => [
+    { value: '', label: this.t('purchases.invoiceTypeNone') },
+    { value: 'A', label: this.t('purchases.invoiceTypeA') },
+    { value: 'B', label: this.t('purchases.invoiceTypeB') },
+    { value: 'C', label: this.t('purchases.invoiceTypeC') },
+    { value: 'REMITO', label: this.t('purchases.invoiceTypeRemito') },
+  ]);
+
+  readonly canManageAttachments = computed(() => this.auth.hasPermission('PURCHASES_CREATE'));
+  attachments        = signal<PurchaseAttachmentResponse[]>([]);
+  attachmentsLoading = signal(false);
+  attachmentBusy     = signal(false);
+  attachmentError    = signal<string | null>(null);
+  deletingAttachment = signal<PurchaseAttachmentResponse | null>(null);
+  /** Compra revertida de la que se hereda el comprobante al rehacerla (Corregir). */
+  private attachmentsFromPurchaseId: string | null = null;
 
   readonly taxCondition = computed(() => this.auth.taxCondition());
   readonly canEditRestaurants = computed(() => this.auth.hasPermission('RESTAURANTS_UPDATE'));
@@ -99,6 +123,8 @@ export class PurchasesComponent implements OnInit {
       purchasedAt: [arToday()],
       supplierId:  [''],
       notes:       [''],
+      invoiceType: [''],
+      invoiceNumber: [''],
       pricesIncludeIva: [true],
       items:       this.fb.array([], Validators.minLength(1)),
     });
@@ -153,9 +179,10 @@ export class PurchasesComponent implements OnInit {
     this.editLegacy.set(false);
     this.editingId.set(null);
     this.items.clear();
+    this.attachmentsFromPurchaseId = null;
     this.form.get('pricesIncludeIva')?.enable();
     // RI recupera el IVA: sus facturas se cargan sin IVA. Monotributo o sin definir: el IVA es costo, con IVA.
-    this.form.reset({ purchasedAt: arToday(), supplierId: '', notes: '',
+    this.form.reset({ purchasedAt: arToday(), supplierId: '', notes: '', invoiceType: '', invoiceNumber: '',
                       pricesIncludeIva: this.taxCondition() !== 'RESPONSABLE_INSCRIPTO' });
     this.addItem();
     this.saveError.set(null);
@@ -312,6 +339,9 @@ export class PurchasesComponent implements OnInit {
       ...(v.purchasedAt ? { purchasedAt: arDayStart(v.purchasedAt) } : {}),
       ...(v.supplierId  ? { supplierId:  v.supplierId  } : {}),
       ...(v.notes?.trim() ? { notes: v.notes.trim() } : {}),
+      ...(v.invoiceType ? { invoiceType: v.invoiceType } : {}),
+      ...(v.invoiceNumber?.trim() ? { invoiceNumber: v.invoiceNumber.trim() } : {}),
+      ...(this.attachmentsFromPurchaseId ? { attachmentsFromPurchaseId: this.attachmentsFromPurchaseId } : {}),
     };
     try {
       await this.api.invoke(createPurchase, { body });
@@ -408,6 +438,7 @@ export class PurchasesComponent implements OnInit {
     this.editingId.set(null);
     this.items.clear();
     this.saveError.set(null);
+    this.attachmentsFromPurchaseId = d.id ?? null;
 
     const purchasedDate = d.purchasedAt ? arDateOf(d.purchasedAt) : arToday();
 
@@ -419,6 +450,8 @@ export class PurchasesComponent implements OnInit {
       purchasedAt: purchasedDate,
       supplierId:  d.supplierId ?? '',
       notes:       d.notes ?? '',
+      invoiceType: d.invoiceType ?? '',
+      invoiceNumber: d.invoiceNumber ?? '',
       pricesIncludeIva: d.pricesIncludeIva ?? true,
     });
 
@@ -446,6 +479,9 @@ export class PurchasesComponent implements OnInit {
     this.detail.set(null);
     this.detailLoading.set(true);
     this.detailOpen.set(true);
+    this.attachments.set([]);
+    this.attachmentError.set(null);
+    void this.loadAttachments(purchase.id!);
     try {
       const raw = await this.api.invoke(getPurchase, { id: purchase.id! }) as unknown;
       this.detail.set(await parseBlob<PurchaseDetailResponse>(raw));
@@ -455,13 +491,89 @@ export class PurchasesComponent implements OnInit {
     }
   }
 
+  async loadAttachments(purchaseId: string): Promise<void> {
+    this.attachmentsLoading.set(true);
+    try {
+      const raw = await this.api.invoke(listPurchaseAttachments, { purchaseId }) as unknown;
+      if (this.detailOpen()) this.attachments.set(await parseBlob<PurchaseAttachmentResponse[]>(raw));
+    } catch { this.attachments.set([]); }
+    finally { this.attachmentsLoading.set(false); }
+  }
+
+  /** Baja el archivo y lo abre en otra pestaña; la URL se libera pasado un rato. */
+  async openAttachment(a: PurchaseAttachmentResponse): Promise<void> {
+    const purchaseId = this.detail()?.id;
+    if (!purchaseId || !a.id) return;
+    this.attachmentError.set(null);
+    // Se abre antes del await: los navegadores bloquean un popup abierto fuera del gesto del usuario.
+    const win = window.open('', '_blank');
+    try {
+      const raw = await this.api.invoke(getPurchaseAttachment, { purchaseId, attachmentId: a.id }) as unknown;
+      const blob = raw instanceof Blob ? raw : new Blob([raw as BlobPart]);
+      const url = URL.createObjectURL(blob);
+      if (win) win.location.href = url; else window.open(url, '_blank');
+      setTimeout(() => URL.revokeObjectURL(url), 60_000);
+    } catch (e: any) {
+      win?.close();
+      this.attachmentError.set(extractApiError(e, this.t('purchases.attachmentOpenError')));
+    }
+  }
+
+  async onAttachmentFile(ev: Event): Promise<void> {
+    const input = ev.target as HTMLInputElement;
+    const file = input.files?.[0];
+    input.value = '';
+    const purchaseId = this.detail()?.id;
+    if (!file || !purchaseId) return;
+    if (file.size > 4 * 1024 * 1024) { this.attachmentError.set(this.t('purchases.attachmentTooLarge')); return; }
+    this.attachmentBusy.set(true);
+    this.attachmentError.set(null);
+    try {
+      await this.api.invoke(uploadPurchaseAttachment, { purchaseId, body: { file } });
+      await this.loadAttachments(purchaseId);
+      await this.loadPurchases();
+    } catch (e: any) {
+      this.attachmentError.set(extractApiError(e, this.t('purchases.attachmentUploadError')));
+    } finally { this.attachmentBusy.set(false); }
+  }
+
+  async confirmDeleteAttachment(): Promise<void> {
+    const a = this.deletingAttachment();
+    const purchaseId = this.detail()?.id;
+    if (!a?.id || !purchaseId) return;
+    this.attachmentBusy.set(true);
+    try {
+      await this.api.invoke(deletePurchaseAttachment, { purchaseId, attachmentId: a.id });
+      this.deletingAttachment.set(null);
+      await this.loadAttachments(purchaseId);
+      await this.loadPurchases();
+    } catch (e: any) {
+      this.deletingAttachment.set(null);
+      this.attachmentError.set(extractApiError(e, this.t('purchases.attachmentDeleteError')));
+    } finally { this.attachmentBusy.set(false); }
+  }
+
+  formatSize(bytes?: number): string {
+    const b = bytes ?? 0;
+    return b >= 1024 * 1024 ? `${(b / 1024 / 1024).toLocaleString('es-AR', { maximumFractionDigits: 1 })} MB`
+                           : `${Math.max(1, Math.round(b / 1024)).toLocaleString('es-AR')} KB`;
+  }
+
+  /** "Factura A 0001-00001234" / "Remito"; null si no hay tipo ni número. */
+  invoiceLabel(x: { invoiceType?: string; invoiceNumber?: string }): string | null {
+    const type = x.invoiceType ? this.t('purchases.invoiceLabel' + x.invoiceType) : '';
+    const label = [type, x.invoiceNumber].filter(Boolean).join(' ');
+    return label || null;
+  }
+
   closeDetail(): void {
     this.detailOpen.set(false);
   }
 
   @HostListener('document:keydown.escape')
   onEscape(): void {
-    if (this.createOpen()) this.closeCreate();
+    if (this.deletingAttachment()) this.deletingAttachment.set(null);
+    else if (this.createOpen()) this.closeCreate();
     else if (this.detailOpen()) this.closeDetail();
   }
 

@@ -38,6 +38,9 @@
   background: color-mix(in srgb, var(--accent) 16%, var(--bg-card)); color: var(--text-1);
   font-size: 13px; line-height: 1.45; white-space: pre-wrap; overflow-wrap: anywhere;
 }
+.msg-user { display: flex; flex-direction: column; gap: 4px; }
+.msg-files { display: flex; flex-direction: column; gap: 2px; font-size: 11px; color: var(--text-2); }
+.msg-file { display: flex; align-items: center; gap: 4px; min-width: 0; overflow-wrap: anywhere; i { flex-shrink: 0; } }
 .msg-reply {
   align-self: stretch; display: flex; flex-direction: column; gap: 8px; min-width: 0;
   padding: 12px; border-radius: 4px 14px 14px 14px;

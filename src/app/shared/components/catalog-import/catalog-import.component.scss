@@ -72,3 +72,7 @@
 .replace-item { justify-content: flex-start; cursor: pointer; input { flex-shrink: 0; width: 16px; height: 16px; accent-color: var(--accent); } }
 .replace-name { flex: 1; }
 .replace-place { max-width: 50%; font-size: 11px; color: var(--text-3); }
+.proposed-unit-select {
+  flex-shrink: 0; min-height: 32px; padding: 2px 6px; border-radius: 8px; font-size: 12px;
+  background: var(--bg-card); color: var(--text-1); border: 1px solid var(--border);
+}

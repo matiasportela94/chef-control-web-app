@@ -1,0 +1,75 @@
+// Mobile-first: el drawer mide min(92vw, 420px) en cualquier pantalla. Grillas con minmax(0, 1fr), nunca 1fr a secas.
+.hint { font-size: 12px; line-height: 1.5; color: var(--text-3); margin-bottom: 10px; }
+.notice {
+  display: flex; align-items: flex-start; gap: 8px; margin-bottom: 10px;
+  font-size: 12px; line-height: 1.5; color: var(--text-2);
+  background: var(--bg-input); border: 1px solid var(--border); border-radius: 12px; padding: 10px 12px;
+  > i { font-size: 16px; margin-top: 1px; flex-shrink: 0; }
+  > span { min-width: 0; }
+}
+.notice-danger { background: var(--red-bg); border-color: var(--red); color: var(--red); }
+.notice-ok { border-color: var(--accent); > i { color: var(--accent); } }
+.notice-warn { border-color: var(--accent); > i { color: var(--accent); } }
+.warn-body { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.existing { font-size: 12px; color: var(--text-1); overflow-wrap: anywhere; }
+.link-btn { align-self: flex-start; background: none; border: none; padding: 0; color: var(--accent); font-size: 12px; cursor: pointer; text-decoration: underline; }
+
+.section { margin-bottom: 16px; }
+.mt { margin-top: 10px; }
+.grid2 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; > * { min-width: 0; } }
+.check {
+  display: flex; align-items: center; gap: 8px; align-self: end; min-height: 38px;
+  font-size: 12px; color: var(--text-1); cursor: pointer;
+  input { width: 18px; height: 18px; accent-color: var(--accent); flex-shrink: 0; }
+}
+
+.line {
+  border: 1px solid var(--border); border-radius: 12px; padding: 10px 12px; margin-bottom: 10px; min-width: 0;
+  &.line-problem { border-left: 3px solid var(--accent); }
+}
+.line-head { display: flex; align-items: flex-start; gap: 8px; margin-bottom: 8px; }
+.line-printed {
+  flex: 1; min-width: 0; font-size: 12px; line-height: 1.4; color: var(--text-2); font-family: ui-monospace, monospace;
+  overflow-wrap: anywhere; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+}
+.line-printed-qty { color: var(--text-3); }
+.line-remove {
+  width: 32px; height: 32px; flex-shrink: 0; border-radius: 8px; border: 1px solid var(--border); background: none;
+  color: var(--text-3); cursor: pointer; display: flex; align-items: center; justify-content: center;
+  &:hover:not(:disabled) { color: var(--red); border-color: var(--red); }
+}
+.factor-label { text-transform: none; letter-spacing: 0; font-size: 11px; color: var(--text-1); }
+.line-warn {
+  display: flex; align-items: flex-start; gap: 6px; margin-top: 8px; font-size: 11px; line-height: 1.4; color: var(--text-2);
+  i { color: var(--accent); flex-shrink: 0; margin-top: 1px; }
+}
+.line-missing { margin-top: 6px; font-size: 11px; font-weight: 600; color: var(--accent); }
+
+.totals {
+  display: flex; flex-direction: column; gap: 4px; padding: 10px 12px; border-radius: 12px; background: var(--bg-input);
+  > div { display: flex; justify-content: space-between; gap: 8px; font-size: 12px; color: var(--text-2); }
+  strong { color: var(--text-1); font-variant-numeric: tabular-nums; }
+  .hint { margin: 2px 0 0; }
+  &.totals-differ { border: 1px solid var(--accent); }
+}
+.spin { display: inline-block; animation: spin 1s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { .spin { animation: none; } }
+.factor-result { margin: 6px 0 0; color: var(--text-2); }
+
+// Cierre de caja (comparte este archivo): la elección de qué hacer con ventas ya cargadas y los ignorados plegados.
+.choice { border: 1px solid var(--accent); border-radius: 12px; padding: 10px 12px; }
+.radio {
+  display: flex; align-items: flex-start; gap: 8px; margin-top: 8px; font-size: 12px; color: var(--text-1); cursor: pointer;
+  input { width: 18px; height: 18px; margin-top: 1px; accent-color: var(--accent); flex-shrink: 0; }
+  .hint { margin: 0; }
+}
+.price-differs { color: var(--text-1); }
+.ignored-toggle {
+  display: flex; align-items: center; gap: 6px; width: 100%; min-height: 40px; margin-bottom: 8px; padding: 0 4px;
+  background: none; border: none; color: var(--text-2); font-size: 12px; font-weight: 600; cursor: pointer; text-align: left;
+}
+.ignored-line {
+  display: flex; align-items: center; gap: 8px; padding: 6px 10px; margin-bottom: 6px; border-radius: 10px; background: var(--bg-input);
+  .line-printed { -webkit-line-clamp: 1; }
+}

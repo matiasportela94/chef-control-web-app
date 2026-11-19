@@ -43,6 +43,13 @@
               <div style="min-width:0;">
                 <p style="font-weight:600;color:var(--text-1);font-size:13px;">{{ formatDate(p.purchasedAt) }}</p>
                 <p style="font-size:11px;color:var(--text-3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{ p.supplierName ?? '—' }}</p>
+                @if (invoiceLabel(p); as inv) {
+                  <p style="font-size:11px;color:var(--text-3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
+                    {{ inv }} @if ((p.attachmentCount ?? 0) > 0) { <i class="ti ti-paperclip"></i> {{ p.attachmentCount }} }
+                  </p>
+                } @else if ((p.attachmentCount ?? 0) > 0) {
+                  <p style="font-size:11px;color:var(--text-3);"><i class="ti ti-paperclip"></i> {{ p.attachmentCount }}</p>
+                }
               </div>
               <p style="font-weight:600;color:var(--text-1);font-size:13px;white-space:nowrap;">{{ formatARS(p.total) }}</p>
             </div>
@@ -80,6 +87,12 @@
                   <td style="font-weight:600;color:var(--text-1);">{{ formatDate(p.purchasedAt) }}</td>
                   <td class="hidden md:table-cell" style="color:var(--text-2);">
                     {{ p.supplierName ?? '—' }}
+                    @if (invoiceLabel(p); as inv) {
+                      <p style="font-size:11px;color:var(--text-3);">{{ inv }}</p>
+                    }
+                    @if ((p.attachmentCount ?? 0) > 0) {
+                      <span style="font-size:11px;color:var(--text-3);" [title]="t('purchases.attachments')"><i class="ti ti-paperclip"></i> {{ p.attachmentCount }}</span>
+                    }
                   </td>
                   <td style="text-align:right;font-weight:600;color:var(--text-1);">
                     {{ formatARS(p.total) }}
@@ -148,6 +161,19 @@
         </div>
 
       </div>
+
+      @if (!editMode()) {
+        <div class="pc-form-row" style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-top:-8px;">
+          <div style="margin-bottom:0;min-width:0;">
+            <label class="field-label">{{ t('purchases.invoiceType') }} <span style="color:var(--text-3);font-weight:400;">{{ t('purchases.optional') }}</span></label>
+            <app-select formControlName="invoiceType" [options]="invoiceTypeOptions()" [placeholder]="t('purchases.invoiceTypeNone')"></app-select>
+          </div>
+          <div style="margin-bottom:0;min-width:0;">
+            <label class="field-label">{{ t('purchases.invoiceNumber') }} <span style="color:var(--text-3);font-weight:400;">{{ t('purchases.optional') }}</span></label>
+            <input formControlName="invoiceNumber" type="text" [placeholder]="t('purchases.invoiceNumberPlaceholder')" class="field-input">
+          </div>
+        </div>
+      }
 
       <!-- IVA: cómo vienen los precios de la factura -->
       @if (editLegacy()) {
@@ -363,12 +389,62 @@
       </div>
     }
 
+    @if (invoiceLabel(d); as inv) {
+      <div class="data-card" style="padding:12px 16px;margin-bottom:10px;min-width:0;">
+        <p class="section-title" style="margin-bottom:4px;">{{ t('purchases.invoice') }}</p>
+        <p style="color:var(--text-1);font-size:12px;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{ inv }}</p>
+      </div>
+    }
+
     @if (d.notes) {
       <div class="data-card" style="padding:12px 16px;margin-bottom:10px;">
         <p class="section-title" style="margin-bottom:4px;">{{ t('purchases.notes') }}</p>
         <p style="color:var(--text-2);font-size:12px;">{{ d.notes }}</p>
       </div>
     }
+
+    <!-- Adjuntos -->
+    <div class="data-card" style="padding:12px 16px;margin-bottom:10px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;margin-bottom:8px;">
+        <p class="section-title" style="margin:0;">{{ t('purchases.attachments') }}</p>
+        @if (canManageAttachments()) {
+          <button type="button" class="btn-secondary btn-sm" style="min-height:40px;" [disabled]="attachmentBusy()"
+                  (click)="attachmentInput.click()" [title]="t('purchases.attachmentAdd')">
+            <i class="ti ti-paperclip"></i> {{ t('purchases.attachmentAdd') }}
+          </button>
+          <input #attachmentInput type="file" accept="image/*,application/pdf" hidden (change)="onAttachmentFile($event)">
+        }
+      </div>
+      @if (attachmentsLoading()) {
+        <p style="font-size:12px;color:var(--text-3);">{{ t('purchases.attachmentsLoading') }}</p>
+      } @else if (attachments().length === 0) {
+        <p style="font-size:12px;color:var(--text-3);">{{ t('purchases.attachmentsEmpty') }}</p>
+      } @else {
+        <div style="display:flex;flex-direction:column;gap:6px;">
+          @for (a of attachments(); track a.id) {
+            <div style="display:flex;align-items:center;gap:8px;background:var(--bg-input);border-radius:10px;padding:6px 6px 6px 12px;">
+              <button type="button" (click)="openAttachment(a)" style="flex:1;min-width:0;text-align:left;background:none;border:0;padding:4px 0;cursor:pointer;min-height:40px;">
+                <span style="display:block;font-size:12px;color:var(--text-1);font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
+                  <i class="ti" [class.ti-file-type-pdf]="a.contentType === 'application/pdf'" [class.ti-photo]="a.contentType !== 'application/pdf'"></i>
+                  {{ a.filename }}
+                </span>
+                <span style="display:block;font-size:11px;color:var(--text-3);">{{ formatSize(a.sizeBytes) }} · {{ formatDate(a.createdAt) }}</span>
+              </button>
+              @if (canManageAttachments()) {
+                <button type="button" class="btn-icon" style="color:var(--text-3);flex-shrink:0;min-width:40px;min-height:40px;"
+                        [title]="t('purchases.attachmentDelete')" [attr.aria-label]="t('purchases.attachmentDelete')"
+                        (click)="deletingAttachment.set(a)">
+                  <i class="ti ti-trash"></i>
+                </button>
+              }
+            </div>
+          }
+        </div>
+      }
+      @if (attachmentError()) {
+        <p style="font-size:12px;color:var(--red);margin-top:8px;">{{ attachmentError() }}</p>
+      }
+    </div>
 
     <!-- Items -->
     <div class="table-wrap" style="margin-top:10px;">
@@ -505,3 +581,17 @@
     </div>
   </div>
 }
+
+<app-action-dialog
+  [visible]="!!deletingAttachment()"
+  [title]="t('purchases.attachmentDeleteTitle')"
+  icon="⚠️"
+  tone="danger"
+  [message]="t('purchases.attachmentDeleteBody')"
+  [itemTitle]="deletingAttachment()?.filename ?? ''"
+  [confirmLabel]="t('purchases.attachmentDelete')"
+  [cancelLabel]="t('common.cancel')"
+  [confirmDisabled]="attachmentBusy()"
+  (confirm)="confirmDeleteAttachment()"
+  (cancel)="deletingAttachment.set(null)">
+</app-action-dialog>

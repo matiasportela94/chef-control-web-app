@@ -1,4 +1,4 @@
-<app-drawer [isOpen]="isOpen" [title]="t(fromChat() ? 'import.chat.title' : 'import.title')" [titleIcon]="fromChat() ? 'chef-hat' : 'file-spreadsheet'" (closed)="close()">
+<app-drawer [isOpen]="isOpen" [title]="t(chatMany() ? 'import.chat.titleMany' : fromChat() ? 'import.chat.title' : 'import.title')" [titleIcon]="fromChat() ? 'chef-hat' : 'file-spreadsheet'" (closed)="close()">
 
   @if (recipesBlockedBy(); as reason) {
     <div class="notice"><i class="ti ti-info-circle"></i><span>{{ t(reason === 'plan' ? 'import.productsOnlyPlan' : 'import.productsOnlyPermission') }}</span></div>
@@ -101,7 +101,8 @@
       @if (step() !== 'done' && (r.recipesUnchanged || r.preparationsUnchanged)) {
         <div class="notice"><i class="ti ti-equal"></i><span>{{ t('import.chat.unchanged') }}</span></div>
       }
-    } @else {
+    }
+    @if (!fromChat() || chatMany()) {
     <div class="counters">
       <div class="counter"><span>{{ r.productsCreated ?? 0 }}</span>{{ t('import.counters.productsCreated') }}</div>
       <div class="counter"><span>{{ r.productsExisting ?? 0 }}</span>{{ t('import.counters.productsExisting') }}</div>
@@ -159,7 +160,18 @@
       <p class="hint">{{ t(fromChat() ? 'import.chat.proposedHint' : 'import.ai.proposedHint') }}</p>
       <div class="proposed-list">
         @for (p of proposed(); track $index) {
-          <div class="proposed-item"><span class="ellipsis">{{ p.name }}</span><span class="proposed-unit">{{ p.unit }}</span></div>
+          <div class="proposed-item">
+            <span class="ellipsis">{{ p.name }}</span>
+            @if (units().length && step() === 'preview') {
+              <select class="proposed-unit-select" (change)="setProposedUnit(p, $any($event.target).value)"
+                      [attr.aria-label]="t('import.ai.proposedUnit', { name: p.name ?? '' })">
+                @if (!hasUnit(p.unit)) { <option [value]="p.unit" selected>{{ p.unit }}</option> }
+                @for (u of units(); track u.id) { <option [value]="u.abbreviation" [selected]="u.abbreviation === p.unit">{{ u.abbreviation }}</option> }
+              </select>
+            } @else {
+              <span class="proposed-unit">{{ p.unit }}</span>
+            }
+          </div>
         }
       </div>
     }

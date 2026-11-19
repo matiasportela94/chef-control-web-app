@@ -253,6 +253,49 @@
       </div>
     }
 
+    <!-- Adjuntos -->
+    <div class="data-card" style="padding:12px 16px;margin-bottom:20px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;margin-bottom:8px;">
+        <p class="section-title" style="margin:0;">{{ t('sales.attachments') }}</p>
+        @if (canManageAttachments()) {
+          <button type="button" class="btn-secondary btn-sm" style="min-height:40px;" [disabled]="attachmentBusy()"
+                  (click)="attachmentInput.click()" [title]="t('sales.attachmentAdd')">
+            <i class="ti ti-paperclip"></i> {{ t('sales.attachmentAdd') }}
+          </button>
+          <input #attachmentInput type="file" accept="image/*,application/pdf" hidden (change)="onAttachmentFile($event)">
+        }
+      </div>
+      @if (attachmentsLoading()) {
+        <p style="font-size:12px;color:var(--text-3);">{{ t('sales.attachmentsLoading') }}</p>
+      } @else if (attachments().length === 0) {
+        <p style="font-size:12px;color:var(--text-3);">{{ t('sales.attachmentsEmpty') }}</p>
+      } @else {
+        <div style="display:flex;flex-direction:column;gap:6px;">
+          @for (a of attachments(); track a.id) {
+            <div style="display:flex;align-items:center;gap:8px;background:var(--bg-input);border-radius:10px;padding:6px 6px 6px 12px;">
+              <button type="button" (click)="openAttachment(a)" style="flex:1;min-width:0;text-align:left;background:none;border:0;padding:4px 0;cursor:pointer;min-height:40px;">
+                <span style="display:block;font-size:12px;color:var(--text-1);font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
+                  <i class="ti" [class.ti-file-type-pdf]="a.contentType === 'application/pdf'" [class.ti-photo]="a.contentType !== 'application/pdf'"></i>
+                  {{ a.filename }}
+                </span>
+                <span style="display:block;font-size:11px;color:var(--text-3);">{{ formatSize(a.sizeBytes) }} · {{ formatDate(a.createdAt) }}</span>
+              </button>
+              @if (canManageAttachments()) {
+                <button type="button" class="btn-icon" style="color:var(--text-3);flex-shrink:0;min-width:40px;min-height:40px;"
+                        [title]="t('sales.attachmentDelete')" [attr.aria-label]="t('sales.attachmentDelete')"
+                        (click)="deletingAttachment.set(a)">
+                  <i class="ti ti-trash"></i>
+                </button>
+              }
+            </div>
+          }
+        </div>
+      }
+      @if (attachmentError()) {
+        <p style="font-size:12px;color:var(--red);margin-top:8px;">{{ attachmentError() }}</p>
+      }
+    </div>
+
     <!-- Items -->
     <div class="table-wrap">
       <div style="padding:10px 16px;border-bottom:1px solid var(--border);">
@@ -291,6 +334,20 @@
   }
 
 </app-drawer>
+
+<app-action-dialog
+  [visible]="!!deletingAttachment()"
+  [title]="t('sales.attachmentDeleteTitle')"
+  icon="⚠️"
+  tone="danger"
+  [message]="t('sales.attachmentDeleteBody')"
+  [itemTitle]="deletingAttachment()?.filename ?? ''"
+  [confirmLabel]="t('sales.attachmentDelete')"
+  [cancelLabel]="t('common.cancel')"
+  [confirmDisabled]="attachmentBusy()"
+  (confirm)="confirmDeleteAttachment()"
+  (cancel)="deletingAttachment.set(null)">
+</app-action-dialog>
 
 <!-- MODAL CORREGIR VENTA -->
 

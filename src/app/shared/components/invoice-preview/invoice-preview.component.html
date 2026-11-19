@@ -1,0 +1,198 @@
+<app-drawer [isOpen]="isOpen" [title]="t('invoice.title')" titleIcon="file-invoice" (closed)="close()">
+
+  @if (step() === 'done') {
+    <p class="notice notice-ok"><i class="ti ti-circle-check"></i><span>{{ t('invoice.done') }}</span></p>
+    @if (files.length) {
+      <p class="hint">{{ t('invoice.attached', { count: uploaded(), total: files.length }) }}</p>
+    }
+    @for (e of uploadErrors(); track $index) {
+      <p class="notice notice-danger"><i class="ti ti-alert-triangle"></i><span>{{ e }}</span></p>
+    }
+  } @else {
+    <p class="notice"><i class="ti ti-sparkles"></i><span>{{ t('invoice.review') }}</span></p>
+    @if (!files.length) {
+      <p class="hint">{{ t('invoice.noFiles') }}</p>
+    }
+
+    <!-- Avisos de toda la factura: totales que no cierran, una factura ya cargada, una fecha futura… -->
+    @for (w of warnings(); track $index) {
+      <div class="notice notice-warn">
+        <i class="ti ti-alert-circle"></i>
+        <div class="warn-body">
+          <span>{{ w.message }}</span>
+          @if (w.code === 'ALREADY_LOADED' && w.purchaseId) {
+            @switch (existingOf(w.purchaseId)) {
+              @case (undefined) {
+                <button type="button" class="link-btn" (click)="showExisting(w.purchaseId)">{{ t('invoice.seePurchase') }}</button>
+              }
+              @case ('loading') { <span class="hint"><i class="ti ti-loader-2 spin"></i></span> }
+              @case ('error') { <span class="hint">{{ t('invoice.seePurchaseError') }}</span> }
+              @default {
+                @if (existingOf(w.purchaseId); as p) {
+                  @if (p !== 'loading' && p !== 'error') {
+                    <span class="existing">
+                      {{ formatDate(p.purchasedAt) }} · {{ p.supplierName ?? '—' }}
+                      @if (p.invoiceNumber) { · {{ p.invoiceType === 'REMITO' ? t('invoice.types.REMITO') : t('invoice.typeLetter', { type: p.invoiceType ?? '' }) }} {{ p.invoiceNumber }} }
+                      · {{ formatARS(p.total) }}
+                    </span>
+                  }
+                }
+              }
+            }
+          }
+        </div>
+      </div>
+    }
+
+    <!-- Encabezado -->
+    <div class="section">
+      <label class="field-label" for="inv-supplier">{{ t('invoice.supplier') }}</label>
+      <select id="inv-supplier" class="field-input" [(ngModel)]="header.supplierChoice" [disabled]="busy">
+        <option value="">{{ t('invoice.choose') }}</option>
+        @if (header.newSupplierName || header.supplierChoice === 'new') {
+          <option value="new">{{ t('invoice.newOption', { name: header.newSupplierName || '…' }) }}</option>
+        }
+        @for (s of suppliers(); track s.id) { <option [value]="s.id">{{ s.name }}</option> }
+      </select>
+      @if (header.supplierChoice === 'new') {
+        <div class="grid2 mt">
+          <div>
+            <label class="field-label" for="inv-new-supplier">{{ t('invoice.newSupplierName') }}</label>
+            <input id="inv-new-supplier" class="field-input" [(ngModel)]="header.newSupplierName" [disabled]="busy">
+          </div>
+          <div>
+            <label class="field-label" for="inv-cuit">CUIT</label>
+            <input id="inv-cuit" class="field-input" inputmode="numeric" placeholder="30-71234567-8" [(ngModel)]="header.newSupplierCuit" [disabled]="busy">
+          </div>
+        </div>
+      }
+
+      <div class="grid2 mt">
+        <div>
+          <label class="field-label" for="inv-type">{{ t('invoice.type') }}</label>
+          <select id="inv-type" class="field-input" [(ngModel)]="header.invoiceType" [disabled]="busy">
+            <option value="">—</option>
+            @for (ty of invoiceTypes; track ty) { <option [value]="ty">{{ t('invoice.types.' + ty) }}</option> }
+          </select>
+        </div>
+        <div>
+          <label class="field-label" for="inv-number">{{ t('invoice.number') }}</label>
+          <input id="inv-number" class="field-input" [(ngModel)]="header.invoiceNumber" [disabled]="busy">
+        </div>
+        <div>
+          <label class="field-label" for="inv-date">{{ t('invoice.issuedOn') }}</label>
+          <input id="inv-date" type="date" class="field-input" [(ngModel)]="header.issuedOn" [disabled]="busy">
+        </div>
+        <label class="check">
+          <input type="checkbox" [(ngModel)]="header.pricesIncludeIva" [disabled]="busy">
+          <span>{{ t('invoice.pricesIncludeIva') }}</span>
+        </label>
+      </div>
+    </div>
+
+    <!-- Renglones: una tarjeta por renglón -->
+    <p class="section-title">{{ t('invoice.lines', { count: lines.length }) }}</p>
+    @for (l of lines; track l.key) {
+      <div class="line" [class.line-problem]="lineProblem(l)">
+        <div class="line-head">
+          <span class="line-printed" [title]="l.printedText">{{ l.printedText }}@if (l.printed) { <span class="line-printed-qty"> · {{ l.printed }}</span> }</span>
+          <button type="button" class="line-remove" (click)="removeLine(l)" [disabled]="busy" [title]="t('invoice.removeLine')" [attr.aria-label]="t('invoice.removeLine')">
+            <i class="ti ti-trash"></i>
+          </button>
+        </div>
+
+        <label class="field-label" [for]="'inv-p-' + l.key">{{ t('invoice.product') }}</label>
+        <select [id]="'inv-p-' + l.key" class="field-input" [(ngModel)]="l.productChoice" [disabled]="busy">
+          <option value="">{{ t('invoice.choose') }}</option>
+          @if (l.newName) { <option value="new">{{ t('invoice.newOption', { name: l.newName }) }}</option> }
+          @for (p of products(); track p.id) { <option [value]="p.id">{{ p.name }}</option> }
+        </select>
+        @if (l.productChoice === 'new') {
+          <div class="grid2 mt">
+            <div>
+              <label class="field-label" [for]="'inv-np-' + l.key">{{ t('invoice.newProductName') }}</label>
+              <input [id]="'inv-np-' + l.key" class="field-input" [(ngModel)]="l.newName" [disabled]="busy">
+            </div>
+            <div>
+              <label class="field-label" [for]="'inv-nu-' + l.key">{{ t('invoice.newProductUnit') }}</label>
+              <select [id]="'inv-nu-' + l.key" class="field-input" [(ngModel)]="l.newUnitId" [disabled]="busy">
+                @for (u of units(); track u.id) { <option [value]="u.id">{{ u.abbreviation }} — {{ u.name }}</option> }
+              </select>
+            </div>
+          </div>
+        }
+
+        <div class="grid2 mt">
+          <div>
+            <label class="field-label" [for]="'inv-q-' + l.key">{{ t('invoice.quantity') }}</label>
+            <input [id]="'inv-q-' + l.key" type="number" min="0" step="any" inputmode="decimal" class="field-input" [(ngModel)]="l.quantity" [disabled]="busy">
+          </div>
+          <div>
+            <label class="field-label" [for]="'inv-u-' + l.key">{{ t('invoice.unit') }}</label>
+            <select [id]="'inv-u-' + l.key" class="field-input" [(ngModel)]="l.unitId" [disabled]="busy">
+              <option value="">—</option>
+              @for (u of units(); track u.id) { <option [value]="u.id">{{ u.abbreviation }}</option> }
+            </select>
+          </div>
+          <div>
+            <label class="field-label" [for]="'inv-pr-' + l.key">{{ t('invoice.unitPrice') }}</label>
+            <input [id]="'inv-pr-' + l.key" type="number" min="0" step="any" inputmode="decimal" class="field-input" [(ngModel)]="l.unitPrice" [disabled]="busy">
+          </div>
+          <div>
+            <label class="field-label" [for]="'inv-iva-' + l.key">{{ t('invoice.iva') }}</label>
+            <select [id]="'inv-iva-' + l.key" class="field-input" [(ngModel)]="l.ivaPercentage" [disabled]="busy">
+              @for (r of ivaRates; track r) { <option [ngValue]="r">{{ formatIvaRate(r) }}</option> }
+            </select>
+          </div>
+        </div>
+
+        <!-- "1 BOLSA HARINA 25 KG": la unidad impresa no convierte; lo que se conteste queda aprendido para el proveedor -->
+        @if (l.needsFactor) {
+          <div class="mt">
+            <label class="field-label factor-label" [for]="'inv-f-' + l.key">
+              {{ t('invoice.factorQuestion', { unit: unitAbbr(targetUnitId(l)) || '…', printed: unitAbbr(l.unitId) || l.printedUnit || '…' }) }}
+            </label>
+            <input [id]="'inv-f-' + l.key" type="number" min="0" step="any" inputmode="decimal" class="field-input" [(ngModel)]="l.factor" [disabled]="busy">
+            @if (l.factor && l.factor > 0 && converted(l); as c) {
+              @if (c.unitId !== l.unitId) {
+                <p class="hint factor-result">{{ t('invoice.factorResult', { qty: formatNum(c.quantity), unit: unitAbbr(c.unitId), price: formatARS(c.unitPrice) }) }}</p>
+              }
+            }
+          </div>
+        }
+
+        <div class="mt">
+          <label class="field-label" [for]="'inv-e-' + l.key">{{ t('invoice.expiration') }}</label>
+          <input [id]="'inv-e-' + l.key" type="date" class="field-input" [(ngModel)]="l.expirationDate" [disabled]="busy">
+        </div>
+
+        @for (w of l.warnings; track $index) { <p class="line-warn"><i class="ti ti-alert-circle"></i><span>{{ w }}</span></p> }
+        @if (lineProblem(l); as problem) { <p class="line-missing">{{ problem }}</p> }
+      </div>
+    }
+
+    <div class="totals" [class.totals-differ]="totalDiffers()">
+      @if (printedTotal() != null) {
+        <div><span>{{ t('invoice.printedTotal') }}</span><strong>{{ formatARS(printedTotal()) }}</strong></div>
+      }
+      <div><span>{{ t('invoice.total') }}</span><strong>{{ formatARS(total()) }}</strong></div>
+      @if (totalDiffers()) { <p class="hint">{{ t('invoice.totalDiffers') }}</p> }
+    </div>
+  }
+
+  @if (error()) {
+    <p class="notice notice-danger"><i class="ti ti-alert-triangle"></i><span>{{ error() }}</span></p>
+  }
+
+  <div drawer-footer class="panel-footer" style="justify-content:flex-end;">
+    @if (step() === 'done') {
+      <button type="button" (click)="close()" class="btn-primary btn-sm">{{ t('common.close') }}</button>
+    } @else {
+      <button type="button" (click)="close()" class="btn-secondary btn-sm" [disabled]="busy">{{ t('common.cancel') }}</button>
+      <button type="button" (click)="confirm()" class="btn-primary btn-sm" [disabled]="!canConfirm()">
+        @if (busy) { <i class="ti ti-loader-2 spin"></i> }
+        {{ step() === 'uploading' ? t('invoice.uploading') : t('invoice.confirm') }}
+      </button>
+    }
+  </div>
+</app-drawer>
