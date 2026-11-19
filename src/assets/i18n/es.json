@@ -31,7 +31,9 @@
     "users": "Usuarios",
     "logout": "Salir",
     "iva": "IVA",
-    "productions": "Producción"
+    "productions": "Producción",
+    "switchRestaurant": "Cambiar de local",
+    "switchError": "No se pudo cambiar de local."
   },
   "errors": {
     "INVALID_CREDENTIALS": "Email o contraseña incorrectos",
@@ -144,7 +146,9 @@
     "ATTACHMENT_NOT_FOUND": "No encontramos ese adjunto: puede que ya lo hayan borrado.",
     "ATTACHMENTS_NOT_MOVABLE": "No se pudieron pasar los adjuntos a la compra corregida.",
     "INVALID_CUIT": "El CUIT no es válido: revisá los 11 dígitos.",
-    "SUPPLIER_CUIT_TAKEN": "Ya hay otro proveedor con ese CUIT."
+    "SUPPLIER_CUIT_TAKEN": "Ya hay otro proveedor con ese CUIT.",
+    "USER_ALREADY_IN_RESTAURANT": "Esa persona ya trabaja en este restaurante.",
+    "USER_PROFILE_NOT_EDITABLE": "Esta persona también trabaja en otra cuenta: su nombre y su teléfono no se pueden cambiar desde acá."
   },
   "ai": {
     "title": "Entrada rápida",
@@ -1082,5 +1086,9 @@
     "attachmentOpenError": "No se pudo abrir el adjunto",
     "attachmentUploadError": "No se pudo subir el adjunto",
     "attachmentDeleteError": "No se pudo eliminar el adjunto"
+  },
+  "users": {
+    "inviteExistingHint": "Si ya usa Chef Control, se suma con su nombre y su teléfono.",
+    "profileShared": "Esta persona también trabaja en otra cuenta: su nombre y su teléfono los maneja ella. Acá podés cambiarle el rol."
   }
 }

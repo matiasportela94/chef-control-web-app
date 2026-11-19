@@ -67,3 +67,40 @@
   i { font-size: 16px; }
   @media (min-width: 640px) { padding: 0 14px; }
 }
+
+// ---- selector de locales
+.store-name {
+  align-items: center; gap: 4px; min-width: 0; max-width: 280px; padding: 4px 8px; border-radius: 8px;
+  background: none; border: 1.5px solid transparent; color: var(--text-2); font-size: 12px; cursor: pointer;
+  &:hover, &[aria-expanded="true"] { border-color: var(--border); color: var(--text-1); }
+  i { flex-shrink: 0; font-size: 14px; }
+}
+.store-icon {
+  width: 34px; height: 34px; align-items: center; justify-content: center; cursor: pointer;
+  background: var(--bg-input); border: 1.5px solid var(--border); border-radius: 10px; color: var(--text-2); font-size: 16px;
+}
+.store-backdrop { position: fixed; inset: 0; z-index: 150; }
+// Teléfono: a lo ancho, debajo de la barra. Escritorio: debajo del nombre del local.
+.store-menu {
+  position: fixed; z-index: 160; top: 60px; left: 3vw; right: 3vw; max-height: 70vh; overflow-y: auto;
+  padding: 6px; border-radius: 14px; background: var(--bg-card); border: 1px solid var(--border);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, .25);
+}
+@media (min-width: 768px) {
+  .store-menu { left: var(--menu-left, 24px); right: auto; width: min(92vw, 340px); }
+}
+.store-account {
+  padding: 10px 10px 4px; font-size: 10px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--text-3);
+}
+.store-item {
+  display: flex; align-items: center; gap: 10px; width: 100%; min-height: 44px; padding: 8px 10px; border-radius: 10px;
+  background: none; border: none; cursor: pointer; text-align: left; color: var(--text-1);
+  &:hover:not(:disabled) { background: var(--bg-input); }
+  &:disabled { cursor: default; }
+  &.active { background: color-mix(in srgb, var(--accent) 12%, transparent); }
+}
+.store-item-text { display: flex; flex-direction: column; flex: 1; min-width: 0; }
+.store-item-name { font-size: 13px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.store-item-role { font-size: 11px; color: var(--text-3); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.store-item-check { color: var(--accent); font-size: 16px; flex-shrink: 0; }
+.store-error { display: flex; gap: 6px; padding: 8px 10px; font-size: 12px; color: var(--red); }

@@ -1,4 +1,5 @@
-import { Component, OnInit, signal } from '@angular/core';
+import { Component, OnInit, computed, signal } from '@angular/core';
+import { groupByAccount } from '../../core/utils/restaurants';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, ActivatedRoute, RouterLink } from '@angular/router';
 import { take } from 'rxjs';
@@ -31,6 +32,8 @@ export class LoginComponent implements OnInit {
   errorMsg = signal<string | null>(null);
   forgotSent = signal(false);
   restaurants = signal<RestaurantSummary[]>([]);
+  /** Agrupados por cuenta, como el selector de la barra: encabezado solo si hay más de una. */
+  restaurantGroups = computed(() => groupByAccount(this.restaurants()));
   /** Plan elegido en la landing: después de crear la cuenta se va derecho al checkout. */
   chosenPlan = signal<{ tier: PlanTier; period: BillingPeriod } | null>(null);
 

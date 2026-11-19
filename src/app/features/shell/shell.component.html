@@ -35,9 +35,16 @@
     </div>
 
     @if (authService.currentUser(); as user) {
-      <span style="font-size:12px;color:var(--text-3);min-width:0;" class="hidden md:block truncate">
-        {{ user.restaurantName }}
-      </span>
+      @if (manyRestaurants()) {
+        <button type="button" class="store-name hidden md:flex" (click)="toggleStoreMenu($event)" aria-haspopup="menu"
+                [attr.aria-expanded]="storeMenuOpen()" [title]="t('nav.switchRestaurant')">
+          <span class="truncate">{{ user.restaurantName }}</span><i class="ti ti-chevron-down"></i>
+        </button>
+      } @else {
+        <span style="font-size:12px;color:var(--text-3);min-width:0;" class="hidden md:block truncate">
+          {{ user.restaurantName }}
+        </span>
+      }
     }
 
     <div style="margin-left:auto;display:flex;align-items:center;flex-shrink:0;" class="gap-1.5 sm:gap-2.5">
@@ -57,6 +64,14 @@
         <i class="ti ti-bolt" style="font-size:14px;"></i>
         <span class="hidden sm:inline">Entrada rápida</span>
       </button>
+      }
+
+      <!-- En el teléfono el nombre del local no entra: con varios locales, el ícono abre el selector -->
+      @if (manyRestaurants()) {
+        <button type="button" class="store-icon flex md:hidden" (click)="toggleStoreMenu($event)" aria-haspopup="menu"
+                [attr.aria-expanded]="storeMenuOpen()" [title]="t('nav.switchRestaurant')" [attr.aria-label]="t('nav.switchRestaurant')">
+          <i class="ti ti-building-store"></i>
+        </button>
       }
 
       <!-- Theme toggle -->
@@ -89,6 +104,29 @@
       </button>
     </div>
   </header>
+
+  <!-- Selector de locales: agrupado por cuenta (encabezado solo si hay más de una) -->
+  @if (storeMenuOpen() && authService.currentUser(); as user) {
+    <div class="store-backdrop" (click)="closeStoreMenu()"></div>
+    <div class="store-menu" role="menu" [attr.aria-label]="t('nav.switchRestaurant')" [style.--menu-left.px]="storeMenuLeft()">
+      @for (g of restaurantGroups(); track g.accountId) {
+        @if (restaurantGroups().length > 1) { <p class="store-account">{{ g.accountName }}</p> }
+        @for (r of g.restaurants; track r.id) {
+          <button type="button" role="menuitem" class="store-item" [class.active]="r.id === user.restaurantId"
+                  [attr.aria-current]="r.id === user.restaurantId ? 'true' : null" [disabled]="switching() !== null"
+                  (click)="switchRestaurant(r.id)">
+            <span class="store-item-text">
+              <span class="store-item-name">{{ r.name }}</span>
+              @if (r.role) { <span class="store-item-role">{{ r.role }}</span> }
+            </span>
+            @if (switching() === r.id) { <i class="ti ti-loader-2 animate-spin"></i> }
+            @else if (r.id === user.restaurantId) { <i class="ti ti-check store-item-check"></i> }
+          </button>
+        }
+      }
+      @if (switchError()) { <p class="store-error"><i class="ti ti-alert-circle"></i> {{ switchError() }}</p> }
+    </div>
+  }
 
   <!-- ── SIDEBAR BACKDROP (mobile only) ──────────────────────── -->
   @if (sidebarOpen()) {
