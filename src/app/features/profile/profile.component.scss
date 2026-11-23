@@ -2,6 +2,11 @@
 .eyebrow { font-size: 11px; color: var(--text-3); text-transform: uppercase; letter-spacing: .06em; }
 .value { font-size: 14px; font-weight: 600; color: var(--text-1); margin-top: 2px; }
 .ellipsis { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.input-error {
+  @apply border-danger-500/50;
+  &:focus { box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.12); }
+}
+.form-foot { display: flex; justify-content: flex-end; margin-top: 16px; }
 .hint { font-size: 12px; line-height: 1.5; color: var(--text-3); margin-top: 6px; }
 
 .google-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap; }
