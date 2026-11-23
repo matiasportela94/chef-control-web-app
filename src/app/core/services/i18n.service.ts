@@ -20,6 +20,13 @@ export class I18nService {
    * Traduce una clave. Los `{placeholder}` del texto se reemplazan con `params`:
    * `t('products.yieldPreview', { net: 1, unit: 'kg' })`.
    */
+  /** Una lista de textos (un array en el JSON); vacía si la clave no es una lista. */
+  list(key: string): string[] {
+    let node: any = TRANSLATIONS[this.locale()];
+    for (const part of key.split('.')) node = node?.[part];
+    return Array.isArray(node) ? node : [];
+  }
+
   t(key: string, params?: Record<string, string | number>): string {
     const parts = key.split('.');
     let node: any = TRANSLATIONS[this.locale()];

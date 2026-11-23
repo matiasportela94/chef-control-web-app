@@ -7,6 +7,7 @@ import { updateRestaurant } from '../../api/fn/restaurant-controller/update-rest
 import { setRestaurantActive } from '../../api/fn/restaurant-controller/set-restaurant-active';
 import { deleteRestaurant } from '../../api/fn/restaurant-controller/delete-restaurant';
 import { RestaurantResponse } from '../../api/models/restaurant-response';
+import { RestaurantSummary } from '../../api/models/restaurant-summary';
 import { parseBlob } from '../../core/utils/parse-blob';
 import { extractApiError } from '../../core/utils/api-error';
 import { AuthService } from '../../core/services/auth.service';
@@ -46,6 +47,18 @@ export class RestaurantsComponent implements OnInit {
   /** El nombre tipeado tiene que coincidir exacto — el borrado se lleva toda la data del local. */
   deleteBlocked = computed(() =>
     this.deleteLoading() || this.deleteConfirm().trim() !== (this.deleting()?.name ?? ''));
+
+  /**
+   * Locales de otras cuentas donde la persona es miembro. GET /restaurants lista solo los de esta cuenta; estos salen
+   * de la sesión. Solo lectura: se administran desde su cuenta.
+   */
+  readonly linked = computed(() => {
+    const u = this.auth.currentUser();
+    const accountId = u?.restaurants.find(r => r.id === u.restaurantId)?.accountId;
+    return (u?.restaurants ?? []).filter(r => r.accountId !== accountId);
+  });
+  entering   = signal<string | null>(null);
+  enterError = signal<string | null>(null);
 
   form: FormGroup;
 
@@ -97,6 +110,18 @@ export class RestaurantsComponent implements OnInit {
 
   async ngOnInit(): Promise<void> {
     await this.load();
+  }
+
+  async enter(r: RestaurantSummary): Promise<void> {
+    if (!r.id || this.entering()) return;
+    this.entering.set(r.id);
+    this.enterError.set(null);
+    try {
+      await this.auth.enterRestaurant(r.id);
+    } catch (e) {
+      this.enterError.set(extractApiError(e, this.t('nav.switchError')));
+      this.entering.set(null);
+    }
   }
 
   async load(): Promise<void> {

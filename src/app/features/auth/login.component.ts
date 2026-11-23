@@ -1,4 +1,4 @@
-import { Component, OnInit, computed, signal } from '@angular/core';
+import { Component, OnDestroy, OnInit, computed, signal } from '@angular/core';
 import { groupByAccount } from '../../core/utils/restaurants';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, ActivatedRoute, RouterLink } from '@angular/router';
@@ -14,8 +14,10 @@ import { LoginResponse } from '../../api/models/login-response';
 import { decodeJwtPayload } from '../../core/utils/jwt';
 import { GoogleButtonComponent } from '../../shared/components/google-button/google-button.component';
 import { environment } from '../../../environments/environment';
+import { safeReturnUrl } from '../../core/guards/auth.guard';
 
 const PAID_TIERS: readonly string[] = ['STARTER', 'PRO', 'ENTERPRISE'];
+const PHRASE_MS = 1500;
 
 export type AuthView = 'login' | 'register' | 'forgot' | 'restaurant-select';
 
@@ -26,12 +28,20 @@ export type AuthView = 'login' | 'register' | 'forgot' | 'restaurant-select';
   templateUrl: './login.component.html',
   styleUrl: './login.component.scss'
 })
-export class LoginComponent implements OnInit {
+export class LoginComponent implements OnInit, OnDestroy {
   view = signal<AuthView>('login');
   loading = signal(false);
   errorMsg = signal<string | null>(null);
   forgotSent = signal(false);
   restaurants = signal<RestaurantSummary[]>([]);
+  /** El local que se está abriendo: con el back dormido tarda, y sin aviso parecía colgado. */
+  switchingId = signal<string | null>(null);
+  switchPhrase = signal('');
+  private phraseTimer?: ReturnType<typeof setInterval>;
+  /** Se fue del login antes de la respuesta: no se lo saca de donde esté. */
+  private destroyed = false;
+  /** Adónde iba antes de que el authGuard lo mandara acá. */
+  private returnUrl = '/dashboard';
   /** Agrupados por cuenta, como el selector de la barra: encabezado solo si hay más de una. */
   restaurantGroups = computed(() => groupByAccount(this.restaurants()));
   /** Plan elegido en la landing: después de crear la cuenta se va derecho al checkout. */
@@ -74,8 +84,9 @@ export class LoginComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    if (this.authService.isAuthenticated) { this.router.navigate(['/dashboard']); return; }
     const params = this.route.snapshot.queryParamMap;
+    this.returnUrl = safeReturnUrl(params.get('returnUrl'));
+    if (this.authService.isAuthenticated) { this.router.navigateByUrl(this.returnUrl); return; }
     const view = params.get('view') as AuthView | null;
     if (view === 'register' || view === 'forgot') this.view.set(view);
     const tier = params.get('plan');
@@ -84,8 +95,17 @@ export class LoginComponent implements OnInit {
     }
   }
 
+  ngOnDestroy(): void {
+    this.destroyed = true;
+    clearInterval(this.phraseTimer);
+  }
+
   t(key: string, params?: Record<string, string | number>): string {
     return this.i18n.t(key, params);
+  }
+
+  private goToReturnUrl(): void {
+    if (!this.destroyed) this.router.navigateByUrl(this.returnUrl);
   }
 
   setView(v: AuthView): void {
@@ -177,7 +197,7 @@ export class LoginComponent implements OnInit {
         this.view.set('restaurant-select');
         this.loading.set(false);
       } else {
-        this.router.navigate(['/dashboard']);
+        this.goToReturnUrl();
       }
       return;
     }
@@ -204,16 +224,21 @@ export class LoginComponent implements OnInit {
   }
 
   async selectRestaurant(r: RestaurantSummary): Promise<void> {
-    if (!r.id || this.loading()) return;
-    this.loading.set(true);
+    if (!r.id || this.switchingId()) return;
+    this.switchingId.set(r.id);
     this.errorMsg.set(null);
+    const phrases = this.i18n.list('auth.switchingPhrases');
+    let i = 0;
+    this.switchPhrase.set(phrases[0] ?? '');
+    this.phraseTimer = setInterval(() => this.switchPhrase.set(phrases[i = (i + 1) % phrases.length]), PHRASE_MS);
     try {
       await this.authService.switchToRestaurant(r.id);
-      this.router.navigate(['/dashboard']);
+      this.goToReturnUrl();
     } catch (e: any) {
-      this.errorMsg.set(extractApiError(e, 'Error al conectar con el restaurante'));
+      this.errorMsg.set(extractApiError(e, this.t('auth.switchError')));
     } finally {
-      this.loading.set(false);
+      clearInterval(this.phraseTimer);
+      this.switchingId.set(null);
     }
   }
 

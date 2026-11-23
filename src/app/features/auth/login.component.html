@@ -279,7 +279,7 @@
 
           <p class="text-center text-sm text-surface-500 mt-6">
             <button (click)="setView('login')" class="text-brand-400 hover:text-brand-300 transition-colors">
-              ← Volver al inicio de sesión
+              {{ t('auth.backToLogin') }}
             </button>
           </p>
         </div>
@@ -289,10 +289,8 @@
       @if (view() === 'restaurant-select') {
         <div class="view-enter">
           <div class="mb-8">
-            <h1 class="text-2xl font-bold text-white mb-2 font-display">
-              ¿A qué restaurante ingresás?
-            </h1>
-            <p class="text-surface-400 text-sm">Tu cuenta tiene acceso a varios restaurantes.</p>
+            <h1 class="text-2xl font-bold text-white mb-2 font-display">{{ t('auth.select.title') }}</h1>
+            <p class="text-surface-400 text-sm">{{ t('auth.select.subtitle') }}</p>
           </div>
 
           @if (errorMsg()) {
@@ -308,20 +306,28 @@
             }
             @for (r of g.restaurants; track r.id) {
               <button (click)="selectRestaurant(r)"
-                      [disabled]="loading()"
-                      class="w-full flex items-center justify-between px-5 py-4 rounded-2xl
-                             bg-surface-900 border border-white/5 hover:border-brand-500/40
-                             hover:bg-surface-800 transition-all text-left group disabled:opacity-50">
-                <div>
-                  <p class="text-white font-semibold group-hover:text-brand-300 transition-colors">{{ r.name }}</p>
-                  @if (r.role) {
-                    <p class="text-xs text-surface-500 mt-0.5">{{ r.role }}</p>
+                      [disabled]="switchingId() !== null" [attr.aria-busy]="switchingId() === r.id"
+                      [class.opacity-50]="switchingId() !== null && switchingId() !== r.id"
+                      [class.border-brand-500]="switchingId() === r.id"
+                      class="w-full flex items-center justify-between gap-3 px-5 py-4 rounded-2xl
+                             bg-surface-900 border border-white/5 enabled:hover:border-brand-500/40
+                             enabled:hover:bg-surface-800 transition-all text-left group disabled:cursor-default">
+                <div class="min-w-0">
+                  <p class="text-white font-semibold group-enabled:group-hover:text-brand-300 transition-colors truncate">{{ r.name }}</p>
+                  @if (switchingId() === r.id) {
+                    <p class="text-xs text-brand-300 mt-0.5 truncate" aria-live="polite">{{ switchPhrase() }}</p>
+                  } @else if (r.role) {
+                    <p class="text-xs text-surface-500 mt-0.5 truncate">{{ r.role }}</p>
                   }
                 </div>
-                <svg class="w-5 h-5 text-surface-600 group-hover:text-brand-400 transition-colors shrink-0"
-                     fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
-                </svg>
+                @if (switchingId() === r.id) {
+                  <span class="loader shrink-0"></span>
+                } @else {
+                  <svg class="w-5 h-5 text-surface-600 group-enabled:group-hover:text-brand-400 transition-colors shrink-0"
+                       fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                  </svg>
+                }
               </button>
             }
             }
@@ -329,7 +335,7 @@
 
           <p class="text-center text-sm text-surface-500 mt-6">
             <button (click)="setView('login')" class="text-brand-400 hover:text-brand-300 transition-colors">
-              ← Volver al inicio de sesión
+              {{ t('auth.backToLogin') }}
             </button>
           </p>
         </div>

@@ -64,6 +64,30 @@
     </div>
   }
 
+  @if (linked().length) {
+    <div style="margin-top:28px;">
+      <p class="eyebrow">{{ t('restaurants.linkedTitle') }}</p>
+      <p style="font-size:12px;color:var(--text-3);margin:4px 0 10px;">{{ t('restaurants.linkedHint') }}</p>
+      @if (enterError()) { <p class="enter-error">{{ enterError() }}</p> }
+      <div style="display:flex;flex-direction:column;gap:8px;">
+        @for (r of linked(); track r.id) {
+          <div class="data-card linked-row" style="padding:14px 16px;">
+            <div style="min-width:0;flex:1;">
+              <p class="ellipsis" style="color:var(--text-1);font-weight:600;font-size:13px;">{{ r.name }}</p>
+              <p class="ellipsis" style="font-size:11px;color:var(--text-3);margin-top:2px;">
+                {{ r.accountName }}@if (r.role) { · {{ r.role }} }
+              </p>
+            </div>
+            <button (click)="enter(r)" [disabled]="entering() !== null" class="btn-secondary btn-sm" style="flex-shrink:0;">
+              @if (entering() === r.id) { <i class="ti ti-loader-2 spin"></i> } @else { <i class="ti ti-login-2"></i> }
+              {{ t('restaurants.enter') }}
+            </button>
+          </div>
+        }
+      </div>
+    </div>
+  }
+
 </div>
 
 <app-drawer [isOpen]="drawerOpen()" [title]="editing() ? t('restaurants.editTitle') : t('restaurants.newTitle')" (closed)="closeDrawer()">

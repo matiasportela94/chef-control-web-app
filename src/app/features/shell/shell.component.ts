@@ -70,11 +70,6 @@ export class ShellComponent implements OnInit, OnDestroy {
     if (this.switching() === null) this.storeMenuOpen.set(false);
   }
 
-  /**
-   * Cambiar de local recarga la app entera (location.assign), no navega: el shell no se recrea con el router y
-   * quedarían cachés del local anterior (el historial del chat ofrecería deshacer cosas de otro local, el badge de
-   * alertas, las pantallas abiertas). La sesión y la cookie sobreviven a la recarga.
-   */
   async switchRestaurant(id: string | undefined): Promise<void> {
     const user = this.authService.currentUser();
     if (!id || this.switching() !== null) return;
@@ -82,8 +77,7 @@ export class ShellComponent implements OnInit, OnDestroy {
     this.switching.set(id);
     this.switchError.set(null);
     try {
-      await this.authService.switchToRestaurant(id);
-      location.assign('/dashboard');
+      await this.authService.enterRestaurant(id);
     } catch (e) {
       this.switchError.set(extractApiError(e, this.t('nav.switchError')));
       this.switching.set(null);

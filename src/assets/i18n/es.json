@@ -532,7 +532,11 @@
       "upgradeTimeout": "Todavía no nos llegó la confirmación del pago. Si pagaste, en unos minutos vas a ver tu plan nuevo acá."
     },
     "pricesIncludeIva": "Precios en pesos argentinos, con IVA incluido.",
-    "activeUntil": "Hasta el {date}"
+    "activeUntil": "Hasta el {date}",
+    "accountName": "Nombre de la cuenta",
+    "accountNameHint": "Lo ve quien trabaja en más de una cuenta, en la lista de locales.",
+    "accountNameSaved": "Guardaste el nombre de la cuenta",
+    "accountNameError": "No pudimos guardar el nombre. Probá de nuevo."
   },
   "auth": {
     "backHome": "← Volver al inicio",
@@ -579,7 +583,23 @@
       "creatingAs": "Creás la cuenta con Google como",
       "useEmail": "Prefiero registrarme con email",
       "error": "No pudimos entrar con Google. Probá de nuevo."
-    }
+    },
+    "switchingPhrases": [
+      "Despertando a Anthony",
+      "Preparando la IA",
+      "Afilando cuchillos",
+      "Contando tomates",
+      "Prendiendo las hornallas",
+      "Ordenando la heladera",
+      "Probando la salsa",
+      "Poniendo la mesa"
+    ],
+    "switchError": "No pudimos abrir el local. Probá de nuevo.",
+    "select": {
+      "title": "¿A qué restaurante ingresás?",
+      "subtitle": "Tu cuenta tiene acceso a varios restaurantes."
+    },
+    "backToLogin": "← Volver al inicio de sesión"
   },
   "planGate": {
     "title": "No está incluido en tu plan",
@@ -794,7 +814,10 @@
     "deleteConfirm": "Eliminar definitivamente",
     "deleteError": "Error al eliminar el restaurante",
     "salesIva": "IVA de las ventas",
-    "salesIvaHint": "La alícuota con la que facturás lo que vendés (los precios de la carta la incluyen). El food cost se calcula sobre el precio sin IVA."
+    "salesIvaHint": "La alícuota con la que facturás lo que vendés (los precios de la carta la incluyen). El food cost se calcula sobre el precio sin IVA.",
+    "linkedTitle": "Locales de otras cuentas",
+    "linkedHint": "Trabajás en estos locales, pero son de otra cuenta: se administran desde ahí.",
+    "enter": "Entrar"
   },
   "purchases": {
     "title": "Compras",

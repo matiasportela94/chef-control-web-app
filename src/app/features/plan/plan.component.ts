@@ -3,6 +3,7 @@ import { Router } from '@angular/router';
 import { Api } from '../../api/api';
 import { getAccount } from '../../api/fn/account-controller/get-account';
 import { deleteAccount } from '../../api/fn/account-controller/delete-account';
+import { renameAccount } from '../../api/fn/account-controller/rename-account';
 import { getSubscription } from '../../api/fn/subscription-controller/get-subscription';
 import { listSubscriptionPlans } from '../../api/fn/subscription-controller/list-subscription-plans';
 import { cancelSubscription } from '../../api/fn/subscription-controller/cancel-subscription';
@@ -22,6 +23,7 @@ import {
 } from '../../core/utils/plans';
 import { AuthService } from '../../core/services/auth.service';
 import { I18nService } from '../../core/services/i18n.service';
+import { ToastService } from '../../core/services/toast.service';
 import { ActionDialogComponent } from '../../shared/components/action-dialog/action-dialog.component';
 import { SpinnerComponent } from '../../shared/components/spinner/spinner.component';
 
@@ -72,6 +74,13 @@ export class PlanComponent implements OnInit, OnDestroy {
   cancelLoading = signal(false);
   cancelError   = signal<string | null>(null);
 
+  /** Nombre de la cuenta: es el encabezado del selector de locales de quien trabaja en más de una. */
+  accountName   = signal('');
+  renaming      = signal(false);
+  renameError   = signal<string | null>(null);
+  canRename = computed(() => !this.renaming() && !!this.accountName().trim()
+    && this.accountName().trim() !== (this.account()?.name ?? ''));
+
   deleting      = signal(false);
   deleteConfirm = signal('');
   deleteLoading = signal(false);
@@ -105,7 +114,8 @@ export class PlanComponent implements OnInit, OnDestroy {
 
   annualSavingPct = computed(() => annualSavingPct(this.plans()));
 
-  constructor(private api: Api, private auth: AuthService, private router: Router, private i18n: I18nService) {}
+  constructor(private api: Api, private auth: AuthService, private router: Router, private i18n: I18nService,
+              private toast: ToastService) {}
 
   async ngOnInit(): Promise<void> {
     await this.load();
@@ -135,12 +145,30 @@ export class PlanComponent implements OnInit, OnDestroy {
         this.api.invoke(listSubscriptionPlans),
       ]) as unknown[];
       this.account.set(await parseBlob<AccountResponse>(account));
+      this.accountName.set(this.account()?.name ?? '');
       this.subscription.set(await this.parseOptional<SubscriptionResponse>(subscription));
       this.plans.set(await parseBlob<SubscriptionPlanResponse[]>(plans));
     } catch {
       this.error.set(this.t('plan.loadError'));
     } finally {
       this.loading.set(false);
+    }
+  }
+
+  async saveAccountName(): Promise<void> {
+    if (!this.canRename()) return;
+    this.renaming.set(true);
+    this.renameError.set(null);
+    try {
+      const a = await parseBlob<AccountResponse>(await this.api.invoke(renameAccount, { body: { name: this.accountName().trim() } }) as unknown);
+      this.account.update(cur => ({ ...cur, ...a }));
+      this.accountName.set(a.name ?? '');
+      this.toast.success(this.t('plan.accountNameSaved'));
+      await this.auth.refreshSession().catch(() => {});  // el selector agrupa por el nombre de la cuenta
+    } catch (e) {
+      this.renameError.set(extractApiError(e, this.t('plan.accountNameError')));
+    } finally {
+      this.renaming.set(false);
     }
   }
 

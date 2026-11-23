@@ -1,0 +1,7 @@
+.eyebrow { font-size: 11px; color: var(--text-3); text-transform: uppercase; letter-spacing: .06em; }
+.ellipsis { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.linked-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.enter-error { font-size: 12px; color: var(--red); background: var(--red-bg); border: 1.5px solid var(--red); border-radius: 10px; padding: 8px 12px; margin-bottom: 10px; }
+.spin { display: inline-block; animation: spin 1s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { .spin { animation: none; } }

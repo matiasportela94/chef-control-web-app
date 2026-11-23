@@ -532,7 +532,11 @@
       "upgradeTimeout": "The payment confirmation hasn't arrived yet. If you paid, you'll see your new plan here in a few minutes."
     },
     "pricesIncludeIva": "Prices in Argentine pesos, VAT included.",
-    "activeUntil": "Until {date}"
+    "activeUntil": "Until {date}",
+    "accountName": "Account name",
+    "accountNameHint": "People who work in more than one account see it in the restaurant list.",
+    "accountNameSaved": "Account name saved",
+    "accountNameError": "We couldn't save the name. Please try again."
   },
   "auth": {
     "backHome": "← Back to home",
@@ -579,7 +583,23 @@
       "creatingAs": "You're creating the account with Google as",
       "useEmail": "I'd rather sign up with email",
       "error": "We couldn't sign you in with Google. Please try again."
-    }
+    },
+    "switchingPhrases": [
+      "Waking up Anthony",
+      "Warming up the AI",
+      "Sharpening knives",
+      "Counting tomatoes",
+      "Lighting the burners",
+      "Tidying the fridge",
+      "Tasting the sauce",
+      "Setting the table"
+    ],
+    "switchError": "We couldn't open the restaurant. Please try again.",
+    "select": {
+      "title": "Which restaurant are you signing in to?",
+      "subtitle": "Your account has access to several restaurants."
+    },
+    "backToLogin": "← Back to sign in"
   },
   "planGate": {
     "title": "Not included in your plan",
@@ -794,7 +814,10 @@
     "deleteConfirm": "Delete permanently",
     "deleteError": "Could not delete the restaurant",
     "salesIva": "Sales VAT",
-    "salesIvaHint": "The VAT rate you invoice your sales with (menu prices include it). Food cost is calculated on the price without VAT."
+    "salesIvaHint": "The VAT rate you invoice your sales with (menu prices include it). Food cost is calculated on the price without VAT.",
+    "linkedTitle": "Restaurants from other accounts",
+    "linkedHint": "You work at these restaurants, but they belong to another account and are managed there.",
+    "enter": "Enter"
   },
   "purchases": {
     "title": "Purchases",

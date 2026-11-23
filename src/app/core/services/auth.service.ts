@@ -128,6 +128,16 @@ export class AuthService {
     this.persistUser(response);
   }
 
+  /**
+   * Cambiar de local recarga la app entera (location.assign), no navega: el shell no se recrea con el router y
+   * quedarían cachés del local anterior (el historial del chat ofrecería deshacer cosas de otro local, el badge de
+   * alertas, las pantallas abiertas). La sesión y la cookie sobreviven a la recarga.
+   */
+  async enterRestaurant(restaurantId: string): Promise<void> {
+    await this.switchToRestaurant(restaurantId);
+    location.assign('/dashboard');
+  }
+
   /** El estado local se limpia antes del POST y pase lo que pase con él: la sesión del front termina igual. */
   async logout(): Promise<void> {
     sessionStorage.removeItem(USER_KEY);
