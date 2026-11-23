@@ -7,11 +7,13 @@ import { linkGoogleAccount } from '../../api/fn/auth-controller/link-google-acco
 import { unlinkGoogleAccount } from '../../api/fn/auth-controller/unlink-google-account';
 import { GoogleSignInRequest } from '../../api/models/google-sign-in-request';
 import { forgotPassword } from '../../api/fn/auth-controller/forgot-password';
+import { resetPassword } from '../../api/fn/auth-controller/reset-password';
 import { switchRestaurant } from '../../api/fn/auth-controller/switch-restaurant';
 import { LoginRequest } from '../../api/models/login-request';
 import { LoginResponse } from '../../api/models/login-response';
 import { RegisterRequest } from '../../api/models/register-request';
 import { ForgotPasswordRequest } from '../../api/models/forgot-password-request';
+import { ResetPasswordRequest } from '../../api/models/reset-password-request';
 import { RestaurantSummary } from '../../api/models/restaurant-summary';
 import { parseBlob } from '../utils/parse-blob';
 import { logout as logoutFn } from '../../api/fn/auth-controller/logout';
@@ -112,6 +114,11 @@ export class AuthService {
 
   async forgotPassword(body: ForgotPasswordRequest): Promise<void> {
     await this.api.invoke(forgotPassword, { body });
+  }
+
+  /** Sirve para el link de "olvidé mi contraseña" y para el de la invitación. No abre sesión. */
+  async resetPassword(body: ResetPasswordRequest): Promise<void> {
+    await this.api.invoke(resetPassword, { body });
   }
 
   async switchToRestaurant(restaurantId: string): Promise<void> {

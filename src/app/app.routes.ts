@@ -13,6 +13,17 @@ export const routes: Routes = [
     path: 'login',
     loadComponent: () => import('./features/auth/login.component').then(m => m.LoginComponent)
   },
+  // Los links de los mails: fuera del shell y sin authGuard, como /maintenance. Cambia solo el texto.
+  {
+    path: 'reset-password',
+    data: { mode: 'reset' },
+    loadComponent: () => import('./features/auth/reset-password.component').then(m => m.ResetPasswordComponent)
+  },
+  {
+    path: 'set-password',
+    data: { mode: 'set' },
+    loadComponent: () => import('./features/auth/reset-password.component').then(m => m.ResetPasswordComponent)
+  },
   {
     path: '',
     loadComponent: () => import('./features/shell/shell.component').then(m => m.ShellComponent),

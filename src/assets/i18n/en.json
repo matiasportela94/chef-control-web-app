@@ -1100,5 +1100,27 @@
     "profileShared": "This person also works in another account: they change their own name and phone from My profile. You can change their role here.",
     "phone": "Phone",
     "phoneHint": "Optional."
+  },
+  "resetPassword": {
+    "reset": {
+      "title": "Reset your password",
+      "subtitle": "Choose a new password to sign in to Chef Control."
+    },
+    "set": {
+      "title": "Choose your password",
+      "subtitle": "You'll use it with your email to sign in to Chef Control."
+    },
+    "newPassword": "New password",
+    "confirm": "Repeat the password",
+    "mismatch": "Passwords don't match",
+    "save": "Save password",
+    "saving": "Saving…",
+    "saveError": "We couldn't save the password. Please try again.",
+    "savedTitle": "Done, you can sign in",
+    "savedText": "Your password is saved. Sign in with your email and the new password.",
+    "toLogin": "Go to sign in",
+    "deadLinkTitle": "This link doesn't work",
+    "invalidLink": "The link is incomplete or was copied wrong. Open it again from the email or request a new one.",
+    "requestNew": "Request a new link"
   }
 }

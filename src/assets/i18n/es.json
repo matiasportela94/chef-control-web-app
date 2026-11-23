@@ -1100,5 +1100,27 @@
     "profileShared": "Esta persona también trabaja en otra cuenta: su nombre y su teléfono los cambia ella desde Mi perfil. Acá podés cambiarle el rol.",
     "phone": "Teléfono",
     "phoneHint": "Opcional."
+  },
+  "resetPassword": {
+    "reset": {
+      "title": "Restablecé tu contraseña",
+      "subtitle": "Elegí una contraseña nueva para entrar a Chef Control."
+    },
+    "set": {
+      "title": "Elegí tu contraseña",
+      "subtitle": "Con ella vas a entrar a Chef Control, junto con tu email."
+    },
+    "newPassword": "Contraseña nueva",
+    "confirm": "Repetí la contraseña",
+    "mismatch": "Las contraseñas no coinciden",
+    "save": "Guardar contraseña",
+    "saving": "Guardando…",
+    "saveError": "No pudimos guardar la contraseña. Probá de nuevo.",
+    "savedTitle": "Listo, ya podés entrar",
+    "savedText": "Guardaste tu contraseña. Entrá con tu email y la contraseña nueva.",
+    "toLogin": "Ir a iniciar sesión",
+    "deadLinkTitle": "Este link no sirve",
+    "invalidLink": "Al link le falta una parte o está mal copiado. Abrilo de nuevo desde el mail o pedí otro.",
+    "requestNew": "Pedir otro link"
   }
 }
