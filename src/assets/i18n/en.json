@@ -1089,6 +1089,8 @@
   },
   "users": {
     "inviteExistingHint": "If they already use Chef Control, they join with their own name and phone.",
-    "profileShared": "This person also works in another account: they manage their own name and phone. You can change their role here."
+    "profileShared": "This person also works in another account: they change their own name and phone from My profile. You can change their role here.",
+    "phone": "Phone",
+    "phoneHint": "Optional."
   }
 }

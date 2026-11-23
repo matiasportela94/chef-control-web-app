@@ -164,12 +164,10 @@
       </div>
 
       <div style="margin-bottom:0;">
-        <label class="field-label">Teléfono <span style="color:var(--red);">*</span></label>
-        <input formControlName="phone" type="tel" placeholder="+54 11 1234-5678"
-               class="field-input" [class.input-error]="isInvalid('phone')">
-        @if (isInvalid('phone')) { <p style="font-size:11px;color:var(--red);margin-top:4px;">Requerido para acceso vía Telegram</p> }
+        <label class="field-label">{{ t('users.phone') }}</label>
+        <input formControlName="phone" type="tel" placeholder="+54 11 1234-5678" class="field-input">
         @if (profileLocked(editing())) { <p class="field-hint"><i class="ti ti-lock"></i> {{ t('users.profileShared') }}</p> }
-        @else { <p style="font-size:11px;color:var(--text-3);margin-top:4px;">Se usa como whitelist para el bot de Telegram</p> }
+        @else { <p class="field-hint">{{ t('users.phoneHint') }}</p> }
       </div>
 
       @if (saveError()) {
