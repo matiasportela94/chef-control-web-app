@@ -46,7 +46,14 @@
                   <p style="font-size:11px;color:var(--text-3);">{{ e.productSku }}</p>
                 }
               </div>
-              <p class="waste-cost" style="color:var(--text-1);font-weight:700;font-size:13px;white-space:nowrap;">{{ formatARS(e.cost) }}</p>
+              <div style="display:flex;align-items:center;gap:8px;flex-shrink:0;">
+                <p class="waste-cost" style="color:var(--text-1);font-weight:700;font-size:13px;white-space:nowrap;">{{ formatARS(e.cost) }}</p>
+                @if (canReverse && !e.reversed) {
+                  <button type="button" class="btn-icon" (click)="openReverse(e)" [title]="t('waste.reverse')" [attr.aria-label]="t('waste.reverse')">
+                    <i class="ti ti-arrow-back-up"></i>
+                  </button>
+                }
+              </div>
             </div>
             <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;">
               <span style="display:flex;flex-wrap:wrap;gap:6px;">
@@ -72,6 +79,7 @@
                 <th style="text-align:right;">Cantidad</th>
                 <th style="text-align:center;">Motivo</th>
                 <th style="text-align:right;">Costo</th>
+                @if (canReverse) { <th style="width:1%;"></th> }
               </tr>
             </thead>
             <tbody>
@@ -98,6 +106,15 @@
                   <td class="waste-cost" style="text-align:right;color:var(--text-2);">
                     {{ formatARS(e.cost) }}
                   </td>
+                  @if (canReverse) {
+                    <td style="text-align:right;">
+                      @if (!e.reversed) {
+                        <button type="button" class="btn-icon" (click)="openReverse(e)" [title]="t('waste.reverse')" [attr.aria-label]="t('waste.reverse')">
+                          <i class="ti ti-arrow-back-up"></i>
+                        </button>
+                      }
+                    </td>
+                  }
                 </tr>
               }
             </tbody>
@@ -170,3 +187,19 @@
     </button>
   </div>
 </app-drawer>
+
+<app-action-dialog
+  [visible]="!!reversing()"
+  [title]="t('waste.reverseTitle')"
+  icon="↶"
+  tone="danger"
+  [message]="reverseError() ?? t('waste.reverseMessage')"
+  [itemTitle]="reversing()?.productName ?? ''"
+  [itemSubtitle]="(reversing()?.quantity ?? '') + ' ' + (reversing()?.unitAbbreviation ?? '') + ' · ' + formatARS(reversing()?.cost)"
+  [itemMeta]="formatDate(reversing()?.createdAt)"
+  [confirmLabel]="t('waste.reverse')"
+  [cancelLabel]="t('common.cancel')"
+  [confirmDisabled]="reverseLoading()"
+  (cancel)="reversing.set(null)"
+  (confirm)="confirmReverse()">
+</app-action-dialog>

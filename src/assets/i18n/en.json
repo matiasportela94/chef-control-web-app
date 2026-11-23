@@ -1014,7 +1014,11 @@
   },
   "waste": {
     "reversed": "Undone",
-    "reversedHint": "It was undone: the stock came back and it does not count in the month's waste."
+    "reversedHint": "It was undone: the stock came back and it does not count in the month's waste.",
+    "reverse": "Reverse",
+    "reverseTitle": "Reverse the waste",
+    "reverseMessage": "The stock comes back and the waste no longer counts this month. It stays in the list as undone.",
+    "reverseError": "We couldn't reverse the waste. Please try again."
   },
   "suppliers": {
     "cuit": "Tax ID (CUIT)",
@@ -1145,5 +1149,15 @@
     "deadLinkTitle": "This link doesn't work",
     "invalidLink": "The link is incomplete or was copied wrong. Open it again from the email or request a new one.",
     "requestNew": "Request a new link"
+  },
+  "stockCounts": {
+    "reverse": "Reverse count",
+    "reverseTitle": "Reverse the count",
+    "reverseMessage": "The adjustments it made are undone and the stock goes back to how it was before the count. It stays in the list as reversed.",
+    "reverseError": "We couldn't reverse the count. Please try again.",
+    "reversed": "Reversed",
+    "reversedHint": "Reversed: its adjustments no longer count in the stock.",
+    "adjustmentReversed": "Adjustment reversed",
+    "adjustmentsCount": "{n} adjustments"
   }
 }

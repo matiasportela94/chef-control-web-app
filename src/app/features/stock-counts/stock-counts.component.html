@@ -38,7 +38,7 @@
       <div class="table-wrap" style="margin-bottom:16px;">
         <div>
           @for (c of counts(); track c.id) {
-            <div style="border-bottom:1px solid var(--border);">
+            <div style="border-bottom:1px solid var(--border);" [class.reversed]="c.reversed">
               <!-- Row header -->
               <button (click)="toggleExpand(c.id)"
                       style="width:100%;padding:14px 20px;display:flex;align-items:center;gap:16px;text-align:left;background:transparent;border:none;cursor:pointer;color:inherit;"
@@ -47,6 +47,9 @@
                   <div>
                     <p style="font-size:10px;color:var(--text-3);margin-bottom:2px;">Fecha</p>
                     <p style="font-size:12px;color:var(--text-1);">{{ formatDate(c.countedAt) }}</p>
+                    @if (c.reversed) {
+                      <span class="badge badge-reversed" [title]="t('stockCounts.reversedHint')"><i class="ti ti-arrow-back-up"></i> {{ t('stockCounts.reversed') }}</span>
+                    }
                   </div>
                   <div>
                     <p style="font-size:10px;color:var(--text-3);margin-bottom:2px;">Ítems</p>
@@ -80,14 +83,14 @@
                     <p class="section-title" style="margin-bottom:10px;">Movimientos de ajuste generados</p>
                     <div style="display:flex;flex-direction:column;gap:6px;">
                       @for (m of c.adjustments; track m.id) {
-                        <div style="display:flex;align-items:center;gap:12px;font-size:12px;padding:4px 0;">
+                        <div class="sc-adjustment" [class.adjustment-reversed]="!!m.reversedBy" [title]="m.reversedBy ? t('stockCounts.adjustmentReversed') : ''">
                           <span class="badge"
                                 [class.badge-accent]="m.direction === 'IN'"
                                 [class.badge-red]="m.direction === 'OUT'">
                             {{ m.direction === 'IN' ? '+' : '−' }}{{ m.quantity | number:'1.0-2' }} {{ unitAbbr(m.unitId) }}
                           </span>
-                          <span style="color:var(--text-2);">{{ productName(m.productId) }}</span>
-                          <span style="margin-left:auto;color:var(--text-3);font-size:11px;">
+                          <span class="sc-adjustment-name">{{ productName(m.productId) }}</span>
+                          <span class="sc-adjustment-stock">
                             {{ m.stockBefore | number:'1.0-2' }} {{ unitAbbr(m.unitId) }} → {{ m.stockAfter | number:'1.0-2' }} {{ unitAbbr(m.unitId) }}
                           </span>
                         </div>
@@ -95,6 +98,13 @@
                     </div>
                   } @else if (c.adjustments != null) {
                     <p style="font-size:12px;color:var(--text-3);">Sin ajustes generados — el stock contado coincidió con el registrado.</p>
+                  }
+                  @if (canReverseCount(c) && loadingDetail() !== c.id) {
+                    <div style="display:flex;justify-content:flex-end;margin-top:12px;">
+                      <button type="button" class="btn-danger btn-sm" (click)="openReverse(c)">
+                        <i class="ti ti-arrow-back-up"></i> {{ t('stockCounts.reverse') }}
+                      </button>
+                    </div>
                   }
                 </div>
               }
@@ -196,3 +206,19 @@
     </div>
   </div>
 </app-drawer>
+
+<app-action-dialog
+  [visible]="!!reversing()"
+  [title]="t('stockCounts.reverseTitle')"
+  icon="↶"
+  tone="danger"
+  [message]="reverseError() ?? t('stockCounts.reverseMessage')"
+  [itemTitle]="formatDate(reversing()?.countedAt)"
+  [itemSubtitle]="t('stockCounts.adjustmentsCount', { n: reversing()?.adjustmentsMade ?? 0 })"
+  [itemMeta]="reversing()?.notes ?? ''"
+  [confirmLabel]="t('stockCounts.reverse')"
+  [cancelLabel]="t('common.cancel')"
+  [confirmDisabled]="reverseLoading()"
+  (cancel)="reversing.set(null)"
+  (confirm)="confirmReverse()">
+</app-action-dialog>

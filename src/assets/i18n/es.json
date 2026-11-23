@@ -1014,7 +1014,11 @@
   },
   "waste": {
     "reversed": "Deshecha",
-    "reversedHint": "Se deshizo: el stock volvió y no cuenta en la merma del mes."
+    "reversedHint": "Se deshizo: el stock volvió y no cuenta en la merma del mes.",
+    "reverse": "Revertir",
+    "reverseTitle": "Revertir la merma",
+    "reverseMessage": "El stock vuelve y la merma deja de contar en el mes. Queda en la lista como deshecha.",
+    "reverseError": "No pudimos revertir la merma. Probá de nuevo."
   },
   "suppliers": {
     "cuit": "CUIT",
@@ -1145,5 +1149,15 @@
     "deadLinkTitle": "Este link no sirve",
     "invalidLink": "Al link le falta una parte o está mal copiado. Abrilo de nuevo desde el mail o pedí otro.",
     "requestNew": "Pedir otro link"
+  },
+  "stockCounts": {
+    "reverse": "Revertir conteo",
+    "reverseTitle": "Revertir el conteo",
+    "reverseMessage": "Se deshacen los ajustes que generó y el stock vuelve a como estaba antes del conteo. Queda en la lista como revertido.",
+    "reverseError": "No pudimos revertir el conteo. Probá de nuevo.",
+    "reversed": "Revertido",
+    "reversedHint": "Se revirtió: sus ajustes ya no cuentan en el stock.",
+    "adjustmentReversed": "Ajuste revertido",
+    "adjustmentsCount": "{n} ajustes"
   }
 }

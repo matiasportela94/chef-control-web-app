@@ -7,6 +7,9 @@ import { AlertNotificationService } from '../../core/services/alert-notification
 import { I18nService } from '../../core/services/i18n.service';
 import { listWasteEvents } from '../../api/fn/waste-event-controller/list-waste-events';
 import { createWasteEvent } from '../../api/fn/waste-event-controller/create-waste-event';
+import { reverseWasteEvent } from '../../api/fn/waste-event-controller/reverse-waste-event';
+import { AuthService } from '../../core/services/auth.service';
+import { ActionDialogComponent } from '../../shared/components/action-dialog/action-dialog.component';
 import { listProducts } from '../../api/fn/product-controller/list-products';
 import { listUnits } from '../../api/fn/unit-controller/list-units';
 import { WasteEventResponse } from '../../api/models/waste-event-response';
@@ -26,7 +29,7 @@ import { SelectComponent, SelectOption } from '../../shared/components/select/se
 @Component({
   selector: 'app-waste',
   standalone: true,
-  imports: [ReactiveFormsModule, PaginatorComponent, DrawerComponent, SpinnerComponent, SelectComponent],
+  imports: [ReactiveFormsModule, PaginatorComponent, DrawerComponent, SpinnerComponent, SelectComponent, ActionDialogComponent],
   templateUrl: './waste.component.html',
   styleUrl: './waste.component.scss'
 })
@@ -34,6 +37,11 @@ export class WasteComponent implements OnInit {
   private readonly destroyRef = inject(DestroyRef);
   private readonly i18n = inject(I18nService);
   t = (key: string) => this.i18n.t(key);
+  /** Revertir una merma: mismo permiso que revertir un movimiento en /stock. */
+  readonly canReverse = inject(AuthService).hasPermission('STOCK_DELETE');
+  reversing      = signal<WasteEventResponse | null>(null);
+  reverseLoading = signal(false);
+  reverseError   = signal<string | null>(null);
 
   events   = signal<WasteEventResponse[]>([]);
   loading  = signal(true);
@@ -124,6 +132,31 @@ export class WasteComponent implements OnInit {
   @HostListener('document:keydown.escape')
   onEscape(): void {
     if (this.drawerOpen()) this.closeDrawer();
+    if (this.reversing() && !this.reverseLoading()) this.reversing.set(null);
+  }
+
+  openReverse(e: WasteEventResponse): void {
+    this.reverseError.set(null);
+    this.reversing.set(e);
+  }
+
+  /** La merma queda en la lista como deshecha: el back la devuelve con reversed y se reemplaza en el lugar. */
+  async confirmReverse(): Promise<void> {
+    const e = this.reversing();
+    if (!e?.id || this.reverseLoading()) return;
+    this.reverseLoading.set(true);
+    this.reverseError.set(null);
+    try {
+      const updated = await parseBlob<WasteEventResponse>(await this.api.invoke(reverseWasteEvent, { id: e.id }) as unknown);
+      this.events.update(list => list.map(x => x.id === e.id ? { ...x, ...updated } : x));
+      this.reversing.set(null);
+      void this.alertNotification.refresh();
+    } catch (err) {
+      this.reverseError.set(extractApiError(err, this.t('waste.reverseError')));
+      void this.loadEvents();  // si ya estaba deshecha (otro la revirtió), la lista se pone al día
+    } finally {
+      this.reverseLoading.set(false);
+    }
   }
 
   onProductChange(): void {

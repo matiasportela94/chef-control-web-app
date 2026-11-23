@@ -43,3 +43,12 @@ button .rotate-180 {
     grid-template-columns: repeat(2, 1fr) !important;
   }
 }
+
+// Un conteo revertido sigue en la lista (es historia), apagado como la merma deshecha.
+.reversed { opacity: .6; }
+.badge-reversed { display: inline-flex; align-items: center; gap: 3px; margin-top: 4px; background: var(--bg-input); color: var(--text-2); border: 1px solid var(--border-strong); }
+.sc-adjustment { display: flex; align-items: center; gap: 12px; font-size: 12px; padding: 4px 0; min-width: 0; flex-wrap: wrap; }
+.sc-adjustment-name { color: var(--text-2); min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 1 1 120px; }
+.sc-adjustment-stock { margin-left: auto; color: var(--text-3); font-size: 11px; white-space: nowrap; }
+// Un ajuste revertido (con el conteo o suelto desde /stock): tachado.
+.adjustment-reversed { opacity: .55; .badge, .sc-adjustment-stock { text-decoration: line-through; } }

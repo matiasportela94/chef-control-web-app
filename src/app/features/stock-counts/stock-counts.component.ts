@@ -4,6 +4,10 @@ import { Api }          from '../../api/api';
 import { listStockCounts } from '../../api/fn/stock-count-controller/list-stock-counts';
 import { getStockCount } from '../../api/fn/stock-count-controller/get-stock-count';
 import { createStockCount } from '../../api/fn/stock-count-controller/create-stock-count';
+import { reverseStockCount } from '../../api/fn/stock-count-controller/reverse-stock-count';
+import { AuthService } from '../../core/services/auth.service';
+import { I18nService } from '../../core/services/i18n.service';
+import { ActionDialogComponent } from '../../shared/components/action-dialog/action-dialog.component';
 import { listProducts } from '../../api/fn/product-controller/list-products';
 import { listUnits }    from '../../api/fn/unit-controller/list-units';
 import { StockCountResponse } from '../../api/models/stock-count-response';
@@ -29,7 +33,7 @@ interface ProductMeta {
 @Component({
   selector: 'app-stock-counts',
   standalone: true,
-  imports: [ReactiveFormsModule, PaginatorComponent, DecimalPipe, DrawerComponent, SpinnerComponent],
+  imports: [ReactiveFormsModule, PaginatorComponent, DecimalPipe, DrawerComponent, SpinnerComponent, ActionDialogComponent],
   templateUrl: './stock-counts.component.html',
   styleUrl: './stock-counts.component.scss'
 })
@@ -51,10 +55,18 @@ export class StockCountsComponent implements OnInit {
   saving        = signal(false);
   saveError     = signal<string | null>(null);
 
+  /** Revertir un conteo: mismo permiso que revertir un movimiento en /stock. */
+  readonly canReverse: boolean;
+  reversing      = signal<StockCountResponse | null>(null);
+  reverseLoading = signal(false);
+  reverseError   = signal<string | null>(null);
+
   productMeta: ProductMeta[] = [];
   form: FormGroup;
 
-  constructor(private api: Api, private fb: FormBuilder, private alertNotification: AlertNotificationService) {
+  constructor(private api: Api, private fb: FormBuilder, private alertNotification: AlertNotificationService,
+              auth: AuthService, private i18n: I18nService) {
+    this.canReverse = auth.hasPermission('STOCK_DELETE');
     this.form = this.fb.group({
       items: this.fb.array([]),
       notes: [''],
@@ -144,6 +156,40 @@ export class StockCountsComponent implements OnInit {
   @HostListener('document:keydown.escape')
   onEscape(): void {
     if (this.drawerOpen()) this.closeDrawer();
+    if (this.reversing() && !this.reverseLoading()) this.reversing.set(null);
+  }
+
+  t(key: string, params?: Record<string, string | number>): string {
+    return this.i18n.t(key, params);
+  }
+
+  /** Sin ajustes no hay nada que revertir: el back respondería 200 sin hacer nada. */
+  canReverseCount(c: StockCountResponse): boolean {
+    return this.canReverse && !c.reversed && (c.adjustmentsMade ?? 0) > 0;
+  }
+
+  openReverse(c: StockCountResponse): void {
+    this.reverseError.set(null);
+    this.reversing.set(c);
+  }
+
+  /** Revierte los ajustes que le quedan en pie (si alguno se revirtió suelto desde /stock, ese ya no). */
+  async confirmReverse(): Promise<void> {
+    const c = this.reversing();
+    if (!c?.id || this.reverseLoading()) return;
+    this.reverseLoading.set(true);
+    this.reverseError.set(null);
+    try {
+      const updated = await parseBlob<StockCountResponse>(await this.api.invoke(reverseStockCount, { id: c.id }) as unknown);
+      this.counts.update(list => list.map(x => x.id === c.id ? { ...x, ...updated } : x));
+      this.reversing.set(null);
+      void this.alertNotification.refresh();
+    } catch (e) {
+      this.reverseError.set(extractApiError(e, this.t('stockCounts.reverseError')));
+      void this.loadCounts();
+    } finally {
+      this.reverseLoading.set(false);
+    }
   }
 
   async toggleExpand(id?: string): Promise<void> {
