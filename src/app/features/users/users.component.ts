@@ -205,8 +205,7 @@ export class UsersComponent implements OnInit {
   }
 
   profileLocked(u: UserResponse | null): boolean {
-    // ponytail: cast hasta regenerar contra la rama del back (UserResponse.profileEditable); después se borra.
-    return (u as (UserResponse & { profileEditable?: boolean }) | null)?.profileEditable === false;
+    return u?.profileEditable === false;
   }
 
   async save(): Promise<void> {

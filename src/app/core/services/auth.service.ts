@@ -15,8 +15,8 @@ import { ForgotPasswordRequest } from '../../api/models/forgot-password-request'
 import { RestaurantSummary } from '../../api/models/restaurant-summary';
 import { parseBlob } from '../utils/parse-blob';
 import { logout as logoutFn } from '../../api/fn/auth-controller/logout';
-import { getProfile } from '../../api/fn/profile-controller/get-profile';
-import { updateProfile as updateProfileFn } from '../../api/fn/profile-controller/update-profile';
+import { getOwnProfile } from '../../api/fn/profile-controller/get-own-profile';
+import { updateOwnProfile } from '../../api/fn/profile-controller/update-own-profile';
 import { ProfileResponse } from '../../api/models/profile-response';
 import { UpdateProfileRequest } from '../../api/models/update-profile-request';
 
@@ -97,12 +97,12 @@ export class AuthService {
 
   /** Perfil del usuario logueado. Refresca nombre y Google de la sesión: el login es lo único que los traía. */
   async loadProfile(): Promise<ProfileResponse> {
-    return this.applyProfile(await parseBlob<ProfileResponse>(await this.api.invoke(getProfile) as unknown));
+    return this.applyProfile(await parseBlob<ProfileResponse>(await this.api.invoke(getOwnProfile) as unknown));
   }
 
   /** Cada usuario edita su nombre y su teléfono; el nombre nuevo se ve en la barra en el acto. */
   async updateProfile(body: UpdateProfileRequest): Promise<ProfileResponse> {
-    return this.applyProfile(await parseBlob<ProfileResponse>(await this.api.invoke(updateProfileFn, { body }) as unknown));
+    return this.applyProfile(await parseBlob<ProfileResponse>(await this.api.invoke(updateOwnProfile, { body }) as unknown));
   }
 
   private applyProfile(p: ProfileResponse): ProfileResponse {
