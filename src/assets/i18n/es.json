@@ -616,7 +616,15 @@
       "doneToast": "Desvinculaste tu cuenta de Google",
       "doneHint": "Desde ahora entrás con tu email y la contraseña nueva.",
       "error": "No pudimos desvincular tu cuenta de Google. Probá de nuevo."
-    }
+    },
+    "phone": "Teléfono",
+    "phoneHint": "Opcional. Lo ven quienes administran los locales donde trabajás.",
+    "nameRequired": "Ingresá tu nombre.",
+    "save": "Guardar cambios",
+    "saving": "Guardando…",
+    "savedToast": "Guardaste tu perfil",
+    "saveError": "No pudimos guardar tu perfil. Probá de nuevo.",
+    "loadError": "No pudimos cargar tu perfil. Recargá la página para editarlo."
   },
   "dashboard": {
     "live": "En vivo"
@@ -1089,6 +1097,8 @@
   },
   "users": {
     "inviteExistingHint": "Si ya usa Chef Control, se suma con su nombre y su teléfono.",
-    "profileShared": "Esta persona también trabaja en otra cuenta: su nombre y su teléfono los maneja ella. Acá podés cambiarle el rol."
+    "profileShared": "Esta persona también trabaja en otra cuenta: su nombre y su teléfono los cambia ella desde Mi perfil. Acá podés cambiarle el rol.",
+    "phone": "Teléfono",
+    "phoneHint": "Opcional."
   }
 }

@@ -15,6 +15,10 @@ import { ForgotPasswordRequest } from '../../api/models/forgot-password-request'
 import { RestaurantSummary } from '../../api/models/restaurant-summary';
 import { parseBlob } from '../utils/parse-blob';
 import { logout as logoutFn } from '../../api/fn/auth-controller/logout';
+import { getOwnProfile } from '../../api/fn/profile-controller/get-own-profile';
+import { updateOwnProfile } from '../../api/fn/profile-controller/update-own-profile';
+import { ProfileResponse } from '../../api/models/profile-response';
+import { UpdateProfileRequest } from '../../api/models/update-profile-request';
 
 const USER_KEY = 'cc_user';
 
@@ -89,6 +93,21 @@ export class AuthService {
   async unlinkGoogle(idToken: string, newPassword: string): Promise<void> {
     await this.api.invoke(unlinkGoogleAccount, { body: { idToken, newPassword } });
     this.patchUser({ googleLinked: false });
+  }
+
+  /** Perfil del usuario logueado. Refresca nombre y Google de la sesión: el login es lo único que los traía. */
+  async loadProfile(): Promise<ProfileResponse> {
+    return this.applyProfile(await parseBlob<ProfileResponse>(await this.api.invoke(getOwnProfile) as unknown));
+  }
+
+  /** Cada usuario edita su nombre y su teléfono; el nombre nuevo se ve en la barra en el acto. */
+  async updateProfile(body: UpdateProfileRequest): Promise<ProfileResponse> {
+    return this.applyProfile(await parseBlob<ProfileResponse>(await this.api.invoke(updateOwnProfile, { body }) as unknown));
+  }
+
+  private applyProfile(p: ProfileResponse): ProfileResponse {
+    this.patchUser({ name: p.name ?? '', googleLinked: p.googleLinked ?? false });
+    return p;
   }
 
   async forgotPassword(body: ForgotPasswordRequest): Promise<void> {

@@ -616,7 +616,15 @@
       "doneToast": "Google account unlinked",
       "doneHint": "From now on you sign in with your email and the new password.",
       "error": "We couldn't unlink your Google account. Please try again."
-    }
+    },
+    "phone": "Phone",
+    "phoneHint": "Optional. Visible to whoever manages the restaurants you work at.",
+    "nameRequired": "Enter your name.",
+    "save": "Save changes",
+    "saving": "Saving…",
+    "savedToast": "Your profile was saved",
+    "saveError": "We couldn't save your profile. Please try again.",
+    "loadError": "We couldn't load your profile. Reload the page to edit it."
   },
   "dashboard": {
     "live": "Live"
@@ -1089,6 +1097,8 @@
   },
   "users": {
     "inviteExistingHint": "If they already use Chef Control, they join with their own name and phone.",
-    "profileShared": "This person also works in another account: they manage their own name and phone. You can change their role here."
+    "profileShared": "This person also works in another account: they change their own name and phone from My profile. You can change their role here.",
+    "phone": "Phone",
+    "phoneHint": "Optional."
   }
 }

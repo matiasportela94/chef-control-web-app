@@ -9,12 +9,30 @@
   @if (user(); as u) {
     <div class="profile-col">
 
-      <div class="data-card" style="padding:18px 20px;">
-        <p class="eyebrow">{{ t('profile.name') }}</p>
-        <p class="value ellipsis">{{ u.name }}</p>
-        <p class="eyebrow" style="margin-top:12px;">{{ t('profile.email') }}</p>
+      <form class="data-card" style="padding:18px 20px;" (submit)="$event.preventDefault(); save()">
+        <p class="eyebrow">{{ t('profile.email') }}</p>
         <p class="value ellipsis">{{ u.email }}</p>
-      </div>
+
+        <label class="field-label" for="profile-name" style="margin-top:16px;">{{ t('profile.name') }}</label>
+        <input id="profile-name" type="text" autocomplete="name" class="field-input"
+               [class.input-error]="nameMissing() && !loadingProfile()"
+               [value]="name()" (input)="name.set(inputValue($event))" [disabled]="loadingProfile() || saving()">
+        @if (nameMissing() && !loadingProfile()) { <p class="field-problem">{{ t('profile.nameRequired') }}</p> }
+
+        <label class="field-label" for="profile-phone" style="margin-top:12px;">{{ t('profile.phone') }}</label>
+        <input id="profile-phone" type="tel" autocomplete="tel" placeholder="+54 11 1234-5678" class="field-input"
+               [value]="phone()" (input)="phone.set(inputValue($event))" [disabled]="loadingProfile() || saving()">
+        <p class="hint">{{ t('profile.phoneHint') }}</p>
+
+        @if (loadError()) { <div class="notice notice-danger">{{ loadError() }}</div> }
+        @if (saveError()) { <div class="notice notice-danger">{{ saveError() }}</div> }
+
+        <div class="form-foot">
+          <button type="submit" class="btn-primary btn-sm" [disabled]="!canSave()">
+            @if (saving()) { <i class="ti ti-loader-2 spin"></i> {{ t('profile.saving') }} } @else { {{ t('profile.save') }} }
+          </button>
+        </div>
+      </form>
 
       @if (googleEnabled) {
         <div class="data-card" style="padding:18px 20px;">

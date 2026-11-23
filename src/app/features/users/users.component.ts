@@ -80,7 +80,7 @@ export class UsersComponent implements OnInit {
       name:   ['', Validators.required],
       email:  ['', [Validators.required, Validators.email]],
       roleId: ['', Validators.required],
-      phone:  ['', Validators.required],
+      phone:  [''],
     });
   }
 
@@ -205,8 +205,7 @@ export class UsersComponent implements OnInit {
   }
 
   profileLocked(u: UserResponse | null): boolean {
-    // ponytail: cast hasta regenerar contra la rama del back (UserResponse.profileEditable); después se borra.
-    return (u as (UserResponse & { profileEditable?: boolean }) | null)?.profileEditable === false;
+    return u?.profileEditable === false;
   }
 
   async save(): Promise<void> {
@@ -220,7 +219,7 @@ export class UsersComponent implements OnInit {
         const body = { name: v.name, roleId: v.roleId, phone: v.phone.trim() };
         await this.api.invoke(updateUser, { id: u.id, body });
       } else {
-        const body = { name: v.name, email: v.email, roleId: v.roleId, phone: v.phone.trim() };
+        const body = { name: v.name, email: v.email, roleId: v.roleId, phone: v.phone.trim() || undefined };
         await this.api.invoke(createUser, { body });
       }
       this.drawerOpen.set(false);
