@@ -143,6 +143,7 @@
         <input formControlName="name" type="text" placeholder="Juan García"
                class="field-input" [class.input-error]="isInvalid('name')">
         @if (isInvalid('name')) { <p style="font-size:11px;color:var(--red);margin-top:4px;">Campo requerido</p> }
+        @if (profileLocked(editing())) { <p class="field-hint"><i class="ti ti-lock"></i> {{ t('users.profileShared') }}</p> }
       </div>
 
       <div style="margin-bottom:0;">
@@ -164,10 +165,9 @@
       </div>
 
       <div style="margin-bottom:0;">
-        <label class="field-label">{{ t('users.phone') }}</label>
-        <input formControlName="phone" type="tel" placeholder="+54 11 1234-5678" class="field-input">
-        @if (profileLocked(editing())) { <p class="field-hint"><i class="ti ti-lock"></i> {{ t('users.profileShared') }}</p> }
-        @else { <p class="field-hint">{{ t('users.phoneHint') }}</p> }
+        <label class="field-label" for="user-phone">{{ t('users.phone') }}</label>
+        <input id="user-phone" formControlName="phone" type="tel" placeholder="+54 11 1234-5678" class="field-input">
+        <p class="field-hint">{{ t('users.phoneHint') }}</p>
       </div>
 
       @if (saveError()) {

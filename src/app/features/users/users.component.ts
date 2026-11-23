@@ -122,9 +122,9 @@ export class UsersComponent implements OnInit {
     this.editing.set(u);
     this.form.reset({ name: u.name ?? '', email: u.email ?? '', roleId: u.roleId ?? '', phone: u.phone ?? '' });
     this.form.get('email')?.disable();
-    // Si también trabaja en otra cuenta, su nombre y su teléfono los maneja esa persona: acá solo se cambia el rol.
-    // Deshabilitados no salen en form.value: save() usa getRawValue() y manda los actuales (si no, el back rechaza).
-    for (const field of ['name', 'phone']) this.profileLocked(u) ? this.form.get(field)?.disable() : this.form.get(field)?.enable();
+    // Si también trabaja en otra cuenta, su nombre lo maneja esa persona. El teléfono es el de este local: siempre editable.
+    // Deshabilitado no sale en form.value: save() usa getRawValue() y manda el actual (si no, el back rechaza).
+    this.profileLocked(u) ? this.form.get('name')?.disable() : this.form.get('name')?.enable();
     this.saveError.set(null);
     this.drawerOpen.set(true);
     this.permissionsError.set(null);

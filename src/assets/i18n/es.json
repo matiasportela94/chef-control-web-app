@@ -44,7 +44,7 @@
     "TOKEN_EXPIRED": "El enlace expiró, solicitá uno nuevo",
     "TOKEN_ALREADY_USED": "El enlace ya fue utilizado",
     "DUPLICATE_EMAIL": "Ya existe un usuario con ese email",
-    "DUPLICATE_PHONE": "Ya existe un usuario con ese teléfono",
+    "DUPLICATE_PHONE": "Ese número ya lo usa otra persona en uno de tus locales",
     "DUPLICATE_SLUG": "Ya existe un elemento con ese identificador",
     "DUPLICATE_SKU": "Ya existe un insumo con ese código",
     "RESTAURANT_NOT_FOUND": "Restaurante no encontrado",
@@ -638,7 +638,7 @@
       "error": "No pudimos desvincular tu cuenta de Google. Probá de nuevo."
     },
     "phone": "Teléfono",
-    "phoneHint": "Opcional. Lo ven quienes administran los locales donde trabajás.",
+    "phoneHint": "Opcional. Es el que se usa en los locales donde no te cargaron otro número.",
     "nameRequired": "Ingresá tu nombre.",
     "save": "Guardar cambios",
     "saving": "Guardando…",
@@ -1123,10 +1123,10 @@
     "attachmentDeleteError": "No se pudo eliminar el adjunto"
   },
   "users": {
-    "inviteExistingHint": "Si ya usa Chef Control, se suma con su nombre y su teléfono.",
-    "profileShared": "Esta persona también trabaja en otra cuenta: su nombre y su teléfono los cambia ella desde Mi perfil. Acá podés cambiarle el rol.",
-    "phone": "Teléfono",
-    "phoneHint": "Opcional."
+    "inviteExistingHint": "Si ya usa Chef Control, se suma con su nombre. El teléfono que cargues acá queda para este local.",
+    "profileShared": "Esta persona también trabaja en otra cuenta: su nombre lo cambia ella desde Mi perfil.",
+    "phone": "Teléfono en este local",
+    "phoneHint": "Opcional. Si lo dejás vacío, se usa el teléfono personal de la persona."
   },
   "resetPassword": {
     "reset": {

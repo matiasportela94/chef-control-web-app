@@ -44,7 +44,7 @@
     "TOKEN_EXPIRED": "Link expired, please request a new one",
     "TOKEN_ALREADY_USED": "Link has already been used",
     "DUPLICATE_EMAIL": "Email is already registered",
-    "DUPLICATE_PHONE": "Phone number is already registered",
+    "DUPLICATE_PHONE": "That number is already used by someone else at one of your restaurants",
     "DUPLICATE_SLUG": "Identifier is already in use",
     "DUPLICATE_SKU": "Code is already in use",
     "RESTAURANT_NOT_FOUND": "Restaurant not found",
@@ -638,7 +638,7 @@
       "error": "We couldn't unlink your Google account. Please try again."
     },
     "phone": "Phone",
-    "phoneHint": "Optional. Visible to whoever manages the restaurants you work at.",
+    "phoneHint": "Optional. It's the one used at restaurants where nobody entered another number for you.",
     "nameRequired": "Enter your name.",
     "save": "Save changes",
     "saving": "Saving…",
@@ -1123,10 +1123,10 @@
     "attachmentDeleteError": "Could not delete the attachment"
   },
   "users": {
-    "inviteExistingHint": "If they already use Chef Control, they join with their own name and phone.",
-    "profileShared": "This person also works in another account: they change their own name and phone from My profile. You can change their role here.",
-    "phone": "Phone",
-    "phoneHint": "Optional."
+    "inviteExistingHint": "If they already use Chef Control, they join with their own name. The phone you enter here is for this restaurant.",
+    "profileShared": "This person also works in another account: they change their own name from My profile.",
+    "phone": "Phone at this restaurant",
+    "phoneHint": "Optional. If you leave it empty, the person's own phone is used."
   },
   "resetPassword": {
     "reset": {
